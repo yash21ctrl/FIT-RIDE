@@ -203,7 +203,8 @@
           <div id="manager-name-display" style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.25rem;">Yashwanth M</div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <button id="btn-simulate-chaos" class="btn" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; font-weight: bold; font-size: 0.85rem;" onclick="triggerSimulateChaos()">⚡ Simulate Chaos</button>
           <a href="/employee" target="_blank" class="btn" style="background: #1e293b; color: #cbd5e1; font-size: 0.85rem;">↗ Employee View</a>
           <a href="/driver" target="_blank" class="btn" style="background: #1e293b; color: #cbd5e1; font-size: 0.85rem;">↗ Driver PWA</a>
           <button class="btn" style="background: #334155; color: #f8fafc; font-size: 0.85rem;" onclick="handleManagerLogout()">Sign Out</button>
@@ -220,6 +221,9 @@
         </button>
         <button id="mgr-tab-fleet" class="manager-tab-btn" onclick="switchManagerTab('fleet')">
           🚗 Fleet &amp; Drivers
+        </button>
+        <button id="mgr-tab-analytics" class="manager-tab-btn" onclick="switchManagerTab('analytics')">
+          📈 Analytics
         </button>
         <button id="mgr-tab-history" class="manager-tab-btn" onclick="switchManagerTab('history')">
           📜 Audit History
@@ -312,6 +316,84 @@
             </div>
           </div>
 
+        </div>
+      </section>
+
+      <!-- TAB: ANALYTICS & INSIGHTS -->
+      <section id="view-analytics" class="mgr-page" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <div>
+            <h2 style="font-size: 1.25rem; margin: 0; color: #f8fafc;">Operational Fleet Analytics</h2>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin: 0.25rem 0 0;">Vehicle utilization, driver workload equity, and fatigue rejection metrics.</p>
+          </div>
+          <button class="btn" style="background: #1e293b; color: #38bdf8; font-size: 0.85rem;" onclick="loadAnalyticsData()">↻ Refresh Analytics</button>
+        </div>
+
+        <!-- Metric KPI Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="card" style="padding: 1.25rem; background: #0f172a; border-left: 4px solid #38bdf8;">
+            <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase;">Active Fleet</div>
+            <div id="metric-total-vehicles" style="font-size: 1.8rem; font-weight: bold; color: #f8fafc; margin-top: 0.25rem;">6</div>
+          </div>
+          <div class="card" style="padding: 1.25rem; background: #0f172a; border-left: 4px solid #10b981;">
+            <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase;">Total Drivers</div>
+            <div id="metric-total-drivers" style="font-size: 1.8rem; font-weight: bold; color: #f8fafc; margin-top: 0.25rem;">5</div>
+          </div>
+          <div class="card" style="padding: 1.25rem; background: #0f172a; border-left: 4px solid #f59e0b;">
+            <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase;">Total Bookings</div>
+            <div id="metric-total-bookings" style="font-size: 1.8rem; font-weight: bold; color: #f8fafc; margin-top: 0.25rem;">0</div>
+          </div>
+          <div class="card" style="padding: 1.25rem; background: #0f172a; border-left: 4px solid #ef4444;">
+            <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase;">Driver Rejections</div>
+            <div id="metric-total-rejects" style="font-size: 1.8rem; font-weight: bold; color: #f8fafc; margin-top: 0.25rem;">0</div>
+          </div>
+        </div>
+
+        <!-- Vehicle Utilization Table -->
+        <h3 style="font-size: 1.1rem; color: #f8fafc; margin-bottom: 0.75rem;">Vehicle Utilization</h3>
+        <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem;">
+          <table class="manager-table">
+            <thead>
+              <tr>
+                <th>Vehicle Name</th>
+                <th>Type</th>
+                <th>Capacity</th>
+                <th>Status</th>
+                <th>Trips Logged</th>
+                <th>Total Hours</th>
+                <th>Utilization</th>
+              </tr>
+            </thead>
+            <tbody id="analytics-vehicle-table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Driver Fairness & Workload -->
+        <h3 style="font-size: 1.1rem; color: #f8fafc; margin-bottom: 0.75rem;">Driver Fairness &amp; Fatigue Equity</h3>
+        <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem;">
+          <table class="manager-table">
+            <thead>
+              <tr>
+                <th>Driver Name</th>
+                <th>Phone</th>
+                <th>Rating</th>
+                <th>Status</th>
+                <th>Total Trips</th>
+                <th>Total Hours Driven</th>
+              </tr>
+            </thead>
+            <tbody id="analytics-driver-table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Reject Reasons Breakdown -->
+        <h3 style="font-size: 1.1rem; color: #f8fafc; margin-bottom: 0.75rem;">Driver Rejection Reasons Breakdown</h3>
+        <div id="analytics-reject-reasons-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem;">
+          <!-- Dynamically populated -->
         </div>
       </section>
 

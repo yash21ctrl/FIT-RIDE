@@ -83,7 +83,7 @@ async function loadInitialData() {
 
 // Navigation Tabs
 function switchManagerTab(tab) {
-  const tabs = ['queue', 'gantt', 'fleet', 'history', 'alerts'];
+  const tabs = ['queue', 'gantt', 'fleet', 'analytics', 'history', 'alerts'];
   tabs.forEach(t => {
     const viewEl = document.getElementById(`view-${t}`);
     const btnEl = document.getElementById(`mgr-tab-${t}`);
@@ -97,6 +97,7 @@ function switchManagerTab(tab) {
   if (tab === 'queue') loadApprovalQueue();
   else if (tab === 'gantt') loadGanttData();
   else if (tab === 'fleet') loadFleetData();
+  else if (tab === 'analytics') loadAnalyticsData();
   else if (tab === 'history') loadHistoryData();
   else if (tab === 'alerts') loadAlertsData();
 }
@@ -605,3 +606,111 @@ function renderAlertsCards(emergencies, waitlisted, bumped) {
 
   container.innerHTML = html;
 }
+
+// TAB: ANALYTICS & INSIGHTS
+async function loadAnalyticsData() {
+  try {
+    const res = await api.get('/api/manager/analytics');
+    
+    // KPI metrics
+    if (res.summary) {
+      document.getElementById('metric-total-vehicles').textContent = res.summary.total_vehicles || 0;
+      document.getElementById('metric-total-drivers').textContent = res.summary.total_drivers || 0;
+      document.getElementById('metric-total-bookings').textContent = res.summary.total_bookings || 0;
+    }
+    
+    let totalRejects = 0;
+    if (res.reject_reasons) {
+      totalRejects = Object.values(res.reject_reasons).reduce((a, b) => a + b, 0);
+      document.getElementById('metric-total-rejects').textContent = totalRejects;
+    }
+
+    // Vehicle table
+    const vehBody = document.getElementById('analytics-vehicle-table-body');
+    if (vehBody && res.vehicle_utilization) {
+      vehBody.innerHTML = res.vehicle_utilization.map(v => `
+        <tr>
+          <td><strong>${v.name}</strong></td>
+          <td><span class="badge" style="background:#1e293b; color:#94a3b8;">${v.type}</span></td>
+          <td>${v.capacity} Seats</td>
+          <td><span class="badge ${v.status === 'available' ? 'badge-success' : 'badge-warning'}">${v.status}</span></td>
+          <td>${v.total_trips}</td>
+          <td>${v.total_hours}h</td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <div style="flex: 1; background: #1e293b; height: 8px; border-radius: 4px; overflow: hidden;">
+                <div style="background: #38bdf8; width: ${v.utilization_pct}%; height: 100%;"></div>
+              </div>
+              <span style="font-size: 0.8rem; color: #cbd5e1;">${v.utilization_pct}%</span>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Driver table
+    const drvBody = document.getElementById('analytics-driver-table-body');
+    if (drvBody && res.driver_fairness) {
+      drvBody.innerHTML = res.driver_fairness.map(d => `
+        <tr>
+          <td><strong>${d.name}</strong></td>
+          <td style="color: #94a3b8;">${d.phone || '—'}</td>
+          <td>⭐ ${d.rating_avg.toFixed(1)}</td>
+          <td><span class="badge ${d.status === 'available' ? 'badge-success' : 'badge-neutral'}">${d.status}</span></td>
+          <td>${d.total_trips}</td>
+          <td>${d.total_hours}h</td>
+        </tr>
+      `).join('');
+    }
+
+    // Reject reasons cards
+    const rejContainer = document.getElementById('analytics-reject-reasons-cards');
+    if (rejContainer && res.reject_reasons) {
+      const labels = {
+        tired: 'Tired / Fatigue',
+        vehicle_issue: 'Vehicle Issue',
+        personal: 'Personal / Family',
+        too_far: 'Distance / Too Far',
+        unsafe: 'Safety / Route',
+        timeout: 'Response Timeout',
+        other: 'Other'
+      };
+      rejContainer.innerHTML = Object.entries(res.reject_reasons).map(([k, cnt]) => `
+        <div class="card" style="padding: 0.85rem; background: #0f172a; border: 1px solid #1e293b; text-align: center;">
+          <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">${labels[k] || k}</div>
+          <div style="font-size: 1.4rem; font-weight: bold; color: ${cnt > 0 ? '#ef4444' : '#64748b'}; margin-top: 0.25rem;">${cnt}</div>
+        </div>
+      `).join('');
+    }
+  } catch (err) {
+    console.error('Failed to load analytics:', err);
+  }
+}
+
+// CHAOS SIMULATION TRIGGER
+async function triggerSimulateChaos() {
+  const btn = document.getElementById('btn-simulate-chaos');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ Simulating...';
+  }
+  try {
+    const res = await api.post('/api/admin/simulate', {});
+    let message = '⚡ DEMO CHAOS SIMULATION COMPLETE!\n\n';
+    if (res.scenarios) {
+      res.scenarios.forEach(s => {
+        message += `✓ ${s.scenario}: ${s.details || 'Passed'}\n`;
+      });
+    }
+    alert(message);
+    await loadInitialData();
+  } catch (err) {
+    alert('Chaos simulation failed: ' + (err.message || 'Error'));
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '⚡ Simulate Chaos';
+    }
+  }
+}
+

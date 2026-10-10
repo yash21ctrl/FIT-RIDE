@@ -9,8 +9,11 @@ load_dotenv()
 def reset_demo():
     database_url = os.getenv("DATABASE_URL")
     if not database_url:
-        print("ERROR: DATABASE_URL is not set in environment or .env file.")
-        sys.exit(1)
+        print("DATABASE_URL not set: Resetting in-memory test/demo store...")
+        from app.db import reset_seed_data
+        reset_seed_data()
+        print("Demo reset completed successfully! In-memory store is in pristine seed state.")
+        return
 
     print("Connecting to database for demo reset...")
     conn = psycopg2.connect(database_url)
