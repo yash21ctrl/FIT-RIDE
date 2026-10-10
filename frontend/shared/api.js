@@ -96,6 +96,10 @@ class FleetApiClient {
     }
   }
 
+  clearToken() {
+    this.clearAuth();
+  }
+
   isAuthenticated() {
     return Boolean(this.getToken());
   }
@@ -240,6 +244,19 @@ class FleetApiClient {
     this.clearAuth();
   }
 }
+
+// Global XSS defense helper
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+window.escapeHtml = escapeHtml;
 
 // Global singleton instance for shared usage
 window.api = new FleetApiClient();

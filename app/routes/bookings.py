@@ -183,7 +183,71 @@ def create_booking_request():
     buffer_min = int(config.get("buffer_minutes", 15))
     blocked_until = end_utc + timedelta(minutes=buffer_min)
 
-    # 3b. Direct waitlist request
+    # 3b. Validate optional destination coordinates
+    dest_lat = data.get("dest_lat")
+    dest_lng = data.get("dest_lng")
+
+    if dest_lat is not None and dest_lat != "":
+        if isinstance(dest_lat, bool):
+            return jsonify({
+                "error": {
+                    "code": "BAD_REQUEST",
+                    "message": "Field 'dest_lat' must be a valid number between -90 and 90",
+                    "alternatives": [],
+                }
+            }), 400
+        try:
+            dest_lat = float(dest_lat)
+        except (ValueError, TypeError):
+            return jsonify({
+                "error": {
+                    "code": "BAD_REQUEST",
+                    "message": "Field 'dest_lat' must be a valid float",
+                    "alternatives": [],
+                }
+            }), 400
+        if not (-90.0 <= dest_lat <= 90.0):
+            return jsonify({
+                "error": {
+                    "code": "BAD_REQUEST",
+                    "message": "Field 'dest_lat' must be between -90 and 90",
+                    "alternatives": [],
+                }
+            }), 400
+    else:
+        dest_lat = None
+
+    if dest_lng is not None and dest_lng != "":
+        if isinstance(dest_lng, bool):
+            return jsonify({
+                "error": {
+                    "code": "BAD_REQUEST",
+                    "message": "Field 'dest_lng' must be a valid number between -180 and 180",
+                    "alternatives": [],
+                }
+            }), 400
+        try:
+            dest_lng = float(dest_lng)
+        except (ValueError, TypeError):
+            return jsonify({
+                "error": {
+                    "code": "BAD_REQUEST",
+                    "message": "Field 'dest_lng' must be a valid float",
+                    "alternatives": [],
+                }
+            }), 400
+        if not (-180.0 <= dest_lng <= 180.0):
+            return jsonify({
+                "error": {
+                    "code": "BAD_REQUEST",
+                    "message": "Field 'dest_lng' must be between -180 and 180",
+                    "alternatives": [],
+                }
+            }), 400
+    else:
+        dest_lng = None
+
+    # 3c. Direct waitlist request
     if data.get("waitlist") is True:
         wait_record = {
             "employee_id": employee_id,
@@ -193,8 +257,8 @@ def create_booking_request():
             "end_time": end_utc,
             "blocked_until": blocked_until,
             "destination": destination,
-            "dest_lat": data.get("dest_lat"),
-            "dest_lng": data.get("dest_lng"),
+            "dest_lat": dest_lat,
+            "dest_lng": dest_lng,
             "passengers": passengers,
             "reason": reason,
             "type": booking_type,
@@ -224,8 +288,8 @@ def create_booking_request():
         type=booking_type,
         priority=priority,
         destination=destination,
-        dest_lat=data.get("dest_lat"),
-        dest_lng=data.get("dest_lng"),
+        dest_lat=dest_lat,
+        dest_lng=dest_lng,
         employee_id=employee_id,
         reason=reason,
     )
@@ -245,8 +309,8 @@ def create_booking_request():
                     "end_time": end_utc,
                     "blocked_until": blocked_until,
                     "destination": destination,
-                    "dest_lat": data.get("dest_lat"),
-                    "dest_lng": data.get("dest_lng"),
+                    "dest_lat": dest_lat,
+                    "dest_lng": dest_lng,
                     "passengers": passengers,
                     "reason": reason,
                     "type": "emergency",
@@ -286,8 +350,8 @@ def create_booking_request():
         "end_time": end_utc,
         "blocked_until": blocked_until,
         "destination": destination,
-        "dest_lat": data.get("dest_lat"),
-        "dest_lng": data.get("dest_lng"),
+        "dest_lat": dest_lat,
+        "dest_lng": dest_lng,
         "passengers": passengers,
         "reason": reason,
         "type": booking_type,

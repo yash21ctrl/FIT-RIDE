@@ -4,6 +4,7 @@ let currentGanttMode = 'vehicles'; // 'vehicles' | 'drivers'
 let allVehicles = [];
 let allDrivers = [];
 let pendingQueue = [];
+let ganttBookingsMap = {};
 let overridingBookingId = null;
 let rejectingBookingId = null;
 
@@ -24,7 +25,7 @@ async function checkManagerAuth() {
     if (res && res.profile) {
       if (res.profile.role !== 'manager') {
         alert('Access denied: You must be logged in as a Manager.');
-        api.clearToken();
+        api.clearAuth();
         showManagerLogin();
         return;
       }
@@ -56,6 +57,7 @@ async function quickLoginManager(identifier) {
     const res = await api.login(identifier, '123');
     if (res.role !== 'manager') {
       alert('Selected account is not a manager.');
+      api.clearAuth();
       return;
     }
     currentManagerProfile = res.profile;
@@ -83,6 +85,7 @@ async function handleManagerManualLogin(event) {
     const res = await api.login(idInput, passInput);
     if (res.role !== 'manager') {
       alert('Selected account is not a manager.');
+      api.clearAuth();
       return;
     }
     currentManagerProfile = res.profile;
@@ -99,7 +102,7 @@ async function handleManagerManualLogin(event) {
 }
 
 function handleManagerLogout() {
-  api.clearToken();
+  api.clearAuth();
   currentManagerProfile = null;
   showManagerLogin();
 }
@@ -209,17 +212,20 @@ function renderApprovalQueue() {
 
         <!-- Actions -->
         <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-          <button class="btn" style="background: #1e293b; color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);" onclick="openMgrRejectModal('${b.id}')">
-            ✕ Reject
-          </button>
-          <button class="btn" style="background: #1e293b; color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);" onclick="openOverrideModal('${b.id}')">
-            ✎ Override Assignment
-          </button>
           ${isPending ? `
+            <button class="btn" style="background: #1e293b; color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);" onclick="openMgrRejectModal('${b.id}')">
+              ✕ Reject
+            </button>
+            <button class="btn" style="background: #1e293b; color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);" onclick="openOverrideModal('${b.id}')">
+              ✎ Override Assignment
+            </button>
             <button class="btn" style="background: #10b981; color: white; font-weight: bold; padding: 0.6rem 1.5rem;" onclick="approveBooking('${b.id}')">
               ✓ Approve Request
             </button>
           ` : `
+            <button class="btn" style="background: #1e293b; color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);" onclick="openMgrRejectModal('${b.id}')">
+              ✕ Cancel Booking
+            </button>
             <button class="btn" style="background: #0284c7; color: white; font-weight: 600; padding: 0.6rem 1.25rem;" onclick="openOverrideModal('${b.id}')">
               ↻ Re-dispatch
             </button>
@@ -236,6 +242,7 @@ async function approveBooking(bookingId) {
     await api.post(`/api/manager/bookings/${bookingId}/approve`);
     alert('Booking approved! Dispatched to driver with response window.');
     await loadApprovalQueue();
+    await loadGanttData();
     await loadAlertsData();
   } catch (err) {
     alert(err.message || 'Approval failed');
@@ -243,18 +250,39 @@ async function approveBooking(bookingId) {
 }
 
 // Override Modal
-function openOverrideModal(bookingId) {
+async function openOverrideModal(bookingId) {
   overridingBookingId = bookingId;
   const vehSelect = document.getElementById('override-vehicle-select');
   const drvSelect = document.getElementById('override-driver-select');
 
-  vehSelect.innerHTML = allVehicles.map(v => `
-    <option value="${v.id}">${v.name} (${v.type.toUpperCase()}, ${v.capacity} seats, Status: ${v.status})</option>
-  `).join('');
+  if (!allVehicles.length || !allDrivers.length) {
+    try {
+      const [vRes, dRes] = await Promise.all([
+        api.get('/api/vehicles'),
+        api.get('/api/drivers')
+      ]);
+      allVehicles = vRes.vehicles || [];
+      allDrivers = dRes.drivers || [];
+    } catch (e) {
+      console.warn('Error fetching fleet for override modal:', e);
+    }
+  }
 
-  drvSelect.innerHTML = allDrivers.map(d => `
-    <option value="${d.id}">${d.name} (Status: ${d.status}, Rating: ★${d.rating_avg})</option>
-  `).join('');
+  const b = pendingQueue.find(x => x.id === bookingId) || ganttBookingsMap[bookingId];
+
+  vehSelect.innerHTML = allVehicles.map(v => {
+    const isSelected = b && (b.vehicle_id === v.id);
+    return `
+      <option value="${v.id}" ${isSelected ? 'selected' : ''}>${v.name} (${v.type.toUpperCase()}, ${v.capacity} seats, Status: ${v.status})</option>
+    `;
+  }).join('');
+
+  drvSelect.innerHTML = allDrivers.map(d => {
+    const isSelected = b && (b.driver_id === d.id || b.driver_id === d.profile_id);
+    return `
+      <option value="${d.id}" ${isSelected ? 'selected' : ''}>${d.name} (Status: ${d.status}, Rating: ★${d.rating_avg})</option>
+    `;
+  }).join('');
 
   document.getElementById('override-modal').style.display = 'flex';
 }
@@ -280,14 +308,20 @@ async function submitOverride() {
     alert('Assignment overridden successfully. Dispatched to new driver.');
     await loadApprovalQueue();
     await loadGanttData();
+    await loadAlertsData();
   } catch (err) {
     alert(`Override Error: ${err.message}`);
   }
 }
 
-// Reject Modal
+// Reject / Cancel Modal
 function openMgrRejectModal(bookingId) {
   rejectingBookingId = bookingId;
+  const b = pendingQueue.find(x => x.id === bookingId) || ganttBookingsMap[bookingId];
+  const title = document.querySelector('#mgr-reject-modal h3');
+  if (title) {
+    title.textContent = (b && b.status !== 'PENDING') ? 'Cancel Dispatched Booking' : 'Reject Booking Request';
+  }
   document.getElementById('mgr-reject-reason-input').value = '';
   document.getElementById('mgr-reject-modal').style.display = 'flex';
 }
@@ -301,21 +335,41 @@ async function submitMgrReject() {
   if (!rejectingBookingId) return;
   const reason = document.getElementById('mgr-reject-reason-input').value.trim();
   if (!reason) {
-    alert('Rejection reason note is required.');
+    alert('A reason note is required.');
     return;
   }
 
+  const b = pendingQueue.find(x => x.id === rejectingBookingId) || ganttBookingsMap[rejectingBookingId];
+  const isPending = !b || b.status === 'PENDING';
+
   try {
-    await api.post(`/api/manager/bookings/${rejectingBookingId}/reject`, {
-      reason: reason
-    });
+    if (isPending) {
+      await api.post(`/api/manager/bookings/${rejectingBookingId}/reject`, {
+        reason: reason
+      });
+      alert('Booking rejected and slot released.');
+    } else {
+      await api.post(`/api/bookings/${rejectingBookingId}/cancel`, {
+        note: reason
+      });
+      alert('Booking cancelled and slot released.');
+    }
     closeMgrRejectModal();
-    alert('Booking rejected and slot released.');
     await loadApprovalQueue();
     await loadGanttData();
     await loadAlertsData();
   } catch (err) {
-    alert(err.message || 'Rejection failed');
+    // If reject failed because not pending, try cancel
+    try {
+      await api.post(`/api/bookings/${rejectingBookingId}/cancel`, { note: reason });
+      closeMgrRejectModal();
+      alert('Booking cancelled and slot released.');
+      await loadApprovalQueue();
+      await loadGanttData();
+      await loadAlertsData();
+    } catch (err2) {
+      alert(err.message || 'Action failed');
+    }
   }
 }
 
@@ -332,6 +386,11 @@ function toggleGanttView(mode) {
 }
 
 async function loadGanttData() {
+  const datePicker = document.getElementById('gantt-date-picker');
+  if (datePicker && !datePicker.value) {
+    const todayIst = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    datePicker.value = todayIst;
+  }
   try {
     const res = await api.get('/api/manager/gantt');
     const vehicles = res.vehicles || [];
@@ -348,6 +407,11 @@ async function loadGanttData() {
 }
 
 function renderGanttChart(vehicles, drivers, bookings) {
+  ganttBookingsMap = {};
+  bookings.forEach(b => {
+    ganttBookingsMap[b.id] = b;
+  });
+
   const container = document.getElementById('gantt-rows-container');
   const rows = currentGanttMode === 'vehicles' ? vehicles : drivers;
 
@@ -356,13 +420,25 @@ function renderGanttChart(vehicles, drivers, bookings) {
     return;
   }
 
+  // Get date filter value if date picker exists
+  const datePicker = document.getElementById('gantt-date-picker');
+  const selectedDateStr = datePicker ? datePicker.value : null;
+
   container.innerHTML = rows.map(r => {
     // Find bookings assigned to this resource
     const rowBookings = bookings.filter(b => {
+      if (['CANCELLED', 'REJECTED'].includes(b.status)) return false;
+
+      // Filter by selected date in IST if specified
+      if (selectedDateStr) {
+        const istDate = new Date(b.start_time).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        if (istDate !== selectedDateStr) return false;
+      }
+
       if (currentGanttMode === 'vehicles') {
-        return b.vehicle_id === r.id && !['CANCELLED', 'REJECTED'].includes(b.status);
+        return String(b.vehicle_id) === String(r.id);
       } else {
-        return b.driver_id === r.id && !['CANCELLED', 'REJECTED'].includes(b.status);
+        return (String(b.driver_id) === String(r.id) || String(b.driver_id) === String(r.profile_id));
       }
     });
 
@@ -374,24 +450,34 @@ function renderGanttChart(vehicles, drivers, bookings) {
       const s = new Date(b.start_time);
       const e = new Date(b.end_time);
 
-      // Convert UTC to local IST hour fractions
-      const startHourLocal = s.getUTCHours() + (s.getUTCMinutes() / 60) + 5.5; // IST = UTC + 5.5
-      const endHourLocal = e.getUTCHours() + (e.getUTCMinutes() / 60) + 5.5;
+      // Convert UTC to local IST hour fractions cleanly
+      const istStartParts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Kolkata',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: false
+      }).formatToParts(s);
+      let sH = 0, sM = 0;
+      for (const p of istStartParts) {
+        if (p.type === 'hour') sH = parseInt(p.value, 10);
+        if (p.type === 'minute') sM = parseInt(p.value, 10);
+      }
+      if (sH === 24) sH = 0;
+      const startHourLocal = sH + (sM / 60);
 
-      const normStart = (startHourLocal % 24);
       let durationHours = (e.getTime() - s.getTime()) / 3600000;
       if (durationHours <= 0) durationHours = 1;
 
-      const leftPct = Math.max(0, Math.min(95, (normStart / 24) * 100));
+      const leftPct = Math.max(0, Math.min(95, (startHourLocal / 24) * 100));
       const widthPct = Math.max(3, Math.min(100 - leftPct, (durationHours / 24) * 100));
 
       const statusClass = `block-${b.status.toLowerCase()}`;
       return `
         <div class="gantt-booking-block ${statusClass}" 
              style="left: ${leftPct.toFixed(2)}%; width: ${widthPct.toFixed(2)}%;"
-             title="${b.destination} (${b.status})"
-             onclick='openGanttDetail(${JSON.stringify(b).replace(/'/g, "&#39;")})'>
-          ${b.destination} (${b.passengers}p)
+             title="${b.destination || 'Trip'} (${b.status})"
+             onclick="openGanttDetailById('${b.id}')">
+          ${b.destination || 'Trip'} (${b.passengers || 1}p)
         </div>
       `;
     }).join('');
@@ -413,21 +499,35 @@ function renderGanttChart(vehicles, drivers, bookings) {
   }).join('');
 }
 
-function openGanttDetail(b) {
-  document.getElementById('gantt-detail-title').textContent = b.destination;
+function openGanttDetailById(bookingId) {
+  const b = ganttBookingsMap[bookingId];
+  if (!b) return;
+  const esc = window.escapeHtml || (s => s || '');
+  document.getElementById('gantt-detail-title').textContent = b.destination || 'Booking Details';
   document.getElementById('gantt-detail-body').innerHTML = `
-    <div><strong>Status:</strong> <span class="badge" style="background:#1e293b; color:#38bdf8;">${b.status}</span></div>
-    <div><strong>Schedule (IST):</strong> ${FleetTime.formatIsoLocal(b.start_time)} to ${FleetTime.formatIsoLocal(b.end_time)}</div>
-    <div><strong>Passengers:</strong> ${b.passengers}</div>
-    <div><strong>Vehicle:</strong> ${b.vehicle_name || 'N/A'}</div>
-    <div><strong>Driver:</strong> ${b.driver_name || 'N/A'}</div>
-    <div><strong>Trip Purpose:</strong> ${b.reason}</div>
+    <div><strong>Booking ID:</strong> <span style="font-family: monospace; color: #38bdf8;">${esc(b.id)}</span></div>
+    <div><strong>Status:</strong> <span class="badge" style="background:#1e293b; color:#38bdf8;">${esc(b.status)}</span></div>
+    <div><strong>Employee:</strong> ${esc(b.employee_name || 'N/A')}</div>
+    <div><strong>Schedule (IST):</strong> ${FleetTime.formatLocal(b.start_time)} to ${FleetTime.formatLocal(b.end_time)}</div>
+    <div><strong>Passengers:</strong> ${esc(b.passengers)}</div>
+    <div><strong>Vehicle:</strong> ${esc(b.vehicle_name || 'N/A')}</div>
+    <div><strong>Driver:</strong> ${esc(b.driver_name || 'N/A')}</div>
+    <div><strong>Trip Purpose:</strong> ${esc(b.reason || 'N/A')}</div>
     <div style="margin-top: 0.75rem; padding: 0.75rem; background: #0f172a; border-radius: 8px; border: 1px solid #1e293b;">
       <div style="font-size: 0.8rem; color: #38bdf8; font-weight: bold; margin-bottom: 0.25rem;">DECISION LOG / REASON:</div>
-      <div style="font-size: 0.85rem; color: #cbd5e1;">${b.decision_reason || 'Standard booking confirmed.'}</div>
+      <div style="font-size: 0.85rem; color: #cbd5e1;">${esc(b.decision_reason || 'Standard booking confirmed.')}</div>
     </div>
   `;
   document.getElementById('gantt-detail-modal').style.display = 'flex';
+}
+
+function openGanttDetail(b) {
+  if (typeof b === 'string') {
+    openGanttDetailById(b);
+  } else if (b && b.id) {
+    ganttBookingsMap[b.id] = b;
+    openGanttDetailById(b.id);
+  }
 }
 
 function closeGanttDetailModal() {
@@ -494,50 +594,88 @@ function renderFleetLists() {
   const vContainer = document.getElementById('manager-vehicles-list');
   const dContainer = document.getElementById('manager-drivers-list');
 
+  const esc = window.escapeHtml || (s => s || '');
+
   vContainer.innerHTML = allVehicles.map(v => {
     const isMaint = v.status === 'maintenance';
+    const isRetired = v.status === 'retired';
+    const badgeClass = isRetired ? 'badge-retired' : (isMaint ? 'badge-maintenance' : 'badge-available');
     return `
       <div class="card" style="padding: 1rem; display: flex; justify-content: space-between; align-items: center; ${isMaint ? 'border-color: #f59e0b;' : ''}">
         <div>
-          <div style="font-weight: 700; color: #f8fafc; font-size: 1rem;">${v.name}</div>
+          <div style="font-weight: 700; color: #f8fafc; font-size: 1rem;">${esc(v.name)}</div>
           <div style="font-size: 0.8rem; color: #94a3b8;">
-            ${v.type.toUpperCase()} · ${v.capacity} Seats
+            ${esc(v.type).toUpperCase()} · ${esc(v.capacity)} Seats
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.6rem;">
-          <span class="badge ${isMaint ? 'status-break' : 'status-available'}">${v.status.toUpperCase()}</span>
-          <button class="btn" style="background: #1e293b; color: ${isMaint ? '#10b981' : '#f59e0b'}; font-size: 0.75rem; padding: 0.35rem 0.6rem;" onclick="toggleVehicleMaintenance('${v.id}', '${v.status}')">
-            ${isMaint ? 'Clear Maintenance' : 'Set Maintenance'}
-          </button>
+          <span class="badge ${badgeClass}">${esc(v.status).toUpperCase()}</span>
+          ${!isRetired ? `
+            <button class="btn" style="background: #1e293b; color: ${isMaint ? '#10b981' : '#f59e0b'}; font-size: 0.75rem; padding: 0.35rem 0.6rem;" onclick="toggleVehicleMaintenance('${v.id}', '${v.status}')">
+              ${isMaint ? 'Clear Maintenance' : 'Set Maintenance'}
+            </button>
+          ` : ''}
         </div>
       </div>
     `;
   }).join('');
 
   dContainer.innerHTML = allDrivers.map(d => {
+    const isOff = d.status === 'off';
+    const isAvailable = d.status === 'available';
+    const badgeClass = `badge-${(d.status || 'available').toLowerCase()}`;
     return `
       <div class="card" style="padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
         <div>
-          <div style="font-weight: 700; color: #f8fafc; font-size: 1rem;">${d.name}</div>
+          <div style="font-weight: 700; color: #f8fafc; font-size: 1rem;">${esc(d.name)}</div>
           <div style="font-size: 0.8rem; color: #94a3b8;">
-            License: ${d.license_no || 'N/A'} · Rating: ★ ${d.rating_avg}
+            License: ${esc(d.license_no || 'N/A')} · Rating: ★ ${esc(d.rating_avg)}
           </div>
         </div>
-        <span class="badge status-${d.status.toLowerCase()}">${d.status.toUpperCase()}</span>
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span class="badge ${badgeClass}">${esc(d.status).toUpperCase()}</span>
+          ${(isAvailable || isOff) ? `
+            <button class="btn" style="background: #1e293b; color: ${isOff ? '#10b981' : '#f87171'}; font-size: 0.75rem; padding: 0.35rem 0.6rem;" onclick="toggleDriverStatus('${d.id}', '${d.status}')">
+              ${isOff ? 'Set Available' : 'Set Off-Duty'}
+            </button>
+          ` : ''}
+        </div>
       </div>
     `;
   }).join('');
 }
 
+async function toggleDriverStatus(driverId, currentStatus) {
+  const newStatus = currentStatus === 'off' ? 'available' : 'off';
+  try {
+    await api.patch(`/api/drivers/${driverId}`, { status: newStatus });
+    alert(`Driver status updated to ${newStatus.toUpperCase()}.`);
+    await loadFleetData();
+    await loadGanttData();
+  } catch (err) {
+    alert(err.message || 'Failed to update driver status');
+  }
+}
+
 async function toggleVehicleMaintenance(vehicleId, currentStatus) {
   const newStatus = currentStatus === 'maintenance' ? 'available' : 'maintenance';
   try {
-    await api.patch(`/api/vehicles/${vehicleId}`, {
+    const res = await api.patch(`/api/vehicles/${vehicleId}`, {
       status: newStatus
     });
-    alert(`Vehicle status updated to ${newStatus}.`);
+    let alertMsg = `Vehicle status updated to ${newStatus}.`;
+    if (res.reallocation) {
+      const reallocCount = res.reallocation.reallocated || 0;
+      const waitCount = res.reallocation.waitlisted || 0;
+      if (reallocCount > 0 || waitCount > 0) {
+        alertMsg += `\n⚠️ Reallocated ${reallocCount} affected booking(s), moved ${waitCount} to waitlist.`;
+      }
+    }
+    alert(alertMsg);
     await loadFleetData();
     await loadGanttData();
+    await loadApprovalQueue();
+    await loadAlertsData();
   } catch (err) {
     alert(err.message || 'Failed to update vehicle');
   }

@@ -3,8 +3,11 @@
 Strictly enforces the State Transition Matrix defined in SPEC.md Section 3.
 Rule: No other code may update the booking status column directly.
 """
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Set
+
+logger = logging.getLogger(__name__)
 
 from app.config import get_app_config
 from app.db import (
@@ -391,7 +394,10 @@ def transition(
 
     # 6. Trigger waitlist auto-promotion on slot-freeing events AFTER database update
     if new_status in ("COMPLETED", "REJECTED", "CANCELLED", "BUMPED"):
-        from app.engine.waitlist import promote_waitlisted
-        promote_waitlisted(conn=conn)
+        try:
+            from app.engine.waitlist import promote_waitlisted
+            promote_waitlisted(conn=conn)
+        except Exception as exc:
+            logger.warning("Waitlist promotion failed during transition of booking %s: %s", bid, exc)
 
     return updated

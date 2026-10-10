@@ -185,7 +185,9 @@
                 <button type="button" class="preset-pill" onclick="app.setDuration(60)">1h</button>
                 <button type="button" class="preset-pill" onclick="app.setDuration(90)">1.5h</button>
                 <button type="button" class="preset-pill active" onclick="app.setDuration(120)">2h</button>
+                <button type="button" class="preset-pill" onclick="app.setDuration(150)">2.5h</button>
                 <button type="button" class="preset-pill" onclick="app.setDuration(180)">3h</button>
+                <button type="button" class="preset-pill" onclick="app.setDuration(210)">3.5h</button>
                 <button type="button" class="preset-pill" onclick="app.setDuration(240)">4h</button>
               </div>
             </div>
@@ -193,8 +195,8 @@
             <!-- End Time (Auto-calculated or editable) -->
             <div class="form-group">
               <label class="form-label" for="book-end-time">
-                End Time
-                <span class="helper">Calculated</span>
+                End Time (Return by)
+                <span class="helper">Auto-calculated</span>
               </label>
               <input type="time" id="book-end-time" class="form-control" step="1800" required>
             </div>
@@ -217,29 +219,70 @@
               </div>
             </div>
 
-            <!-- Destination -->
+            <!-- Destination with Round-Trip Guidance -->
             <div class="form-group full-width">
               <label class="form-label" for="book-destination">
                 Destination
-                <span class="helper">Preset Bangalore locations</span>
+                <span class="helper">Click a preset for estimated round-trip duration</span>
               </label>
               <input type="text" id="book-destination" class="form-control" placeholder="e.g. Kempegowda Airport (BLR)" required>
-              <div class="preset-pills">
-                <button type="button" class="preset-pill" onclick="app.setDestination('Bengaluru Tech Park', this)">Bengaluru Tech Park</button>
-                <button type="button" class="preset-pill" onclick="app.setDestination('Kempegowda Airport (BLR)', this)">Kempegowda Airport (BLR)</button>
-                <button type="button" class="preset-pill" onclick="app.setDestination('Electronic City Campus', this)">Electronic City Campus</button>
-                <button type="button" class="preset-pill" onclick="app.setDestination('Whitefield R&D Center', this)">Whitefield R&D Center</button>
-                <button type="button" class="preset-pill" onclick="app.setDestination('City Center HQ', this)">City Center HQ</button>
+              <div class="preset-pills" style="margin-top: 0.5rem;">
+                <button type="button" class="preset-pill" onclick="app.setDestination('Bengaluru Tech Park', 120, this)">
+                  🏢 Bengaluru Tech Park <span style="font-size:0.75rem; color:#38bdf8;">(~2h round-trip)</span>
+                </button>
+                <button type="button" class="preset-pill" onclick="app.setDestination('Kempegowda Airport (BLR)', 210, this)">
+                  ✈️ Kempegowda Airport <span style="font-size:0.75rem; color:#38bdf8;">(~3.5h round-trip)</span>
+                </button>
+                <button type="button" class="preset-pill" onclick="app.setDestination('Electronic City Campus', 150, this)">
+                  💻 Electronic City <span style="font-size:0.75rem; color:#38bdf8;">(~2.5h round-trip)</span>
+                </button>
+                <button type="button" class="preset-pill" onclick="app.setDestination('Whitefield R&D Center', 150, this)">
+                  🔬 Whitefield R&amp;D <span style="font-size:0.75rem; color:#38bdf8;">(~2.5h round-trip)</span>
+                </button>
+                <button type="button" class="preset-pill" onclick="app.setDestination('City Center HQ', 90, this)">
+                  🏙️ City Center HQ <span style="font-size:0.75rem; color:#38bdf8;">(~1.5h round-trip)</span>
+                </button>
               </div>
             </div>
 
             <!-- Trip Reason -->
             <div class="form-group full-width">
               <label class="form-label" for="book-reason">
-                Trip Purpose & Justification
+                Trip Purpose &amp; Justification
                 <span class="helper">Mandatory</span>
               </label>
               <textarea id="book-reason" class="form-control" placeholder="Describe the business need or emergency justification..." required>Client meeting & technical presentation</textarea>
+            </div>
+          </div>
+
+          <!-- Live Trip Schedule Summary Banner -->
+          <div id="trip-schedule-summary-card" style="margin-top: 1.5rem; background: #0f172a; border: 1px solid #1e293b; border-left: 4px solid #38bdf8; border-radius: 12px; padding: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <div style="font-size: 0.85rem; font-weight: 700; color: #38bdf8; text-transform: uppercase; display: flex; align-items: center; gap: 0.4rem;">
+                <span>⏱️</span> Trip Schedule Preview
+              </div>
+              <span id="summary-date-display" class="badge" style="background: #1e293b; color: #cbd5e1; font-size: 0.8rem;">Today</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem; text-align: center; background: #090d16; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid #1e293b;">
+              <div style="text-align: left;">
+                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;">Trip Starts (Departure)</div>
+                <div id="summary-start-display" style="font-size: 1.25rem; font-weight: bold; color: #f8fafc; margin-top: 0.15rem;">--:--</div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; align-items: center;">
+                <span id="summary-duration-display" class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 0.8rem; font-weight: 600;">2 hours</span>
+                <div style="color: #64748b; font-size: 1rem; margin-top: 0.2rem;">────────▶</div>
+              </div>
+
+              <div style="text-align: right;">
+                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;">Trip Ends (Return By)</div>
+                <div id="summary-end-display" style="font-size: 1.25rem; font-weight: bold; color: #10b981; margin-top: 0.15rem;">--:--</div>
+              </div>
+            </div>
+
+            <div id="summary-destination-note" style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.6rem; display: flex; align-items: center; gap: 0.4rem;">
+              <span>💡</span> The vehicle and driver will be reserved for your team for the full duration above.
             </div>
           </div>
 

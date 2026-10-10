@@ -87,6 +87,16 @@ def add_vehicle():
             }
         }), 400
 
+    custom_vid = str(data.get("id") or "").strip()
+    if custom_vid and get_vehicle_by_id(custom_vid):
+        return jsonify({
+            "error": {
+                "code": "CONFLICT",
+                "message": f"Vehicle with ID '{custom_vid}' already exists",
+                "alternatives": [],
+            }
+        }), 409
+
     name = data.get("name")
     if not name or not isinstance(name, str) or not name.strip():
         return jsonify({

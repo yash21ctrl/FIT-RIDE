@@ -50,6 +50,13 @@ const FleetTime = {
   },
 
   /**
+   * Alias for formatLocal for backwards compatibility.
+   */
+  formatIsoLocal(utcIsoStr, showSeconds = false) {
+    return this.formatLocal(utcIsoStr, showSeconds);
+  },
+
+  /**
    * Format just the time part in Asia/Kolkata (e.g. "10:30 AM")
    */
   formatLocalTime(utcIsoStr) {
@@ -97,6 +104,20 @@ const FleetTime = {
     if (hours > 0 && mins > 0) return `${hours}h ${mins}m`;
     if (hours > 0) return `${hours}h`;
     return `${mins}m`;
+  },
+
+  /**
+   * Calculate difference in minutes between two local HH:MM strings.
+   * Handles next-day rollover if end < start.
+   */
+  diffMinutesLocal(startTimeStr, endTimeStr) {
+    if (!startTimeStr || !endTimeStr) return 0;
+    const [sh, sm] = startTimeStr.split(':').map(Number);
+    const [eh, em] = endTimeStr.split(':').map(Number);
+    let sMin = sh * 60 + sm;
+    let eMin = eh * 60 + em;
+    if (eMin < sMin) eMin += 24 * 60;
+    return eMin - sMin;
   },
 
   /**
@@ -168,29 +189,34 @@ const FleetTime = {
    * If endTimeStr <= startTimeStr, the trip crosses midnight into the next day.
    */
   calculateEndUtcIso(startDateStr, startTimeStr, endTimeStr, durationMinutes = null) {
-    if (startDateStr && startTimeStr && durationMinutes) {
-      return this.addDuration(startDateStr, startTimeStr, durationMinutes).utcIso;
-    }
     const startUtc = this.toUtcIso(startDateStr, startTimeStr);
     if (!startUtc) return null;
 
-    let endUtc = this.toUtcIso(startDateStr, endTimeStr);
-    if (new Date(endUtc) <= new Date(startUtc)) {
-      // Midnight crossing: end date is next calendar day (+24 hours)
-      const nextDayStartDate = new Date(new Date(startUtc).getTime() + 24 * 60 * 60 * 1000);
-      const formatter = new Intl.DateTimeFormat('en-CA', {
-        timeZone: this.TIMEZONE,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      });
-      const parts = formatter.formatToParts(nextDayStartDate);
-      const map = {};
-      for (const p of parts) map[p.type] = p.value;
-      const nextDateStr = `${map.year}-${map.month}-${map.day}`;
-      endUtc = this.toUtcIso(nextDateStr, endTimeStr);
+    if (endTimeStr && String(endTimeStr).trim()) {
+      let endUtc = this.toUtcIso(startDateStr, endTimeStr);
+      if (new Date(endUtc) <= new Date(startUtc)) {
+        // Midnight crossing: end date is next calendar day (+24 hours)
+        const nextDayStartDate = new Date(new Date(startUtc).getTime() + 24 * 60 * 60 * 1000);
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: this.TIMEZONE,
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        });
+        const parts = formatter.formatToParts(nextDayStartDate);
+        const map = {};
+        for (const p of parts) map[p.type] = p.value;
+        const nextDateStr = `${map.year}-${map.month}-${map.day}`;
+        endUtc = this.toUtcIso(nextDateStr, endTimeStr);
+      }
+      return endUtc;
     }
-    return endUtc;
+
+    if (durationMinutes) {
+      return this.addDuration(startDateStr, startTimeStr, durationMinutes).utcIso;
+    }
+
+    return null;
   },
 };
 

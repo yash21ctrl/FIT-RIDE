@@ -48,11 +48,11 @@ def submit_rating():
     d_rate = data.get("driver_rating") or data.get("rating")
     v_rate = data.get("vehicle_rating") or d_rate or 5
 
-    if d_rate is None:
+    if d_rate is None or isinstance(d_rate, bool) or isinstance(v_rate, bool):
         return jsonify({
             "error": {
                 "code": "BAD_REQUEST",
-                "message": "driver_rating is required",
+                "message": "driver_rating is required and must be an integer between 1 and 5",
                 "alternatives": [],
             }
         }), 400

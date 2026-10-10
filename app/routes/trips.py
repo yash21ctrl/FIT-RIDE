@@ -89,6 +89,14 @@ def start_trip(booking_id: str):
     checklist = data.get("checklist")
 
     if start_odo is not None:
+        if isinstance(start_odo, bool):
+            return jsonify({
+                "error": {
+                    "code": "BAD_REQUEST",
+                    "message": "start_odometer must be a non-negative number",
+                    "alternatives": [],
+                }
+            }), 400
         try:
             start_odo = float(start_odo)
             if start_odo < 0:
@@ -174,6 +182,14 @@ def end_trip(booking_id: str):
     fuel = data.get("fuel_added")
 
     if end_odo is not None:
+        if isinstance(end_odo, bool):
+            return jsonify({
+                "error": {
+                    "code": "BAD_REQUEST",
+                    "message": "end_odometer must be a non-negative number",
+                    "alternatives": [],
+                }
+            }), 400
         try:
             end_odo = float(end_odo)
             if end_odo < 0:
@@ -201,6 +217,14 @@ def end_trip(booking_id: str):
                 }), 400
 
     if fuel is not None:
+        if isinstance(fuel, bool):
+            return jsonify({
+                "error": {
+                    "code": "BAD_REQUEST",
+                    "message": "fuel_added must be a non-negative number",
+                    "alternatives": [],
+                }
+            }), 400
         try:
             fuel = float(fuel)
             if fuel < 0:
@@ -273,12 +297,23 @@ def post_location(booking_id: str):
 
     saved = []
     for loc in locations_to_add:
+        if not isinstance(loc, dict):
+            continue
         lat = loc.get("latitude") if "latitude" in loc else loc.get("lat")
         lng = loc.get("longitude") if "longitude" in loc else loc.get("lng")
         if lat is None or lng is None:
             continue
+        if isinstance(lat, bool) or isinstance(lng, bool):
+            continue
+        try:
+            flat = float(lat)
+            flng = float(lng)
+            if not (-90.0 <= flat <= 90.0) or not (-180.0 <= flng <= 180.0):
+                continue
+        except (ValueError, TypeError):
+            continue
         rec_at = loc.get("timestamp") or loc.get("recorded_at")
-        entry = add_trip_location(booking_id, float(lat), float(lng), recorded_at=rec_at)
+        entry = add_trip_location(booking_id, flat, flng, recorded_at=rec_at)
         saved.append(entry)
 
     return jsonify({"saved_count": len(saved), "locations": saved}), 201
@@ -300,7 +335,15 @@ def get_location(booking_id: str):
             }
         }), 404
 
-    limit = int(request.args.get("limit", 100))
+    limit_raw = request.args.get("limit", 100)
+    try:
+        limit = int(limit_raw)
+        if limit <= 0:
+            limit = 100
+        limit = min(limit, 1000)
+    except (ValueError, TypeError):
+        limit = 100
+
     locs = get_trip_locations(booking_id, limit=limit)
     latest = locs[-1] if locs else None
 
@@ -341,7 +384,7 @@ def rate_trip(booking_id: str):
     d_rate = data.get("driver_rating") or data.get("rating")
     v_rate = data.get("vehicle_rating") or d_rate or 5
 
-    if d_rate is None:
+    if d_rate is None or isinstance(d_rate, bool) or isinstance(v_rate, bool):
         return jsonify({
             "error": {
                 "code": "BAD_REQUEST",

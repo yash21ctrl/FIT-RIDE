@@ -651,6 +651,69 @@ textarea.form-control {
   border-color: var(--status-rejected-border);
 }
 
+.badge-available,
+.status-available {
+  background: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.badge-maintenance,
+.status-maintenance,
+.badge-break,
+.status-break {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.badge-retired,
+.status-retired {
+  background: rgba(100, 116, 139, 0.2);
+  color: #94a3b8;
+  border-color: rgba(100, 116, 139, 0.4);
+}
+
+.badge-off,
+.status-off {
+  background: rgba(239, 68, 68, 0.16);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.badge-on_trip,
+.status-on_trip,
+.badge-on-trip,
+.status-on-trip {
+  background: rgba(59, 130, 246, 0.18);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.badge-success {
+  background: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.badge-neutral {
+  background: rgba(100, 116, 139, 0.2);
+  color: #cbd5e1;
+  border-color: rgba(100, 116, 139, 0.4);
+}
+
+.badge-danger {
+  background: rgba(239, 68, 68, 0.16);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
 /* Result Screen Layout */
 .result-box {
   animation: fadeIn var(--duration-normal) var(--ease-out);

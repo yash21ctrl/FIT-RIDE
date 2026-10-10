@@ -2,7 +2,7 @@
 import uuid
 from flask import Blueprint, jsonify, request
 from app.auth import require_role
-from app.db import get_all_profiles, create_profile
+from app.db import get_all_profiles, create_profile, get_profile_by_id, get_profile_by_email
 
 employees_bp = Blueprint("employees", __name__, url_prefix="/api/employees")
 
@@ -43,6 +43,24 @@ def add_employee():
     custom_id = str(data.get("id") or "").strip() or str(uuid.uuid4())
     email = str(data.get("email", "")).strip() or f"{custom_id}@fleetride.local"
     phone = str(data.get("phone", "")).strip() or None
+
+    if get_profile_by_id(custom_id):
+        return jsonify({
+            "error": {
+                "code": "CONFLICT",
+                "message": f"Profile with ID '{custom_id}' already exists",
+                "alternatives": [],
+            }
+        }), 409
+
+    if get_profile_by_email(email):
+        return jsonify({
+            "error": {
+                "code": "CONFLICT",
+                "message": f"Profile with email '{email}' already exists",
+                "alternatives": [],
+            }
+        }), 409
 
     profile_data = {
         "id": custom_id,

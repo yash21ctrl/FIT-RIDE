@@ -71,8 +71,26 @@ def trip_merge_check():
     dest_lat = data.get("dest_lat")
     dest_lng = data.get("dest_lng")
     start_raw = data.get("start_time") or data.get("start")
-    passengers = int(data.get("passengers", 1))
-    radius_km = float(data.get("merge_radius_km", 2.0))
+
+    try:
+        pax_raw = data.get("passengers", 1)
+        if isinstance(pax_raw, bool):
+            raise ValueError()
+        passengers = int(pax_raw)
+        if passengers <= 0:
+            passengers = 1
+    except (ValueError, TypeError):
+        passengers = 1
+
+    try:
+        rad_raw = data.get("merge_radius_km", 2.0)
+        if isinstance(rad_raw, bool):
+            raise ValueError()
+        radius_km = float(rad_raw)
+        if radius_km <= 0:
+            radius_km = 2.0
+    except (ValueError, TypeError):
+        radius_km = 2.0
 
     if dest_lat is None or dest_lng is None or not start_raw:
         return jsonify({
@@ -80,6 +98,24 @@ def trip_merge_check():
             "message": "dest_lat, dest_lng, and start_time are required for proximity check",
             "candidates": [],
         }), 200
+
+    try:
+        if isinstance(dest_lat, bool) or isinstance(dest_lng, bool):
+            raise ValueError()
+        dest_lat = float(dest_lat)
+        dest_lng = float(dest_lng)
+        if not (-90.0 <= dest_lat <= 90.0) or not (-180.0 <= dest_lng <= 180.0):
+            return jsonify({
+                "mergeable": False,
+                "message": "dest_lat must be between -90 and 90, and dest_lng between -180 and 180",
+                "candidates": [],
+            }), 400
+    except (ValueError, TypeError):
+        return jsonify({
+            "mergeable": False,
+            "message": "dest_lat and dest_lng must be valid floating numbers",
+            "candidates": [],
+        }), 400
 
     start_dt = _to_utc_dt(start_raw)
     if not start_dt:
@@ -94,7 +130,13 @@ def trip_merge_check():
         if b_lat is None or b_lng is None:
             continue
 
-        dist_km = haversine_km(float(dest_lat), float(dest_lng), float(b_lat), float(b_lng))
+        try:
+            fb_lat = float(b_lat)
+            fb_lng = float(b_lng)
+        except (ValueError, TypeError):
+            continue
+
+        dist_km = haversine_km(dest_lat, dest_lng, fb_lat, fb_lng)
         b_st = _to_utc_dt(b.get("start_time"))
         if not b_st:
             continue
@@ -336,8 +378,8 @@ def simulate_chaos():
         t5_start = base_time + timedelta(days=1)
         t5_end = t5_start + timedelta(hours=2)
 
-        # Booking on Bolero
-        bolero_id = "00000000-0000-0000-0001-000000000005"
+        # Booking on Bolero (SEED_VEHICLES 00000000-0000-0001-000000000004)
+        bolero_id = "00000000-0000-0000-0001-000000000004"
         b_bolero = create_booking({
             "employee_id": "00000000-0000-0000-0003-000000000001",
             "vehicle_id": bolero_id,

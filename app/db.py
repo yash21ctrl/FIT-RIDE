@@ -1,3 +1,4 @@
+import logging
 import os
 import threading
 import uuid
@@ -6,6 +7,8 @@ from typing import Any, Dict, List, Optional
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from app.config import DATABASE_URL, SUPABASE_URL, SUPABASE_SERVICE_KEY, SUPABASE_ANON_KEY
+
+logger = logging.getLogger(__name__)
 
 
 # Canonical seed profiles matching migrations/003_seed.sql
@@ -405,10 +408,12 @@ def create_profile(profile_data: Dict[str, Any], conn=None) -> Dict[str, Any]:
                     res["id"] = str(res["id"])
                     res["email"] = record["email"]
                     return res
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("Database insert profile failed, falling back to memory: %s", exc)
+            if conn:
+                conn.rollback()
         finally:
-            if close_conn:
+            if close_conn and conn:
                 conn.close()
 
     # In-memory execution
@@ -435,32 +440,34 @@ def query_vehicles(conn=None) -> List[Dict[str, Any]]:
         if conn is not None:
             close_conn = True
 
-    if conn is None:
-        return [
-            dict(v) for v in _in_memory_vehicles.values()
-            if v.get("status") != "retired"
-        ]
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT id, name, type, capacity, status, maintenance_until, odometer_km
+                    FROM vehicles
+                    WHERE status != 'retired'
+                    ORDER BY capacity ASC, name ASC;
+                """)
+                rows = cur.fetchall()
+                result = []
+                for r in rows:
+                    item = dict(r)
+                    item["id"] = str(item["id"])
+                    if item.get("odometer_km") is not None:
+                        item["odometer_km"] = float(item["odometer_km"])
+                    result.append(item)
+                return result
+        except Exception as exc:
+            logger.debug("query_vehicles database error, falling back to memory: %s", exc)
+        finally:
+            if close_conn and conn:
+                conn.close()
 
-    try:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("""
-                SELECT id, name, type, capacity, status, maintenance_until, odometer_km
-                FROM vehicles
-                WHERE status != 'retired'
-                ORDER BY capacity ASC, name ASC;
-            """)
-            rows = cur.fetchall()
-            result = []
-            for r in rows:
-                item = dict(r)
-                item["id"] = str(item["id"])
-                if item.get("odometer_km") is not None:
-                    item["odometer_km"] = float(item["odometer_km"])
-                result.append(item)
-            return result
-    finally:
-        if close_conn and conn:
-            conn.close()
+    return [
+        dict(v) for v in _in_memory_vehicles.values()
+        if v.get("status") != "retired"
+    ]
 
 
 def get_all_vehicles(conn=None) -> List[Dict[str, Any]]:
@@ -471,30 +478,32 @@ def get_all_vehicles(conn=None) -> List[Dict[str, Any]]:
         if conn is not None:
             close_conn = True
 
-    if conn is None:
-        res = [dict(v) for v in _in_memory_vehicles.values()]
-        res.sort(key=lambda x: (x.get("capacity", 0), x.get("name", "")))
-        return res
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT id, name, type, capacity, status, maintenance_until, odometer_km
+                    FROM vehicles
+                    ORDER BY capacity ASC, name ASC;
+                """)
+                rows = cur.fetchall()
+                result = []
+                for r in rows:
+                    item = dict(r)
+                    item["id"] = str(item["id"])
+                    if item.get("odometer_km") is not None:
+                        item["odometer_km"] = float(item["odometer_km"])
+                    result.append(item)
+                return result
+        except Exception as exc:
+            logger.debug("get_all_vehicles database error, falling back to memory: %s", exc)
+        finally:
+            if close_conn and conn:
+                conn.close()
 
-    try:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("""
-                SELECT id, name, type, capacity, status, maintenance_until, odometer_km
-                FROM vehicles
-                ORDER BY capacity ASC, name ASC;
-            """)
-            rows = cur.fetchall()
-            result = []
-            for r in rows:
-                item = dict(r)
-                item["id"] = str(item["id"])
-                if item.get("odometer_km") is not None:
-                    item["odometer_km"] = float(item["odometer_km"])
-                result.append(item)
-            return result
-    finally:
-        if close_conn and conn:
-            conn.close()
+    res = [dict(v) for v in _in_memory_vehicles.values()]
+    res.sort(key=lambda x: (x.get("capacity", 0), x.get("name", "")))
+    return res
 
 
 def get_vehicle_by_id(vehicle_id: str, conn=None) -> Optional[Dict[str, Any]]:
@@ -651,40 +660,42 @@ def query_drivers(conn=None) -> List[Dict[str, Any]]:
         if conn is not None:
             close_conn = True
 
-    if conn is None:
-        res = []
-        for d in _in_memory_drivers.values():
-            if d.get("status") != "off":
-                prof = _in_memory_profiles.get(d["profile_id"], {})
-                item = dict(d)
-                item["name"] = prof.get("name", "")
-                item["phone"] = prof.get("phone", "")
-                res.append(item)
-        res.sort(key=lambda x: x.get("rating_avg", 0), reverse=True)
-        return res
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT d.id, d.profile_id, d.status, d.license_no, d.rating_avg, p.name, p.phone
+                    FROM drivers d
+                    JOIN profiles p ON d.profile_id = p.id
+                    WHERE d.status != 'off'
+                    ORDER BY d.rating_avg DESC;
+                """)
+                rows = cur.fetchall()
+                result = []
+                for r in rows:
+                    item = dict(r)
+                    item["id"] = str(item["id"])
+                    item["profile_id"] = str(item["profile_id"])
+                    if item.get("rating_avg") is not None:
+                        item["rating_avg"] = float(item["rating_avg"])
+                    result.append(item)
+                return result
+        except Exception as exc:
+            logger.debug("query_drivers database error, falling back to memory: %s", exc)
+        finally:
+            if close_conn and conn:
+                conn.close()
 
-    try:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("""
-                SELECT d.id, d.profile_id, d.status, d.license_no, d.rating_avg, p.name, p.phone
-                FROM drivers d
-                JOIN profiles p ON d.profile_id = p.id
-                WHERE d.status != 'off'
-                ORDER BY d.rating_avg DESC;
-            """)
-            rows = cur.fetchall()
-            result = []
-            for r in rows:
-                item = dict(r)
-                item["id"] = str(item["id"])
-                item["profile_id"] = str(item["profile_id"])
-                if item.get("rating_avg") is not None:
-                    item["rating_avg"] = float(item["rating_avg"])
-                result.append(item)
-            return result
-    finally:
-        if close_conn and conn:
-            conn.close()
+    res = []
+    for d in _in_memory_drivers.values():
+        if d.get("status") != "off":
+            prof = _in_memory_profiles.get(d["profile_id"], {})
+            item = dict(d)
+            item["name"] = prof.get("name", "")
+            item["phone"] = prof.get("phone", "")
+            res.append(item)
+    res.sort(key=lambda x: x.get("rating_avg", 0), reverse=True)
+    return res
 
 
 def get_all_drivers(conn=None) -> List[Dict[str, Any]]:
@@ -695,39 +706,41 @@ def get_all_drivers(conn=None) -> List[Dict[str, Any]]:
         if conn is not None:
             close_conn = True
 
-    if conn is None:
-        res = []
-        for d in _in_memory_drivers.values():
-            prof = _in_memory_profiles.get(d["profile_id"], {})
-            item = dict(d)
-            item["name"] = prof.get("name", "")
-            item["phone"] = prof.get("phone", "")
-            item["role"] = prof.get("role", "driver")
-            res.append(item)
-        res.sort(key=lambda x: x.get("rating_avg", 0), reverse=True)
-        return res
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT d.id, d.profile_id, d.status, d.license_no, d.rating_avg, p.name, p.phone, p.role
+                    FROM drivers d
+                    JOIN profiles p ON d.profile_id = p.id
+                    ORDER BY d.rating_avg DESC;
+                """)
+                rows = cur.fetchall()
+                result = []
+                for r in rows:
+                    item = dict(r)
+                    item["id"] = str(item["id"])
+                    item["profile_id"] = str(item["profile_id"])
+                    if item.get("rating_avg") is not None:
+                        item["rating_avg"] = float(item["rating_avg"])
+                    result.append(item)
+                return result
+        except Exception as exc:
+            logger.debug("get_all_drivers database error, falling back to memory: %s", exc)
+        finally:
+            if close_conn and conn:
+                conn.close()
 
-    try:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("""
-                SELECT d.id, d.profile_id, d.status, d.license_no, d.rating_avg, p.name, p.phone, p.role
-                FROM drivers d
-                JOIN profiles p ON d.profile_id = p.id
-                ORDER BY d.rating_avg DESC;
-            """)
-            rows = cur.fetchall()
-            result = []
-            for r in rows:
-                item = dict(r)
-                item["id"] = str(item["id"])
-                item["profile_id"] = str(item["profile_id"])
-                if item.get("rating_avg") is not None:
-                    item["rating_avg"] = float(item["rating_avg"])
-                result.append(item)
-            return result
-    finally:
-        if close_conn and conn:
-            conn.close()
+    res = []
+    for d in _in_memory_drivers.values():
+        prof = _in_memory_profiles.get(d["profile_id"], {})
+        item = dict(d)
+        item["name"] = prof.get("name", "")
+        item["phone"] = prof.get("phone", "")
+        item["role"] = prof.get("role", "driver")
+        res.append(item)
+    res.sort(key=lambda x: x.get("rating_avg", 0), reverse=True)
+    return res
 
 
 def get_driver_by_id(driver_id: str, conn=None) -> Optional[Dict[str, Any]]:
@@ -748,8 +761,8 @@ def get_driver_by_id(driver_id: str, conn=None) -> Optional[Dict[str, Any]]:
                     SELECT d.id, d.profile_id, d.status, d.license_no, d.rating_avg, p.name, p.phone, p.role
                     FROM drivers d
                     JOIN profiles p ON d.profile_id = p.id
-                    WHERE d.id = %s;
-                """, (driver_id,))
+                    WHERE d.id = %s OR d.profile_id = %s;
+                """, (driver_id, driver_id))
                 row = cur.fetchone()
                 if row:
                     item = dict(row)
@@ -765,6 +778,11 @@ def get_driver_by_id(driver_id: str, conn=None) -> Optional[Dict[str, Any]]:
                 conn.close()
 
     d = _in_memory_drivers.get(str(driver_id))
+    if not d:
+        for cand in _in_memory_drivers.values():
+            if str(cand.get("profile_id")) == str(driver_id):
+                d = cand
+                break
     if not d:
         return None
     prof = _in_memory_profiles.get(d["profile_id"], {})

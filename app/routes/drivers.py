@@ -112,14 +112,34 @@ def add_driver():
                     "alternatives": [],
                 }
             }), 400
-        from app.db import create_profile
+        from app.db import create_profile, get_profile_by_email
         drv_custom_id = str(data.get("id") or "").strip()
+        drv_email = str(data.get("email", "")).strip() or f"driver_{driver_name.lower().replace(' ', '')}@fleetride.local"
+
+        if drv_custom_id and get_profile_by_id(drv_custom_id):
+            return jsonify({
+                "error": {
+                    "code": "CONFLICT",
+                    "message": f"Profile with ID '{drv_custom_id}' already exists",
+                    "alternatives": [],
+                }
+            }), 409
+
+        if drv_email and get_profile_by_email(drv_email):
+            return jsonify({
+                "error": {
+                    "code": "CONFLICT",
+                    "message": f"Profile with email '{drv_email}' already exists",
+                    "alternatives": [],
+                }
+            }), 409
+
         new_prof = create_profile({
             "id": drv_custom_id or None,
             "name": driver_name,
             "role": "driver",
             "phone": str(data.get("phone", "")).strip() or None,
-            "email": str(data.get("email", "")).strip() or f"driver_{driver_name.lower().replace(' ', '')}@fleetride.local",
+            "email": drv_email,
         })
         profile_id = new_prof["id"]
         profile = new_prof
@@ -155,7 +175,7 @@ def add_driver():
         }), 400
 
     rating_avg = data.get("rating_avg", 5.0)
-    if not isinstance(rating_avg, (int, float)) or rating_avg < 1.0 or rating_avg > 5.0:
+    if isinstance(rating_avg, bool) or not isinstance(rating_avg, (int, float)) or rating_avg < 1.0 or rating_avg > 5.0:
         return jsonify({
             "error": {
                 "code": "BAD_REQUEST",

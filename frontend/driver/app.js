@@ -82,7 +82,7 @@ async function checkDriverAuth() {
     if (res && res.profile) {
       if (res.profile.role !== 'driver') {
         alert('Access denied: You must be logged in as a driver.');
-        api.clearToken();
+        api.clearAuth();
         showDriverLogin();
         return;
       }
@@ -117,6 +117,7 @@ async function quickLoginDriver(identifier) {
     const res = await api.login(identifier, '123');
     if (res.role !== 'driver') {
       alert('Selected account is not a driver.');
+      api.clearAuth();
       return;
     }
     currentDriverProfile = res.profile;
@@ -146,6 +147,7 @@ async function handleDriverManualLogin(event) {
     const res = await api.login(idInput, passInput);
     if (res.role !== 'driver') {
       alert('Selected account is not a driver.');
+      api.clearAuth();
       return;
     }
     currentDriverProfile = res.profile;
@@ -162,7 +164,7 @@ async function handleDriverManualLogin(event) {
 }
 
 function handleDriverLogout() {
-  api.clearToken();
+  api.clearAuth();
   currentDriverProfile = null;
   currentDriverRecord = null;
   assignedRequests = [];
@@ -315,6 +317,7 @@ function renderRequestsList() {
   badge.style.display = 'inline-block';
   badge.textContent = assignedRequests.length;
 
+  const esc = window.escapeHtml || (s => s || '');
   container.innerHTML = assignedRequests.map(req => {
     const isEmergency = req.type === 'emergency' || req.priority === 'emergency';
     return `
@@ -323,17 +326,17 @@ function renderRequestsList() {
         
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
           <div>
-            <div style="font-size: 1.15rem; font-weight: 800; color: #f8fafc;">${req.destination}</div>
-            <div style="font-size: 0.85rem; color: #94a3b8;">${req.passengers} Passengers · ${req.vehicle_name || 'Assigned Vehicle'}</div>
+            <div style="font-size: 1.15rem; font-weight: 800; color: #f8fafc;">${esc(req.destination)}</div>
+            <div style="font-size: 0.85rem; color: #94a3b8;">${esc(req.passengers)} Passengers · ${esc(req.vehicle_name || 'Assigned Vehicle')}</div>
           </div>
-          <div class="countdown-timer" data-respond-by="${req.respond_by || ''}">
+          <div class="countdown-timer" data-respond-by="${esc(req.respond_by || '')}">
             --:--
           </div>
         </div>
 
         <div style="background: #1e293b; padding: 0.75rem; border-radius: 10px; margin-bottom: 1rem; font-size: 0.85rem; color: #cbd5e1;">
           <div><strong>Schedule:</strong> ${FleetTime.formatIsoLocal(req.start_time)} to ${FleetTime.formatIsoLocal(req.end_time)}</div>
-          <div><strong>Purpose:</strong> ${req.reason}</div>
+          <div><strong>Purpose:</strong> ${esc(req.reason)}</div>
         </div>
 
         <div style="display: flex; gap: 0.75rem;">
@@ -438,6 +441,7 @@ function renderActiveTripView() {
   const b = activeTripBooking;
   const isConfirmed = b.status === 'CONFIRMED';
   const isInProgress = b.status === 'IN_PROGRESS';
+  const esc = window.escapeHtml || (s => s || '');
 
   if (isConfirmed) {
     container.innerHTML = `
@@ -447,9 +451,9 @@ function renderActiveTripView() {
           <span class="driver-status-badge status-available">CONFIRMED</span>
         </div>
 
-        <h3 style="font-size: 1.3rem; margin: 0 0 0.5rem; color: #f8fafc;">${b.destination}</h3>
+        <h3 style="font-size: 1.3rem; margin: 0 0 0.5rem; color: #f8fafc;">${esc(b.destination)}</h3>
         <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1.25rem;">
-          Vehicle: <strong>${b.vehicle_name || 'Fleet Vehicle'}</strong> · ${b.passengers} Passengers
+          Vehicle: <strong>${esc(b.vehicle_name || 'Fleet Vehicle')}</strong> · ${esc(b.passengers)} Passengers
         </p>
 
         <!-- Checklist -->
@@ -488,9 +492,9 @@ function renderActiveTripView() {
           <span class="driver-status-badge status-on_trip">ON TRIP</span>
         </div>
 
-        <h3 style="font-size: 1.3rem; margin: 0 0 0.5rem; color: #f8fafc;">${b.destination}</h3>
+        <h3 style="font-size: 1.3rem; margin: 0 0 0.5rem; color: #f8fafc;">${esc(b.destination)}</h3>
         <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1.25rem;">
-          Vehicle: <strong>${b.vehicle_name || 'Fleet Vehicle'}</strong> · Telemetry active
+          Vehicle: <strong>${esc(b.vehicle_name || 'Fleet Vehicle')}</strong> · Telemetry active
         </p>
 
         <!-- Live Telemetry Card -->
@@ -549,6 +553,7 @@ async function renderScheduleView() {
   try {
     const res = await api.get('/api/bookings/mine');
     const trips = res.bookings || [];
+    const esc = window.escapeHtml || (s => s || '');
 
     if (trips.length === 0) {
       container.innerHTML = '<p style="color: #94a3b8; font-size: 0.9rem;">No scheduled trips recorded.</p>';
@@ -558,8 +563,8 @@ async function renderScheduleView() {
     container.innerHTML = trips.map(t => `
       <div style="background: #1e293b; padding: 0.8rem; border-radius: 10px; margin-bottom: 0.6rem; border-left: 4px solid #38bdf8;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <strong style="color: #f8fafc; font-size: 0.95rem;">${t.destination}</strong>
-          <span style="font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 9999px; background: rgba(56, 189, 248, 0.15); color: #38bdf8;">${t.status}</span>
+          <strong style="color: #f8fafc; font-size: 0.95rem;">${esc(t.destination)}</strong>
+          <span style="font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 9999px; background: rgba(56, 189, 248, 0.15); color: #38bdf8;">${esc(t.status)}</span>
         </div>
         <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.3rem;">
           ${FleetTime.formatIsoLocal(t.start_time)}

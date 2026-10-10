@@ -126,6 +126,12 @@ class EmployeeApp {
 
   onLoginSuccess(user) {
     const safeUser = user || {};
+    if (safeUser.role === 'driver') {
+      this.api.clearAuth();
+      this.showToast('Access Denied: Drivers should use the Driver Portal (/driver).', 'error');
+      this.showView('login');
+      return;
+    }
     const nameEl = document.getElementById('user-display-name');
     const avatarEl = document.getElementById('user-avatar');
     const name = safeUser.name || 'Employee';
@@ -149,6 +155,8 @@ class EmployeeApp {
     const slot = this.time.getNextAvailableSlot(30);
     const dateInput = document.getElementById('book-date');
     const startInput = document.getElementById('book-start-time');
+    const endInput = document.getElementById('book-end-time');
+    const destInput = document.getElementById('book-destination');
 
     if (dateInput) {
       dateInput.value = slot.dateStr;
@@ -160,12 +168,18 @@ class EmployeeApp {
 
     this.updateCalculatedEndTime();
 
-    // Listen to changes on start time or date
+    // Listen to changes on start time, date, end time, and destination
     if (startInput) {
       startInput.addEventListener('change', () => this.updateCalculatedEndTime());
     }
     if (dateInput) {
-      dateInput.addEventListener('change', () => this.updateCalculatedEndTime());
+      dateInput.addEventListener('change', () => this.updateScheduleSummary());
+    }
+    if (endInput) {
+      endInput.addEventListener('change', () => this.handleEndTimeChange());
+    }
+    if (destInput) {
+      destInput.addEventListener('input', () => this.updateScheduleSummary());
     }
   }
 
@@ -212,10 +226,13 @@ class EmployeeApp {
     // Highlight preset pill
     const pills = document.querySelectorAll('#booking-form .preset-pills button');
     pills.forEach((p) => {
-      if (p.textContent.includes(`${mins}m`) || p.textContent.includes(`${mins / 60}h`)) {
-        p.classList.add('active');
-      } else if (p.getAttribute('onclick')?.includes('setDuration')) {
-        p.classList.remove('active');
+      const matchM = p.getAttribute('onclick')?.match(/setDuration\((\d+)\)/);
+      if (matchM) {
+        if (parseInt(matchM[1], 10) === mins) {
+          p.classList.add('active');
+        } else {
+          p.classList.remove('active');
+        }
       }
     });
 
@@ -235,6 +252,99 @@ class EmployeeApp {
     } catch {
       // fallback
     }
+
+    this.updateScheduleSummary();
+  }
+
+  handleEndTimeChange() {
+    const startTimeStr = document.getElementById('book-start-time')?.value;
+    const endTimeStr = document.getElementById('book-end-time')?.value;
+    if (startTimeStr && endTimeStr) {
+      const diff = this.time.diffMinutesLocal(startTimeStr, endTimeStr);
+      if (diff > 0) {
+        this.durationMinutes = diff;
+        const durDisplay = document.getElementById('duration-display');
+        if (durDisplay) {
+          const h = Math.floor(diff / 60);
+          const m = diff % 60;
+          durDisplay.textContent = h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+        }
+
+        // Highlight matching duration pill if exact
+        const pills = document.querySelectorAll('#booking-form .preset-pills button');
+        pills.forEach((p) => {
+          const matchM = p.getAttribute('onclick')?.match(/setDuration\((\d+)\)/);
+          if (matchM) {
+            if (parseInt(matchM[1], 10) === diff) {
+              p.classList.add('active');
+            } else {
+              p.classList.remove('active');
+            }
+          }
+        });
+      }
+    }
+    this.updateScheduleSummary();
+  }
+
+  updateScheduleSummary() {
+    const dateInput = document.getElementById('book-date');
+    const startInput = document.getElementById('book-start-time');
+    const endInput = document.getElementById('book-end-time');
+    const destInput = document.getElementById('book-destination');
+
+    const dateStr = dateInput ? dateInput.value : '';
+    const startTimeStr = startInput ? startInput.value : '';
+    const endTimeStr = endInput ? endInput.value : '';
+    const destStr = destInput ? destInput.value.trim() : '';
+
+    const dateDisplay = document.getElementById('summary-date-display');
+    const startDisplay = document.getElementById('summary-start-display');
+    const durationDisplay = document.getElementById('summary-duration-display');
+    const endDisplay = document.getElementById('summary-end-display');
+    const destNote = document.getElementById('summary-destination-note');
+
+    if (dateDisplay && dateStr) {
+      const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      if (dateStr === todayStr) {
+        dateDisplay.textContent = 'Today (IST)';
+      } else {
+        const d = new Date(dateStr + 'T00:00:00+05:30');
+        dateDisplay.textContent = d.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short' });
+      }
+    }
+
+    if (startDisplay && startTimeStr) {
+      const [sh, sm] = startTimeStr.split(':').map(Number);
+      const ampm = sh >= 12 ? 'PM' : 'AM';
+      const h12 = sh % 12 || 12;
+      startDisplay.textContent = `${String(h12).padStart(2, '0')}:${String(sm).padStart(2, '0')} ${ampm}`;
+    }
+
+    if (endDisplay && endTimeStr) {
+      const [eh, em] = endTimeStr.split(':').map(Number);
+      const ampm = eh >= 12 ? 'PM' : 'AM';
+      const h12 = eh % 12 || 12;
+      endDisplay.textContent = `${String(h12).padStart(2, '0')}:${String(em).padStart(2, '0')} ${ampm}`;
+    }
+
+    if (durationDisplay) {
+      const h = Math.floor(this.durationMinutes / 60);
+      const m = this.durationMinutes % 60;
+      let durText = '';
+      if (h > 0 && m > 0) durText = `${h}h ${m}m duration`;
+      else if (h > 0) durText = `${h}h duration`;
+      else durText = `${m}m duration`;
+      durationDisplay.textContent = `⏱️ ${durText}`;
+    }
+
+    if (destNote) {
+      if (destStr) {
+        destNote.innerHTML = `<span>📍</span> Trip to <strong>${destStr}</strong>. Vehicle reserved from departure until return deadline. +15m buffer included after return.`;
+      } else {
+        destNote.innerHTML = `<span>💡</span> The vehicle and driver will be reserved for your team for the full duration above.`;
+      }
+    }
   }
 
   setPassengers(count, btn = null) {
@@ -252,7 +362,7 @@ class EmployeeApp {
     }
   }
 
-  setDestination(dest, btn = null) {
+  setDestination(dest, mins = null, btn = null) {
     const input = document.getElementById('book-destination');
     if (input) input.value = dest;
     const container = input?.parentElement?.querySelector('.preset-pills');
@@ -262,8 +372,14 @@ class EmployeeApp {
     if (btn) {
       btn.classList.add('active');
     } else if (container) {
-      const match = Array.from(container.querySelectorAll('.preset-pill')).find((p) => p.textContent.trim() === dest.trim());
+      const match = Array.from(container.querySelectorAll('.preset-pill')).find((p) => p.textContent.includes(dest.trim()));
       if (match) match.classList.add('active');
+    }
+
+    if (mins) {
+      this.setDuration(mins);
+    } else {
+      this.updateScheduleSummary();
     }
   }
 
@@ -400,8 +516,8 @@ class EmployeeApp {
 
           <div class="resource-card">
             <div class="resource-title">Schedule Window</div>
-            <div class="resource-name">${startLocal}</div>
-            <div class="resource-meta">Duration: ${durStr} (until ${endLocal})</div>
+            <div class="resource-name">${startLocal} ➔ ${endLocal}</div>
+            <div class="resource-meta">⏱️ Total Duration: ${durStr} · Return by ${endLocal}</div>
           </div>
         </div>
 
