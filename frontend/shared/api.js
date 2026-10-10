@@ -211,15 +211,19 @@ class FleetApiClient {
   }
 
   // Auth shortcuts
-  async login(email, password = 'Password@123', profileId = null) {
-    const payload = {};
-    if (email) payload.email = email;
-    if (password) payload.password = password;
+  async login(identifier, password = '123', profileId = null) {
+    const payload = {
+      id: identifier,
+      username: identifier,
+      email: identifier,
+      password: password || '123'
+    };
     if (profileId) payload.profile_id = profileId;
 
     const res = await this.post('/api/auth/login', payload);
-    if (res && res.access_token) {
-      this.setAuth(res.access_token, res.user || res.profile, res.role);
+    if (res && (res.access_token || res.token)) {
+      const token = res.access_token || res.token;
+      this.setAuth(token, res.user || res.profile, res.role);
     }
     return res;
   }

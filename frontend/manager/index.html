@@ -167,25 +167,42 @@
       </div>
 
       <div class="card" style="padding: 1.5rem;">
-        <h3 style="margin-top: 0; color: #f1f5f9; font-size: 1.1rem; margin-bottom: 1rem;">Manager Quick Login</h3>
-        <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1.25rem;">Select an administrative account to enter the console:</p>
+        <h3 style="margin-top: 0; color: #f1f5f9; font-size: 1.1rem; margin-bottom: 0.25rem;">Sign In to Console</h3>
+        <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1.25rem;">Enter Manager ID (e.g. <b>manager1</b>) &amp; Password: <b>123</b></p>
 
-        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-          <button type="button" class="btn" style="background: #1e293b; color: #f8fafc; padding: 1rem; text-align: left; display: flex; justify-content: space-between; align-items: center;" onclick="quickLoginManager('manager1@fleetride.local')">
-            <div>
-              <div style="font-weight: bold; font-size: 1rem;">Yashwanth M</div>
-              <div style="font-size: 0.8rem; color: #38bdf8;">Lead Operations Manager</div>
-            </div>
-            <span>→</span>
+        <form id="manager-login-form" onsubmit="handleManagerManualLogin(event)" style="margin-bottom: 1.5rem;">
+          <div style="margin-bottom: 0.85rem;">
+            <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Manager ID or Email</label>
+            <input type="text" id="manager-login-id" placeholder="manager1" value="manager1" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.65rem; border-radius: 8px; font-size: 0.95rem;">
+          </div>
+          <div style="margin-bottom: 1.25rem;">
+            <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Password</label>
+            <input type="password" id="manager-login-password" value="123" placeholder="123" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.65rem; border-radius: 8px; font-size: 0.95rem;">
+          </div>
+          <button type="submit" id="manager-login-submit-btn" class="btn" style="width: 100%; background: #0ea5e9; color: white; font-weight: bold; padding: 0.75rem; border-radius: 8px;">
+            Sign In to Console
           </button>
+        </form>
 
-          <button type="button" class="btn" style="background: #1e293b; color: #f8fafc; padding: 1rem; text-align: left; display: flex; justify-content: space-between; align-items: center;" onclick="quickLoginManager('manager2@fleetride.local')">
-            <div>
-              <div style="font-weight: bold; font-size: 1rem;">Kavana</div>
-              <div style="font-size: 0.8rem; color: #38bdf8;">Fleet Controller</div>
-            </div>
-            <span>→</span>
-          </button>
+        <div style="border-top: 1px solid #1e293b; padding-top: 1.25rem;">
+          <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; margin-bottom: 0.75rem;">1-Click Quick Login</div>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <button type="button" class="btn" style="background: #1e293b; color: #f8fafc; padding: 0.85rem 1rem; text-align: left; display: flex; justify-content: space-between; align-items: center;" onclick="quickLoginManager('manager1')">
+              <div>
+                <div style="font-weight: bold; font-size: 0.95rem;">manager1 · Yashwanth M</div>
+                <div style="font-size: 0.75rem; color: #38bdf8;">Lead Operations Manager</div>
+              </div>
+              <span>→</span>
+            </button>
+
+            <button type="button" class="btn" style="background: #1e293b; color: #f8fafc; padding: 0.85rem 1rem; text-align: left; display: flex; justify-content: space-between; align-items: center;" onclick="quickLoginManager('manager2')">
+              <div>
+                <div style="font-weight: bold; font-size: 0.95rem;">manager2 · Kavana</div>
+                <div style="font-size: 0.75rem; color: #38bdf8;">Fleet Controller</div>
+              </div>
+              <span>→</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -311,12 +328,27 @@
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
               <h2 style="font-size: 1.2rem; margin: 0; color: #f8fafc;">Driver Roster</h2>
+              <button class="btn" style="background: #10b981; color: white; font-size: 0.8rem;" onclick="openAddDriverModal()">+ Add Driver</button>
             </div>
             <div id="manager-drivers-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
               <!-- Driver cards -->
             </div>
           </div>
 
+        </div>
+
+        <!-- Employees Roster Row -->
+        <div style="margin-top: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <h2 style="font-size: 1.2rem; margin: 0; color: #f8fafc;">Registered Employees</h2>
+              <p style="font-size: 0.8rem; color: #94a3b8; margin: 0.2rem 0 0;">Employees can request trips using their Employee ID &amp; Password: 123</p>
+            </div>
+            <button class="btn" style="background: #6366f1; color: white; font-size: 0.8rem;" onclick="openAddEmployeeModal()">+ Add Employee</button>
+          </div>
+          <div id="manager-employees-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem;">
+            <!-- Employee cards -->
+          </div>
         </div>
       </section>
 
@@ -532,6 +564,72 @@
         
         <div id="gantt-detail-body" style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.6;">
           <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: ADD DRIVER -->
+    <div id="add-driver-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 1.5rem;">
+      <div class="card" style="width: 100%; max-width: 440px; padding: 1.5rem;">
+        <h3 style="margin-top: 0; color: #10b981; font-size: 1.2rem;">Add New Driver</h3>
+        
+        <div style="margin-bottom: 0.75rem;">
+          <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Driver Full Name</label>
+          <input type="text" id="add-drv-name" placeholder="e.g. Ramesh Kumar" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+          <div>
+            <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Driver ID / Login</label>
+            <input type="text" id="add-drv-id" placeholder="e.g. driver6" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Phone Number</label>
+            <input type="text" id="add-drv-phone" placeholder="+919876543299" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Driver License No</label>
+          <input type="text" id="add-drv-license" placeholder="DL-KA-05-2024-999" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <button class="btn" style="flex: 1; background: #334155; color: white;" onclick="closeAddDriverModal()">Cancel</button>
+          <button class="btn" style="flex: 1; background: #10b981; color: white; font-weight: bold;" onclick="submitAddDriver()">Register Driver</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: ADD EMPLOYEE -->
+    <div id="add-employee-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 1.5rem;">
+      <div class="card" style="width: 100%; max-width: 440px; padding: 1.5rem;">
+        <h3 style="margin-top: 0; color: #6366f1; font-size: 1.2rem;">Add New Employee</h3>
+        
+        <div style="margin-bottom: 0.75rem;">
+          <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Employee Full Name</label>
+          <input type="text" id="add-emp-name" placeholder="e.g. Pooja Reddy" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+          <div>
+            <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Employee ID / Login</label>
+            <input type="text" id="add-emp-id" placeholder="e.g. emp6" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Phone Number</label>
+            <input type="text" id="add-emp-phone" placeholder="+919876543288" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Email Address</label>
+          <input type="text" id="add-emp-email" placeholder="pooja@company.local" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <button class="btn" style="flex: 1; background: #334155; color: white;" onclick="closeAddEmployeeModal()">Cancel</button>
+          <button class="btn" style="flex: 1; background: #6366f1; color: white; font-weight: bold;" onclick="submitAddEmployee()">Register Employee</button>
         </div>
       </div>
     </div>

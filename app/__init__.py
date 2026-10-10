@@ -179,6 +179,7 @@ def create_app():
     from app.routes.ratings import ratings_bp
     from app.routes.notifications import notifications_bp
     from app.routes.admin import admin_bp
+    from app.routes.employees import employees_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(bookings_bp)
@@ -191,6 +192,7 @@ def create_app():
     app.register_blueprint(ratings_bp)
     app.register_blueprint(notifications_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(employees_bp)
 
     # Static file routes for frontend portals (Phase 5: Employee Portal)
     from flask import send_from_directory, redirect

@@ -101,24 +101,38 @@ def add_driver():
         }), 400
 
     profile_id = data.get("profile_id")
+    profile = None
     if not profile_id or not isinstance(profile_id, str) or not profile_id.strip():
-        return jsonify({
-            "error": {
-                "code": "BAD_REQUEST",
-                "message": "Profile ID is required and cannot be empty",
-                "alternatives": [],
-            }
-        }), 400
-
-    profile = get_profile_by_id(profile_id.strip())
-    if not profile:
-        return jsonify({
-            "error": {
-                "code": "BAD_REQUEST",
-                "message": f"Profile not found with ID {profile_id}",
-                "alternatives": [],
-            }
-        }), 400
+        driver_name = str(data.get("name", "")).strip()
+        if not driver_name:
+            return jsonify({
+                "error": {
+                    "code": "BAD_REQUEST",
+                    "message": "Either 'name' or 'profile_id' is required to register a driver",
+                    "alternatives": [],
+                }
+            }), 400
+        from app.db import create_profile
+        drv_custom_id = str(data.get("id") or "").strip()
+        new_prof = create_profile({
+            "id": drv_custom_id or None,
+            "name": driver_name,
+            "role": "driver",
+            "phone": str(data.get("phone", "")).strip() or None,
+            "email": str(data.get("email", "")).strip() or f"driver_{driver_name.lower().replace(' ', '')}@fleetride.local",
+        })
+        profile_id = new_prof["id"]
+        profile = new_prof
+    else:
+        profile = get_profile_by_id(profile_id.strip())
+        if not profile:
+            return jsonify({
+                "error": {
+                    "code": "BAD_REQUEST",
+                    "message": f"Profile not found with ID {profile_id}",
+                    "alternatives": [],
+                }
+            }), 400
 
     existing_driver = get_driver_by_profile_id(profile_id.strip())
     if existing_driver:

@@ -51,9 +51,9 @@ function showManagerApp() {
   document.getElementById('manager-name-display').textContent = currentManagerProfile.name;
 }
 
-async function quickLoginManager(email) {
+async function quickLoginManager(identifier) {
   try {
-    const res = await api.login(email, 'Password@123');
+    const res = await api.login(identifier, '123');
     if (res.role !== 'manager') {
       alert('Selected account is not a manager.');
       return;
@@ -63,6 +63,38 @@ async function quickLoginManager(email) {
     loadInitialData();
   } catch (err) {
     alert(err.message || 'Login failed');
+  }
+}
+
+async function handleManagerManualLogin(event) {
+  if (event) event.preventDefault();
+  const idInput = document.getElementById('manager-login-id').value.trim();
+  const passInput = document.getElementById('manager-login-password').value.trim() || '123';
+  const btn = document.getElementById('manager-login-submit-btn');
+  if (!idInput) {
+    alert('Please enter your Manager ID (e.g. manager1)');
+    return;
+  }
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Logging In...';
+    }
+    const res = await api.login(idInput, passInput);
+    if (res.role !== 'manager') {
+      alert('Selected account is not a manager.');
+      return;
+    }
+    currentManagerProfile = res.profile;
+    showManagerApp();
+    loadInitialData();
+  } catch (err) {
+    alert(err.message || 'Login failed');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Sign In to Console';
+    }
   }
 }
 
@@ -414,9 +446,48 @@ async function loadFleetData() {
     allDrivers = dRes.drivers || [];
 
     renderFleetLists();
+    await loadEmployeesData();
   } catch (err) {
     console.warn('Error loading fleet lists:', err);
   }
+}
+
+async function loadEmployeesData() {
+  try {
+    const res = await api.get('/api/employees');
+    const employees = res.employees || [];
+    renderEmployeesList(employees);
+  } catch (err) {
+    console.warn('Error loading employees:', err);
+  }
+}
+
+function renderEmployeesList(employees) {
+  const container = document.getElementById('manager-employees-list');
+  if (!container) return;
+  if (employees.length === 0) {
+    container.innerHTML = '<div style="color: #94a3b8; padding: 1rem;">No employees registered yet. Click "+ Add Employee" to register one.</div>';
+    return;
+  }
+  container.innerHTML = employees.map(emp => {
+    const loginId = emp.id && emp.id.length < 20 ? emp.id : (emp.email ? emp.email.split('@')[0] : emp.id);
+    return `
+      <div class="card" style="padding: 1rem; border: 1px solid #1e293b; background: #0f172a;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">${emp.name}</div>
+            <div style="font-size: 0.8rem; color: #38bdf8; font-family: monospace; margin-top: 0.2rem;">
+              Login ID: <strong>${loginId}</strong>
+            </div>
+            <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.2rem;">
+              ${emp.email || '—'} · ${emp.phone || 'No phone'}
+            </div>
+          </div>
+          <span class="badge" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);">EMPLOYEE</span>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 function renderFleetLists() {
@@ -503,6 +574,85 @@ async function submitAddVehicle() {
     await loadGanttData();
   } catch (err) {
     alert(err.message || 'Failed to add vehicle');
+  }
+}
+
+// Add Driver Modal Handlers
+function openAddDriverModal() {
+  document.getElementById('add-driver-modal').style.display = 'flex';
+}
+
+function closeAddDriverModal() {
+  document.getElementById('add-driver-modal').style.display = 'none';
+}
+
+async function submitAddDriver() {
+  const name = document.getElementById('add-drv-name').value.trim();
+  const id = document.getElementById('add-drv-id').value.trim();
+  const phone = document.getElementById('add-drv-phone').value.trim();
+  const license = document.getElementById('add-drv-license').value.trim();
+
+  if (!name) {
+    alert('Please enter a driver name.');
+    return;
+  }
+
+  try {
+    await api.post('/api/drivers', {
+      name: name,
+      id: id || undefined,
+      phone: phone || undefined,
+      license_no: license || undefined
+    });
+    closeAddDriverModal();
+    document.getElementById('add-drv-name').value = '';
+    document.getElementById('add-drv-id').value = '';
+    document.getElementById('add-drv-phone').value = '';
+    document.getElementById('add-drv-license').value = '';
+    alert(`Driver "${name}" registered successfully! They can log in with ID and password 123.`);
+    await loadFleetData();
+    await loadGanttData();
+  } catch (err) {
+    alert(err.message || 'Failed to add driver');
+  }
+}
+
+// Add Employee Modal Handlers
+function openAddEmployeeModal() {
+  document.getElementById('add-employee-modal').style.display = 'flex';
+}
+
+function closeAddEmployeeModal() {
+  document.getElementById('add-employee-modal').style.display = 'none';
+}
+
+async function submitAddEmployee() {
+  const name = document.getElementById('add-emp-name').value.trim();
+  const id = document.getElementById('add-emp-id').value.trim();
+  const phone = document.getElementById('add-emp-phone').value.trim();
+  const email = document.getElementById('add-emp-email').value.trim();
+
+  if (!name) {
+    alert('Please enter an employee name.');
+    return;
+  }
+
+  try {
+    await api.post('/api/employees', {
+      name: name,
+      id: id || undefined,
+      phone: phone || undefined,
+      email: email || undefined
+    });
+    closeAddEmployeeModal();
+    document.getElementById('add-emp-name').value = '';
+    document.getElementById('add-emp-id').value = '';
+    document.getElementById('add-emp-phone').value = '';
+    document.getElementById('add-emp-email').value = '';
+    alert(`Employee "${name}" registered successfully! They can log in with ID and password 123.`);
+    await loadEmployeesData();
+  } catch (err) {
+    alert(err.message || 'Failed to add employee');
   }
 }
 

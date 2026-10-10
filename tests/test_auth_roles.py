@@ -830,3 +830,83 @@ def test_query_filters_on_vehicles_and_drivers(client):
     drvs = res_d.get_json()["drivers"]
     assert all(d["status"] == "available" for d in drvs)
 
+
+def test_simplified_id_and_password_login(client):
+    """
+    Prove that users can log in using simple IDs ('emp1', 'driver1', 'manager1')
+    and universal password '123'.
+    """
+    # 1. Employee login
+    res_emp = client.post("/api/auth/login", json={"id": "emp1", "password": "123"})
+    assert res_emp.status_code == 200
+    assert res_emp.get_json()["role"] == "employee"
+    assert res_emp.get_json()["user"]["name"] == "Ananya Roy"
+
+    # 2. Driver login
+    res_drv = client.post("/api/auth/login", json={"id": "driver1", "password": "123"})
+    assert res_drv.status_code == 200
+    assert res_drv.get_json()["role"] == "driver"
+    assert res_drv.get_json()["driver_id"] is not None
+
+    # 3. Manager login
+    res_mgr = client.post("/api/auth/login", json={"id": "manager1", "password": "123"})
+    assert res_mgr.status_code == 200
+    assert res_mgr.get_json()["role"] == "manager"
+
+    # 4. Bearer auth works directly with simple ID
+    res_me = client.get("/api/me", headers={"Authorization": "Bearer emp1"})
+    assert res_me.status_code == 200
+    assert res_me.get_json()["role"] == "employee"
+
+
+def test_manager_can_list_and_add_employees_and_drivers(client):
+    """
+    Prove manager can list employees, add a new employee, and add a new driver.
+    Verify the newly added users can immediately log in with password '123'.
+    """
+    mgr_token = create_test_token(MGR_1_ID)
+    headers = auth_header(mgr_token)
+
+    # 1. List employees
+    res_list = client.get("/api/employees", headers=headers)
+    assert res_list.status_code == 200
+    employees = res_list.get_json()["employees"]
+    assert len(employees) >= 5
+
+    # 2. Add new employee 'emp6'
+    res_add_emp = client.post(
+        "/api/employees",
+        json={"name": "Pooja Reddy", "id": "emp6", "phone": "+919876543288"},
+        headers=headers,
+    )
+    assert res_add_emp.status_code == 201
+    created_emp = res_add_emp.get_json()["employee"]
+    assert created_emp["id"] == "emp6"
+    assert created_emp["name"] == "Pooja Reddy"
+
+    # New employee logs in immediately with ID 'emp6' and password '123'
+    res_login_emp = client.post("/api/auth/login", json={"id": "emp6", "password": "123"})
+    assert res_login_emp.status_code == 200
+    assert res_login_emp.get_json()["role"] == "employee"
+
+    # 3. Add new driver 'driver6'
+    res_add_drv = client.post(
+        "/api/drivers",
+        json={
+            "name": "Ramesh Kumar",
+            "id": "driver6",
+            "phone": "+919876543299",
+            "license_no": "DL-KA-05-2024-999",
+        },
+        headers=headers,
+    )
+    assert res_add_drv.status_code == 201
+    created_drv = res_add_drv.get_json()["driver"]
+    assert created_drv["status"] == "available"
+
+    # New driver logs in immediately with ID 'driver6' and password '123'
+    res_login_drv = client.post("/api/auth/login", json={"id": "driver6", "password": "123"})
+    assert res_login_drv.status_code == 200
+    assert res_login_drv.get_json()["role"] == "driver"
+    assert res_login_drv.get_json()["driver_id"] is not None
+

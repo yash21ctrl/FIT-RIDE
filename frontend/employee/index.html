@@ -52,19 +52,19 @@
         <div class="card-header">
           <div>
             <h1 class="card-title">Sign In to FleetRide</h1>
-            <p class="card-subtitle">Shared fleet allocation & operations system</p>
+            <p class="card-subtitle">Enter Employee ID (e.g. <b>emp1</b>) &amp; Password: <b>123</b></p>
           </div>
         </div>
 
         <form id="login-form" onsubmit="app.handleLoginSubmit(event)">
           <div class="form-group" style="margin-bottom: 1rem;">
-            <label class="form-label" for="login-email">Email Address</label>
-            <input type="email" id="login-email" class="form-control" required placeholder="emp1@fleetride.local">
+            <label class="form-label" for="login-email">Employee ID or Email</label>
+            <input type="text" id="login-email" class="form-control" required placeholder="e.g. emp1 or emp1@fleetride.local" value="emp1">
           </div>
 
           <div class="form-group" style="margin-bottom: 1.25rem;">
-            <label class="form-label" for="login-password">Password</label>
-            <input type="password" id="login-password" class="form-control" required value="Password@123">
+            <label class="form-label" for="login-password">Password (Default: 123)</label>
+            <input type="password" id="login-password" class="form-control" required value="123" placeholder="123">
           </div>
 
           <button type="submit" id="login-submit-btn" class="btn btn-primary" style="width: 100%;">
@@ -76,38 +76,38 @@
         <div class="quick-login-section">
           <div class="quick-login-title">Quick Demo Login (Seed Employees)</div>
           <div class="quick-login-grid">
-            <button class="quick-login-btn" onclick="app.quickLogin('emp1@fleetride.local')">
+            <button class="quick-login-btn" onclick="app.quickLogin('emp1')">
               <div>
-                <div class="quick-login-name">Ananya Roy (Employee 1)</div>
-                <div class="quick-login-email">emp1@fleetride.local</div>
+                <div class="quick-login-name">emp1 · Ananya Roy</div>
+                <div class="quick-login-email">ID: emp1 · Pass: 123</div>
               </div>
               <span>➔</span>
             </button>
-            <button class="quick-login-btn" onclick="app.quickLogin('emp2@fleetride.local')">
+            <button class="quick-login-btn" onclick="app.quickLogin('emp2')">
               <div>
-                <div class="quick-login-name">Vikram Das (Employee 2)</div>
-                <div class="quick-login-email">emp2@fleetride.local</div>
+                <div class="quick-login-name">emp2 · Vikram Das</div>
+                <div class="quick-login-email">ID: emp2 · Pass: 123</div>
               </div>
               <span>➔</span>
             </button>
-            <button class="quick-login-btn" onclick="app.quickLogin('emp3@fleetride.local')">
+            <button class="quick-login-btn" onclick="app.quickLogin('emp3')">
               <div>
-                <div class="quick-login-name">Neha Nair (Employee 3)</div>
-                <div class="quick-login-email">emp3@fleetride.local</div>
+                <div class="quick-login-name">emp3 · Neha Nair</div>
+                <div class="quick-login-email">ID: emp3 · Pass: 123</div>
               </div>
               <span>➔</span>
             </button>
-            <button class="quick-login-btn" onclick="app.quickLogin('emp4@fleetride.local')">
+            <button class="quick-login-btn" onclick="app.quickLogin('emp4')">
               <div>
-                <div class="quick-login-name">Rahul Mehra (Employee 4)</div>
-                <div class="quick-login-email">emp4@fleetride.local</div>
+                <div class="quick-login-name">emp4 · Rahul Mehra</div>
+                <div class="quick-login-email">ID: emp4 · Pass: 123</div>
               </div>
               <span>➔</span>
             </button>
-            <button class="quick-login-btn" onclick="app.quickLogin('emp5@fleetride.local')">
+            <button class="quick-login-btn" onclick="app.quickLogin('emp5')">
               <div>
-                <div class="quick-login-name">Sneha Patel (Employee 5)</div>
-                <div class="quick-login-email">emp5@fleetride.local</div>
+                <div class="quick-login-name">emp5 · Sneha Patel</div>
+                <div class="quick-login-email">ID: emp5 · Pass: 123</div>
               </div>
               <span>➔</span>
             </button>

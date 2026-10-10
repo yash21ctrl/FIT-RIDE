@@ -372,6 +372,51 @@ def get_profile_by_email(email: str, conn=None) -> Optional[Dict[str, Any]]:
     return None
 
 
+def create_profile(profile_data: Dict[str, Any], conn=None) -> Dict[str, Any]:
+    """Insert or register a user profile (employee, driver, manager)."""
+    new_id = str(profile_data.get("id") or uuid.uuid4())
+    record = {
+        "id": new_id,
+        "name": str(profile_data.get("name", "")).strip(),
+        "role": str(profile_data.get("role", "employee")).strip().lower(),
+        "phone": str(profile_data.get("phone", "")).strip() or None,
+        "email": str(profile_data.get("email", "")).strip() or f"{new_id[:8]}@fleetride.local",
+        "telegram_chat_id": profile_data.get("telegram_chat_id"),
+    }
+    
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    INSERT INTO profiles (id, name, role, phone, telegram_chat_id)
+                    VALUES (%s, %s, %s, %s, %s)
+                    RETURNING id, name, role, phone, telegram_chat_id;
+                """, (record["id"], record["name"], record["role"], record["phone"], record["telegram_chat_id"]))
+                conn.commit()
+                row = cur.fetchone()
+                if row:
+                    res = dict(row)
+                    res["id"] = str(res["id"])
+                    res["email"] = record["email"]
+                    return res
+        except Exception:
+            pass
+        finally:
+            if close_conn:
+                conn.close()
+
+    # In-memory execution
+    with _in_memory_lock:
+        _in_memory_profiles[new_id] = dict(record)
+        return dict(record)
+
+
 # ---------------------------------------------------------
 # Vehicle Repository Functions
 # ---------------------------------------------------------

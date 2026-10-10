@@ -191,44 +191,61 @@
       </div>
 
       <div class="touch-card">
-        <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; color: #e2e8f0;">Quick Driver Login</h3>
-        <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem;">Select a seeded driver to log in immediately:</p>
-        
-        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-          <button type="button" class="btn btn-big" style="background: #1e293b; color: #f1f5f9; font-size: 0.95rem; text-align: left; justify-content: flex-start; padding: 0.8rem 1rem;" onclick="quickLoginDriver('driver1@fleetride.local')">
-            <div>
-              <div style="font-weight: 700;">Ravi Kumar (Driver 1)</div>
-              <div style="font-size: 0.75rem; color: #94a3b8;">★ 4.8 · Recent Trip (Fatigue Demo)</div>
-            </div>
-          </button>
-          
-          <button type="button" class="btn btn-big" style="background: #1e293b; color: #f1f5f9; font-size: 0.95rem; text-align: left; justify-content: flex-start; padding: 0.8rem 1rem;" onclick="quickLoginDriver('driver2@fleetride.local')">
-            <div>
-              <div style="font-weight: 700;">Suresh Patil (Driver 2)</div>
-              <div style="font-size: 0.75rem; color: #94a3b8;">★ 4.9 · 3 Trips Today (Fairness Demo)</div>
-            </div>
-          </button>
+        <h3 style="margin-top: 0; margin-bottom: 0.25rem; font-size: 1.15rem; color: #e2e8f0;">Driver Sign In</h3>
+        <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1.25rem;">Enter Driver ID (e.g. <b>driver1</b>) &amp; Password: <b>123</b></p>
 
-          <button type="button" class="btn btn-big" style="background: #1e293b; color: #f1f5f9; font-size: 0.95rem; text-align: left; justify-content: flex-start; padding: 0.8rem 1rem;" onclick="quickLoginDriver('driver3@fleetride.local')">
-            <div>
-              <div style="font-weight: 700;">Amit Singh (Driver 3)</div>
-              <div style="font-size: 0.75rem; color: #94a3b8;">★ 4.7 · Available</div>
-            </div>
+        <form id="driver-login-form" onsubmit="handleDriverManualLogin(event)" style="margin-bottom: 1.5rem;">
+          <div style="margin-bottom: 0.85rem;">
+            <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Driver ID or Email</label>
+            <input type="text" id="driver-login-id" placeholder="driver1" value="driver1" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.65rem; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;">
+          </div>
+          <div style="margin-bottom: 1.25rem;">
+            <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Password</label>
+            <input type="password" id="driver-login-password" value="123" placeholder="123" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.65rem; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;">
+          </div>
+          <button type="submit" id="driver-login-submit-btn" class="btn btn-big" style="background: #10b981; color: white;">
+            Sign In to Driver App
           </button>
+        </form>
 
-          <button type="button" class="btn btn-big" style="background: #1e293b; color: #f1f5f9; font-size: 0.95rem; text-align: left; justify-content: flex-start; padding: 0.8rem 1rem;" onclick="quickLoginDriver('driver4@fleetride.local')">
-            <div>
-              <div style="font-weight: 700;">Priya Sharma (Driver 4)</div>
-              <div style="font-size: 0.75rem; color: #94a3b8;">★ 4.6 · Available</div>
-            </div>
-          </button>
+        <div style="border-top: 1px solid #1f2937; padding-top: 1.25rem;">
+          <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; margin-bottom: 0.75rem;">1-Click Quick Demo Login</div>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <button type="button" class="btn btn-big" style="background: #1e293b; color: #f1f5f9; font-size: 0.95rem; text-align: left; justify-content: flex-start; padding: 0.8rem 1rem;" onclick="quickLoginDriver('driver1')">
+              <div>
+                <div style="font-weight: 700;">driver1 · Ravi Kumar</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">★ 4.8 · Available</div>
+              </div>
+            </button>
+            
+            <button type="button" class="btn btn-big" style="background: #1e293b; color: #f1f5f9; font-size: 0.95rem; text-align: left; justify-content: flex-start; padding: 0.8rem 1rem;" onclick="quickLoginDriver('driver2')">
+              <div>
+                <div style="font-weight: 700;">driver2 · Suresh Patil</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">★ 4.9 · Available</div>
+              </div>
+            </button>
 
-          <button type="button" class="btn btn-big" style="background: #1e293b; color: #f1f5f9; font-size: 0.95rem; text-align: left; justify-content: flex-start; padding: 0.8rem 1rem;" onclick="quickLoginDriver('driver5@fleetride.local')">
-            <div>
-              <div style="font-weight: 700;">Rajesh Verma (Driver 5)</div>
-              <div style="font-size: 0.75rem; color: #94a3b8;">★ 4.9 · Available</div>
-            </div>
-          </button>
+            <button type="button" class="btn btn-big" style="background: #1e293b; color: #f1f5f9; font-size: 0.95rem; text-align: left; justify-content: flex-start; padding: 0.8rem 1rem;" onclick="quickLoginDriver('driver3')">
+              <div>
+                <div style="font-weight: 700;">driver3 · Amit Singh</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">★ 4.7 · Available</div>
+              </div>
+            </button>
+
+            <button type="button" class="btn btn-big" style="background: #1e293b; color: #f1f5f9; font-size: 0.95rem; text-align: left; justify-content: flex-start; padding: 0.8rem 1rem;" onclick="quickLoginDriver('driver4')">
+              <div>
+                <div style="font-weight: 700;">driver4 · Priya Sharma</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">★ 4.6 · Available</div>
+              </div>
+            </button>
+
+            <button type="button" class="btn btn-big" style="background: #1e293b; color: #f1f5f9; font-size: 0.95rem; text-align: left; justify-content: flex-start; padding: 0.8rem 1rem;" onclick="quickLoginDriver('driver5')">
+              <div>
+                <div style="font-weight: 700;">driver5 · Rajesh Verma</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">★ 4.9 · Available</div>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
     </div>

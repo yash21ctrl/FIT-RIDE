@@ -114,10 +114,10 @@ class EmployeeApp {
     }
   }
 
-  async quickLogin(email) {
-    document.getElementById('login-email').value = email;
+  async quickLogin(identifier) {
+    document.getElementById('login-email').value = identifier;
     try {
-      const res = await this.api.login(email, 'Password@123');
+      const res = await this.api.login(identifier, '123');
       this.onLoginSuccess(res.user || res.profile);
     } catch (err) {
       this.showToast(err.message || 'Quick login failed', 'error');

@@ -112,9 +112,9 @@ function showDriverApp() {
 }
 
 // Quick Login
-async function quickLoginDriver(email) {
+async function quickLoginDriver(identifier) {
   try {
-    const res = await api.login(email, 'Password@123');
+    const res = await api.login(identifier, '123');
     if (res.role !== 'driver') {
       alert('Selected account is not a driver.');
       return;
@@ -124,6 +124,40 @@ async function quickLoginDriver(email) {
     loadDriverDashboard();
   } catch (err) {
     alert(err.message || 'Login failed');
+  }
+}
+
+async function handleDriverManualLogin(event) {
+  if (event) event.preventDefault();
+  const idInput = document.getElementById('driver-login-id').value.trim();
+  const passInput = document.getElementById('driver-login-password').value.trim() || '123';
+  const btn = document.getElementById('driver-login-submit-btn');
+
+  if (!idInput) {
+    alert('Please enter your Driver ID (e.g. driver1)');
+    return;
+  }
+
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Logging In...';
+    }
+    const res = await api.login(idInput, passInput);
+    if (res.role !== 'driver') {
+      alert('Selected account is not a driver.');
+      return;
+    }
+    currentDriverProfile = res.profile;
+    showDriverApp();
+    loadDriverDashboard();
+  } catch (err) {
+    alert(err.message || 'Login failed');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Sign In to Driver App';
+    }
   }
 }
 

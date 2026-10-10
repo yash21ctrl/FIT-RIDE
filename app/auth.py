@@ -7,10 +7,48 @@ from flask import g, jsonify, request
 import jwt
 
 from app.config import SUPABASE_JWT_SECRET
-from app.db import get_profile_by_id, get_driver_by_profile_id
+from app.db import get_profile_by_id, get_driver_by_profile_id, get_profile_by_email, get_all_profiles
 
 # Default fallback signing secret for test/offline environments
 TEST_JWT_SECRET = "fleetride-jwt-test-secret-hs256-32bytes-min"
+
+# Easy aliases for simplified login (emp1, driver1, manager1)
+ALIAS_MAP: Dict[str, str] = {
+    "emp1": "00000000-0000-0000-0003-000000000001",
+    "emp2": "00000000-0000-0000-0003-000000000002",
+    "emp3": "00000000-0000-0000-0003-000000000003",
+    "emp4": "00000000-0000-0000-0003-000000000004",
+    "emp5": "00000000-0000-0000-0003-000000000005",
+    "manager1": "00000000-0000-0000-0002-000000000001",
+    "manager2": "00000000-0000-0000-0002-000000000002",
+    "driver1": "00000000-0000-0000-0004-000000000001",
+    "driver2": "00000000-0000-0000-0004-000000000002",
+    "driver3": "00000000-0000-0000-0004-000000000003",
+    "driver4": "00000000-0000-0000-0004-000000000004",
+    "driver5": "00000000-0000-0000-0004-000000000005",
+}
+
+
+def resolve_profile_from_identifier(identifier: str) -> Optional[Dict[str, Any]]:
+    """Look up profile by UUID, email, or short username alias (emp1, driver1, manager1)."""
+    if not identifier:
+        return None
+    s = str(identifier).strip()
+    if s.lower() in ALIAS_MAP:
+        return get_profile_by_id(ALIAS_MAP[s.lower()])
+    p = get_profile_by_id(s)
+    if p:
+        return p
+    p = get_profile_by_email(s)
+    if p:
+        return p
+    for prof in get_all_profiles():
+        em = prof.get("email", "").lower()
+        nm = prof.get("name", "").lower()
+        pid = str(prof.get("id", "")).lower()
+        if pid == s.lower() or em == s.lower() or em.startswith(s.lower() + "@") or s.lower() == nm:
+            return prof
+    return None
 
 
 def get_jwt_secret() -> str:
@@ -54,37 +92,41 @@ def decode_jwt(token: str, secret: Optional[str] = None) -> Dict[str, Any]:
 
 def get_current_user_from_token(token: str) -> Dict[str, Any]:
     """
-    Verify JWT and load user profile and role DIRECTLY from the database.
+    Verify JWT or raw user identifier and load user profile and role DIRECTLY from the database.
     Never trusts client-supplied role claims.
     """
     user_id = None
     try:
         payload = decode_jwt(token)
         user_id = payload.get("sub")
-    except Exception as jwt_err:
-        from app.db import get_supabase_client
-        sb = get_supabase_client()
-        if sb is not None:
-            try:
-                user_res = sb.auth.get_user(token)
-                if user_res and getattr(user_res, "user", None):
-                    user_id = getattr(user_res.user, "id", None)
-            except Exception:
-                pass
-        if not user_id:
-            raise jwt_err
+    except jwt.ExpiredSignatureError:
+        raise
+    except Exception:
+        resolved = resolve_profile_from_identifier(token)
+        if resolved:
+            user_id = resolved["id"]
+        else:
+            from app.db import get_supabase_client
+            sb = get_supabase_client()
+            if sb is not None:
+                try:
+                    user_res = sb.auth.get_user(token)
+                    if user_res and getattr(user_res, "user", None):
+                        user_id = getattr(user_res.user, "id", None)
+                except Exception:
+                    pass
 
     if not user_id:
-        raise ValueError("Token missing 'sub' claim")
+        raise ValueError(f"Invalid token or unknown user: {token}")
 
-    profile = get_profile_by_id(user_id)
+    profile = get_profile_by_id(user_id) or resolve_profile_from_identifier(user_id)
     if not profile:
         raise ValueError(f"Profile not found for ID: {user_id}")
 
     verified_role = profile["role"]
     driver_id = None
     if verified_role == "driver":
-        drv = get_driver_by_profile_id(user_id)
+        drv = get_driver_by_profile_id(profile["id"])
         if drv:
             driver_id = drv.get("id")
 
@@ -101,17 +143,15 @@ def get_current_user_from_token(token: str) -> Dict[str, Any]:
 
 def _extract_bearer_token() -> Optional[str]:
     """
-    Extract token from Authorization header supporting case-insensitive 'Bearer' scheme.
-    Returns token string or None if header is missing or malformed.
+    Extract token from Authorization header supporting Bearer scheme or direct user ID.
     """
     auth_header = request.headers.get("Authorization", "").strip()
     if not auth_header:
-        return None
+        return request.headers.get("X-User-ID") or None
     parts = auth_header.split(None, 1)
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        return None
-    token = parts[1].strip()
-    return token or None
+    if len(parts) == 2 and parts[0].lower() == "bearer":
+        return parts[1].strip() or None
+    return auth_header or None
 
 
 def _authenticate_request_or_error():
@@ -123,39 +163,13 @@ def _authenticate_request_or_error():
     if getattr(g, "current_user", None):
         return g.current_user, None
 
-    auth_header = request.headers.get("Authorization", "").strip()
-    if not auth_header:
-        return None, (
-            jsonify({
-                "error": {
-                    "code": "UNAUTHORIZED",
-                    "message": "Missing or malformed Authorization header",
-                    "alternatives": [],
-                }
-            }),
-            401,
-        )
-
-    parts = auth_header.split(None, 1)
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        return None, (
-            jsonify({
-                "error": {
-                    "code": "UNAUTHORIZED",
-                    "message": "Missing or malformed Authorization header",
-                    "alternatives": [],
-                }
-            }),
-            401,
-        )
-
-    token = parts[1].strip()
+    token = _extract_bearer_token()
     if not token:
         return None, (
             jsonify({
                 "error": {
                     "code": "UNAUTHORIZED",
-                    "message": "Token cannot be empty",
+                    "message": "Missing or malformed Authorization header",
                     "alternatives": [],
                 }
             }),
