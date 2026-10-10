@@ -240,5 +240,9 @@ def create_app():
     def frontend_static(filename):
         return send_from_directory(frontend_dir, filename)
 
+    # Initialize background timeout monitor daemon safely (guarded against test/debug duplications)
+    from app.services.timeouts import init_timeout_scheduler
+    init_timeout_scheduler(app)
+
     return app
 

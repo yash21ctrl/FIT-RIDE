@@ -306,6 +306,29 @@ def get_profile_by_id(profile_id: str, conn=None) -> Optional[Dict[str, Any]]:
     return dict(prof) if prof else None
 
 
+def get_all_profiles(conn=None) -> List[Dict[str, Any]]:
+    """Fetch all user profiles."""
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("SELECT id, name, role, phone, telegram_chat_id FROM profiles;")
+                rows = cur.fetchall()
+                return [dict(r) for r in rows]
+        except Exception:
+            pass
+        finally:
+            if close_conn:
+                conn.close()
+
+    return [dict(p) for p in _in_memory_profiles.values()]
+
+
 def get_profile_by_email(email: str, conn=None) -> Optional[Dict[str, Any]]:
     """Lookup profile by email."""
     if not email:
@@ -1383,6 +1406,22 @@ def add_driver_response(
 
     _in_memory_driver_responses.append(dict(record))
     return dict(record)
+
+
+def create_decision_log(booking_id: Optional[str] = None, actor_id: Optional[str] = None, action: str = "", note: Optional[str] = None, conn=None) -> Dict[str, Any]:
+    """Helper wrapper for add_decision_log."""
+    return add_decision_log(booking_id=booking_id, actor_id=actor_id, action=action, note=note, conn=conn)
+
+
+def create_driver_response(data: Dict[str, Any], conn=None) -> Dict[str, Any]:
+    """Helper wrapper for add_driver_response accepting dictionary payload."""
+    return add_driver_response(
+        booking_id=data["booking_id"],
+        driver_id=data["driver_id"],
+        response=data["response"],
+        reject_reason=data.get("reject_reason"),
+        conn=conn,
+    )
 
 
 def get_driver_responses(booking_id: Optional[str] = None, driver_id: Optional[str] = None, conn=None) -> List[Dict[str, Any]]:
