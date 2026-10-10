@@ -132,16 +132,24 @@ function renderApprovalQueue() {
   }
 
   container.innerHTML = pendingQueue.map(b => {
+    const isPending = b.status === 'PENDING';
+    const isDriverPending = b.status === 'DRIVER_PENDING';
+    const borderColor = isPending ? '#f59e0b' : '#38bdf8';
+    const statusBadge = isPending
+      ? `<span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4);">AWAITING APPROVAL</span>`
+      : `<span class="badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4);">DISPATCHED TO DRIVER</span>`;
+
     return `
-      <div class="card" style="padding: 1.5rem; margin-bottom: 1.25rem; border-left: 4px solid #f59e0b;">
+      <div class="card" style="padding: 1.5rem; margin-bottom: 1.25rem; border-left: 4px solid ${borderColor};">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
           <div>
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <h3 style="font-size: 1.25rem; margin: 0; color: #f8fafc;">${b.destination}</h3>
               <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4);">${b.priority.toUpperCase()}</span>
+              ${statusBadge}
             </div>
             <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.25rem;">
-              Requested by Employee · ${b.passengers} Passengers · Purpose: "${b.reason}"
+              Requested by ${b.employee_name || 'Employee'} · ${b.passengers} Passengers · Purpose: "${b.reason}"
             </div>
           </div>
           <div style="text-align: right; font-size: 0.85rem; color: #cbd5e1;">
@@ -152,8 +160,11 @@ function renderApprovalQueue() {
 
         <!-- Allocation Engine Explanation Box -->
         <div style="background: #090d16; border: 1px solid #1e293b; border-radius: 12px; padding: 1rem; margin-bottom: 1.25rem;">
-          <div style="font-size: 0.8rem; font-weight: 700; color: #38bdf8; text-transform: uppercase; margin-bottom: 0.4rem;">
-            ⚙️ Allocation Engine Recommendation
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: #38bdf8; text-transform: uppercase;">
+              ⚙️ Allocation Engine Recommendation
+            </div>
+            ${b.respond_by ? `<div style="font-size: 0.75rem; color: #f59e0b;">Driver Response Due: ${FleetTime.formatIsoLocal(b.respond_by)}</div>` : ''}
           </div>
           <div style="font-size: 0.95rem; color: #f1f5f9; font-weight: 600; margin-bottom: 0.5rem;">
             Vehicle: <span style="color: #38bdf8;">${b.vehicle_name || 'Assigned Vehicle'}</span> &nbsp;|&nbsp; 
@@ -172,9 +183,15 @@ function renderApprovalQueue() {
           <button class="btn" style="background: #1e293b; color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);" onclick="openOverrideModal('${b.id}')">
             ✎ Override Assignment
           </button>
-          <button class="btn" style="background: #10b981; color: white; font-weight: bold; padding: 0.6rem 1.5rem;" onclick="approveBooking('${b.id}')">
-            ✓ Approve Request
-          </button>
+          ${isPending ? `
+            <button class="btn" style="background: #10b981; color: white; font-weight: bold; padding: 0.6rem 1.5rem;" onclick="approveBooking('${b.id}')">
+              ✓ Approve Request
+            </button>
+          ` : `
+            <button class="btn" style="background: #0284c7; color: white; font-weight: 600; padding: 0.6rem 1.25rem;" onclick="openOverrideModal('${b.id}')">
+              ↻ Re-dispatch
+            </button>
+          `}
         </div>
       </div>
     `;

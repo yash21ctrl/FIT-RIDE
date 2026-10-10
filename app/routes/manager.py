@@ -17,6 +17,7 @@ from app.db import (
     query_bookings,
     get_vehicle_by_id,
     get_driver_by_id,
+    get_profile_by_id,
     serialize_booking,
     _to_utc_dt,
 )
@@ -38,11 +39,40 @@ def ping():
 @manager_bp.route("/queue", methods=["GET"])
 @require_role("manager")
 def approval_queue():
-    """List bookings awaiting manager approval (status PENDING)."""
-    pending = query_bookings(active_only=False, status="PENDING")
+    """List bookings awaiting manager approval or oversight."""
+    status_filter = request.args.get("status")
+    
+    if status_filter == "PENDING":
+        bookings = query_bookings(active_only=False, status="PENDING")
+    elif status_filter == "DRIVER_PENDING":
+        bookings = query_bookings(active_only=False, status="DRIVER_PENDING")
+    elif status_filter == "all":
+        bookings = query_bookings(active_only=True)
+    else:
+        # Default: Return all actionable bookings (PENDING + DRIVER_PENDING + APPROVED)
+        pending = query_bookings(active_only=False, status="PENDING")
+        driver_pending = query_bookings(active_only=False, status="DRIVER_PENDING")
+        approved = query_bookings(active_only=False, status="APPROVED")
+        # Combine unique bookings preserving order
+        seen_ids = set()
+        bookings = []
+        for b in pending + driver_pending + approved:
+            if b["id"] not in seen_ids:
+                seen_ids.add(b["id"])
+                bookings.append(b)
+
     queue_items = []
-    for b in pending:
+    pending_items = []
+    dispatched_items = []
+
+    for b in bookings:
         item = serialize_booking(b)
+        if b.get("employee_id"):
+            emp = get_profile_by_id(b["employee_id"])
+            if emp:
+                item["employee_name"] = emp.get("name", "Employee")
+                item["employee_email"] = emp.get("email", "")
+                item["employee_phone"] = emp.get("phone", "")
         if b.get("vehicle_id"):
             veh = get_vehicle_by_id(b["vehicle_id"])
             if veh:
@@ -52,9 +82,19 @@ def approval_queue():
             drv = get_driver_by_id(b["driver_id"])
             if drv:
                 item["driver_name"] = drv.get("name")
-        queue_items.append(item)
 
-    return jsonify({"queue": queue_items, "count": len(queue_items)}), 200
+        queue_items.append(item)
+        if b.get("status") == "PENDING":
+            pending_items.append(item)
+        elif b.get("status") in ("DRIVER_PENDING", "APPROVED"):
+            dispatched_items.append(item)
+
+    return jsonify({
+        "queue": queue_items,
+        "pending": pending_items,
+        "dispatched": dispatched_items,
+        "count": len(queue_items),
+    }), 200
 
 
 @manager_bp.route("/bookings/<booking_id>/approve", methods=["POST"])

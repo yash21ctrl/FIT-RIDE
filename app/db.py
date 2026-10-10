@@ -1,4 +1,5 @@
 import os
+import threading
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
@@ -110,7 +111,7 @@ SEED_PROFILES: Dict[str, Dict[str, Any]] = {
     },
 }
 
-# Canonical seed vehicles matching migrations/003_seed.sql
+# Canonical seed vehicles: 1 bus, 2 4-seater cars, 2 6-seater vans
 SEED_VEHICLES: Dict[str, Dict[str, Any]] = {
     "00000000-0000-0000-0001-000000000001": {
         "id": "00000000-0000-0000-0001-000000000001",
@@ -132,28 +133,28 @@ SEED_VEHICLES: Dict[str, Dict[str, Any]] = {
     },
     "00000000-0000-0000-0001-000000000003": {
         "id": "00000000-0000-0000-0001-000000000003",
-        "name": "Maruti Ertiga",
+        "name": "Toyota Innova",
         "type": "van",
-        "capacity": 7,
+        "capacity": 6,
         "status": "available",
         "maintenance_until": None,
         "odometer_km": 45200,
     },
     "00000000-0000-0000-0001-000000000004": {
         "id": "00000000-0000-0000-0001-000000000004",
-        "name": "Toyota Innova Crysta",
+        "name": "Mahindra Bolero",
         "type": "van",
-        "capacity": 7,
+        "capacity": 6,
         "status": "available",
         "maintenance_until": None,
         "odometer_km": 61000,
     },
     "00000000-0000-0000-0001-000000000005": {
         "id": "00000000-0000-0000-0001-000000000005",
-        "name": "Mahindra Bolero",
+        "name": "Reserve Fleet Van (Retired)",
         "type": "van",
-        "capacity": 7,
-        "status": "available",
+        "capacity": 6,
+        "status": "retired",
         "maintenance_until": None,
         "odometer_km": 78300,
     },
@@ -218,6 +219,7 @@ _in_memory_trips: Dict[str, Dict[str, Any]] = {}
 _in_memory_notifications: List[Dict[str, Any]] = []
 _in_memory_locations: List[Dict[str, Any]] = []
 _in_memory_ratings: Dict[str, Dict[str, Any]] = {}
+_in_memory_lock = threading.Lock()
 
 
 def reset_seed_data() -> None:
@@ -1062,9 +1064,10 @@ def create_booking(booking_data: Dict[str, Any], conn=None) -> Dict[str, Any]:
                 conn.close()
 
     # In-memory execution
-    _check_in_memory_exclusions(record)
-    _in_memory_bookings[new_id] = dict(record)
-    return dict(record)
+    with _in_memory_lock:
+        _check_in_memory_exclusions(record)
+        _in_memory_bookings[new_id] = dict(record)
+        return dict(record)
 
 
 def get_booking_by_id(booking_id: str, conn=None) -> Optional[Dict[str, Any]]:
@@ -1160,13 +1163,14 @@ def update_booking(booking_id: str, updates: Dict[str, Any], conn=None) -> Optio
                 conn.close()
 
     # In-memory execution
-    if bid in _in_memory_bookings:
-        candidate = dict(_in_memory_bookings[bid])
-        candidate.update(clean_updates)
-        _check_in_memory_exclusions(candidate, exclude_booking_id=bid)
-        _in_memory_bookings[bid].update(clean_updates)
-        return dict(_in_memory_bookings[bid])
-    return None
+    with _in_memory_lock:
+        if bid in _in_memory_bookings:
+            candidate = dict(_in_memory_bookings[bid])
+            candidate.update(clean_updates)
+            _check_in_memory_exclusions(candidate, exclude_booking_id=bid)
+            _in_memory_bookings[bid].update(clean_updates)
+            return dict(_in_memory_bookings[bid])
+        return None
 
 
 def query_bookings(
