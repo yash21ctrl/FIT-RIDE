@@ -139,6 +139,54 @@ def test_concurrent_simultaneous_inserts_exclusion_23p01():
     assert errors[0].pgcode == "23P01", f"Expected error code 23P01, got {errors[0].pgcode}"
 
 
+def test_concurrent_driver_conflict_exclusion_23p01():
+    """
+    Two threads attempt simultaneous insert for the same DRIVER but different vehicles.
+    A threading.Barrier synchronizes their execution.
+    Verify: Exactly one succeeds, and the other catches 23P01 (no_driver_overlap).
+    """
+    sim_db = SimulatedBookingDatabase()
+    driver_id = "d-shared-01"
+    veh_1 = "v-swift-01"
+    veh_2 = "v-city-02"
+
+    now_utc = datetime(2026, 10, 20, 16, 0, 0, tzinfo=timezone.utc)
+    start_time = now_utc
+    end_time = now_utc + timedelta(hours=2)
+    blocked_until = end_time + timedelta(minutes=15)
+
+    barrier = threading.Barrier(2)
+    results = []
+    errors = []
+
+    def attempt_reservation(vehicle_id):
+        try:
+            barrier.wait(timeout=5)
+            bid = sim_db.insert_booking(
+                vehicle_id=vehicle_id,
+                driver_id=driver_id,
+                start_time=start_time,
+                end_time=end_time,
+                blocked_until=blocked_until,
+            )
+            results.append(bid)
+        except ExclusionViolationError as e:
+            errors.append(e)
+
+    t1 = threading.Thread(target=attempt_reservation, args=(veh_1,))
+    t2 = threading.Thread(target=attempt_reservation, args=(veh_2,))
+
+    t1.start()
+    t2.start()
+    t1.join(timeout=5)
+    t2.join(timeout=5)
+
+    assert len(results) == 1, f"Expected exactly 1 success, got {len(results)}"
+    assert len(errors) == 1, f"Expected exactly 1 failure, got {len(errors)}"
+    assert errors[0].pgcode == "23P01", f"Expected error code 23P01, got {errors[0].pgcode}"
+    assert "no_driver_overlap" in errors[0].message
+
+
 def test_multiple_concurrent_threads_race():
     """
     5 threads racing to book the exact same vehicle and slot simultaneously.

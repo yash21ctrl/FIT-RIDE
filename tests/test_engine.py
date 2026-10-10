@@ -610,3 +610,247 @@ def test_scoring_and_explain_pure_functions():
     assert "Suresh" in explanation
     assert "3.45" in explanation
 
+
+# =====================================================================
+# 17. Two-tuple Window Preserves Buffer and Full Duration in driver_ok
+# =====================================================================
+def test_driver_ok_window_two_tuple_preserves_buffer(base_time):
+    """
+    When passing (start, end) as a 2-tuple for a 2-hour trip:
+    - Trip duration must be 2.0 hours (not undercounted to 1h 45m).
+    - Blocked until must be end + 15 min buffer.
+    - A booking starting 5 minutes after end (inside buffer) must be rejected as an overlap.
+    """
+    driver = {"id": "d-buf", "name": "Driver", "status": "available"}
+    trip_start = base_time
+    trip_end = base_time + timedelta(hours=2)
+
+    # Booking starting 5 minutes after trip_end (inside 15-min buffer)
+    inside_buffer_booking = {
+        "id": "b-overlap",
+        "driver_id": "d-buf",
+        "start_time": trip_end + timedelta(minutes=5),
+        "end_time": trip_end + timedelta(hours=1),
+        "blocked_until": trip_end + timedelta(hours=1, minutes=15),
+        "status": "CONFIRMED",
+    }
+
+    # With driver_min_rest_minutes = 0 to isolate the buffer overlap check
+    check = driver_ok(
+        driver,
+        (trip_start, trip_end),
+        bookings=[inside_buffer_booking],
+        config={"driver_min_rest_minutes": 0, "buffer_minutes": 15},
+    )
+    assert bool(check) is False
+    assert "overlapping" in check.reason.lower()
+
+
+# =====================================================================
+# 18. Daily Hours Cap Spans Midnight in Asia/Kolkata
+# =====================================================================
+def test_daily_hours_cap_spans_midnight_in_asia_kolkata():
+    """
+    A trip starts at 23:00 IST on Day 1 and ends at 03:00 IST on Day 2 (4h trip: 1h on Day 1, 3h on Day 2).
+    On Day 2, driver already drove 7 hours from 10:00 to 17:00 IST.
+    Total driving on Day 2 = 3h + 7h = 10h > 9h.
+    driver_ok must detect the breach on Day 2 and reject.
+    """
+    # 23:00 IST on Oct 15 is 17:30 UTC on Oct 15
+    day1_start_ist = datetime(2026, 10, 15, 23, 0, 0, tzinfo=KOLKATA_TZ)
+    day2_end_ist = datetime(2026, 10, 16, 3, 0, 0, tzinfo=KOLKATA_TZ)
+
+    driver = {"id": "d-night", "name": "Night Driver", "status": "available"}
+
+    # Existing booking on Day 2: 7 hours (10:00 to 17:00 IST on Oct 16)
+    trip_day2 = {
+        "id": "b-day2",
+        "driver_id": "d-night",
+        "start_time": datetime(2026, 10, 16, 10, 0, 0, tzinfo=KOLKATA_TZ).astimezone(timezone.utc),
+        "end_time": datetime(2026, 10, 16, 17, 0, 0, tzinfo=KOLKATA_TZ).astimezone(timezone.utc),
+        "blocked_until": datetime(2026, 10, 16, 17, 15, 0, tzinfo=KOLKATA_TZ).astimezone(timezone.utc),
+        "status": "CONFIRMED",
+    }
+
+    check = driver_ok(
+        driver,
+        (day1_start_ist.astimezone(timezone.utc), day2_end_ist.astimezone(timezone.utc)),
+        bookings=[trip_day2],
+    )
+    assert bool(check) is False
+    assert "daily hours limit" in check.reason.lower()
+    assert "2026-10-16" in check.reason
+
+
+# =====================================================================
+# 19. Continuous Driving Limit With Subsequent Trips
+# =====================================================================
+def test_continuous_driving_with_subsequent_trips(base_time):
+    """
+    Proposed trip: 2.5 hours (10:00 to 12:30).
+    Upcoming booked trip: 2.0 hours (12:45 to 14:45), gap = 15m (< 30m break).
+    Total continuous driving = 2.5h + 2.0h = 4.5h > 4.0h limit.
+    driver_ok must detect the continuous driving breach.
+    """
+    driver = {"id": "d-seq", "name": "Sequenced Driver", "status": "available"}
+    upcoming_trip = {
+        "id": "b-up",
+        "driver_id": "d-seq",
+        "start_time": base_time + timedelta(hours=2, minutes=45),  # 12:45
+        "end_time": base_time + timedelta(hours=4, minutes=45),    # 14:45
+        "blocked_until": base_time + timedelta(hours=5),
+        "status": "CONFIRMED",
+    }
+
+    check = driver_ok(
+        driver,
+        (base_time, base_time + timedelta(hours=2, minutes=30)),  # 10:00 - 12:30 (2.5h)
+        bookings=[upcoming_trip],
+        config={"driver_min_rest_minutes": 15, "driver_long_break_minutes": 30, "driver_max_continuous_hours": 4.0},
+    )
+    assert bool(check) is False
+    assert "continuous" in check.reason.lower()
+
+
+# =====================================================================
+# 20. Retired Vehicles Excluded When Diagnosing NO_VEHICLE_BIG_ENOUGH
+# =====================================================================
+def test_failure_reason_no_vehicle_big_enough_when_large_vehicles_retired(base_time):
+    """
+    Fleet has:
+    - Maruti Swift (4 seats, available)
+    - Maruti Ertiga (7 seats, available)
+    - Force Tempo Traveller (12 seats, RETIRED)
+    Request for 10 passengers: No ACTIVE vehicle has >= 10 seats.
+    Must diagnose NO_VEHICLE_BIG_ENOUGH (not ALL_VEHICLES_BUSY).
+    """
+    vehicles = [
+        {"id": "v-1", "name": "Swift", "capacity": 4, "status": "available"},
+        {"id": "v-2", "name": "Ertiga", "capacity": 7, "status": "available"},
+        {"id": "v-3", "name": "Tempo Traveller", "capacity": 12, "status": "retired"},
+    ]
+    drivers = [{"id": "d-1", "name": "Driver", "status": "available"}]
+    req = {"start": base_time, "end": base_time + timedelta(hours=2), "passengers": 10}
+
+    result = allocate(req, vehicles=vehicles, drivers=drivers, bookings=[])
+    assert result.ok is False
+    assert result.failure_reason == "NO_VEHICLE_BIG_ENOUGH"
+    assert len(result.alternatives) > 0
+
+
+# =====================================================================
+# 21. Split Recommendation When Passengers Exceed Max Fleet Capacity
+# =====================================================================
+def test_alternatives_split_recommendation_when_passengers_exceed_fleet_capacity(base_time):
+    """
+    For a 15-passenger request when max fleet capacity is 12:
+    - Alternatives must include split_recommendation and waitlist_recommendation.
+    - Alternatives must NOT propose single-vehicle shifted windows on 12-seater vehicle.
+    """
+    vehicles = [
+        {"id": "v-tempo", "name": "Force Tempo Traveller", "capacity": 12, "status": "available"}
+    ]
+    drivers = [{"id": "d-1", "name": "Driver", "status": "available"}]
+    req = {"start": base_time, "end": base_time + timedelta(hours=2), "passengers": 15}
+
+    result = allocate(req, vehicles=vehicles, drivers=drivers, bookings=[])
+    assert result.ok is False
+    assert result.failure_reason == "NO_VEHICLE_BIG_ENOUGH"
+
+    alt_types = [a["type"] for a in result.alternatives]
+    assert "split_recommendation" in alt_types
+    # Must NOT suggest shifted window on a vehicle that cannot fit 15 passengers
+    assert "shifted_window" not in alt_types
+
+
+# =====================================================================
+# 22. Alternatives Discovers Free Slots After Vehicle Maintenance Ends
+# =====================================================================
+def test_alternatives_finds_slot_after_maintenance_ends(base_time):
+    """
+    A vehicle is currently under maintenance until base_time + 1 day.
+    Direct allocation for base_time fails with VEHICLES_IN_MAINTENANCE.
+    Alternatives must discover next free slot after maintenance ends.
+    """
+    vehicles = [
+        {
+            "id": "v-maint",
+            "name": "Bolero",
+            "capacity": 7,
+            "status": "maintenance",
+            "maintenance_until": base_time + timedelta(days=1),
+        }
+    ]
+    drivers = [{"id": "d-1", "name": "Driver", "status": "available", "rating_avg": 4.8}]
+    req = {"start": base_time, "end": base_time + timedelta(hours=2), "passengers": 5}
+
+    result = allocate(req, vehicles=vehicles, drivers=drivers, bookings=[])
+    assert result.ok is False
+    assert result.failure_reason == "VEHICLES_IN_MAINTENANCE"
+    assert len(result.alternatives) > 0
+
+    next_slot_alts = [a for a in result.alternatives if a["type"] == "next_available_slot"]
+    assert len(next_slot_alts) > 0
+    # Discovered slot must start after maintenance_until
+    found_start = datetime.fromisoformat(next_slot_alts[0]["start"])
+    assert found_start >= base_time + timedelta(days=1)
+
+
+# =====================================================================
+# 23. Driver Objects Are Not Mutated Across Multiple Allocations
+# =====================================================================
+def test_driver_objects_not_mutated_across_allocations(base_time):
+    """
+    Calling allocate() on Day 1 must not mutate driver dicts in-place and pollute
+    trips_today for subsequent calls on Day 2.
+    """
+    drivers = [
+        {"id": "d-1", "name": "Driver 1", "status": "available", "rating_avg": 4.8}
+    ]
+    # Day 1 booking
+    bkg_day1 = {
+        "id": "b-1",
+        "driver_id": "d-1",
+        "start_time": base_time,
+        "end_time": base_time + timedelta(hours=1),
+        "blocked_until": base_time + timedelta(hours=1, minutes=15),
+        "status": "COMPLETED",
+    }
+
+    req_day1 = {"start": base_time + timedelta(hours=2), "end": base_time + timedelta(hours=3), "passengers": 2}
+    allocate(req_day1, drivers=drivers, bookings=[bkg_day1])
+
+    # The driver dict must not have an in-place mutation that poisons day 2
+    req_day2 = {"start": base_time + timedelta(days=5), "end": base_time + timedelta(days=5, hours=2), "passengers": 2}
+    res_day2 = allocate(req_day2, drivers=drivers, bookings=[bkg_day1])
+    assert res_day2.ok is True
+    # Reason should show 0 trips today on day 2
+    assert "0 trips today" in res_day2.options[0].reason
+
+
+# =====================================================================
+# 24. Exclude Booking ID In Driver Trips Today and Fairness
+# =====================================================================
+def test_exclude_booking_id_in_trips_today(base_time):
+    """
+    When reallocating an existing booking (exclude_booking_id), that booking
+    must not count toward the driver's trips today.
+    """
+    drivers = [
+        {"id": "d-1", "name": "Driver 1", "status": "available", "rating_avg": 4.8}
+    ]
+    existing_bkg = {
+        "id": "b-self",
+        "driver_id": "d-1",
+        "start_time": base_time,
+        "end_time": base_time + timedelta(hours=1),
+        "blocked_until": base_time + timedelta(hours=1, minutes=15),
+        "status": "CONFIRMED",
+    }
+
+    req = {"start": base_time, "end": base_time + timedelta(hours=1), "passengers": 2}
+    res = allocate(req, exclude_booking_id="b-self", drivers=drivers, bookings=[existing_bkg])
+    assert res.ok is True
+    assert "0 trips today" in res.options[0].reason
+
+

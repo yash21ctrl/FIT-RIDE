@@ -71,7 +71,8 @@ def find_alternatives(
         bookings = []
 
     # 1. Capacity check: If passengers exceed max vehicle in fleet
-    max_fleet_cap = max([int(_get(v, "capacity", 0)) for v in vehicles], default=0)
+    active_vehicles = [v for v in vehicles if _get(v, "status", "available") != "retired"]
+    max_fleet_cap = max([int(_get(v, "capacity", 0)) for v in active_vehicles], default=0)
     if passengers > max_fleet_cap:
         alternatives.append({
             "type": "split_recommendation",
@@ -79,21 +80,32 @@ def find_alternatives(
             "max_vehicle_capacity": max_fleet_cap,
             "description": f"No vehicle has {passengers} seats (fleet maximum is {max_fleet_cap}). Recommend splitting into 2 separate bookings.",
         })
-        # Also find next slot on the largest vehicle
-        suitable_vehicles = [v for v in vehicles if int(_get(v, "capacity", 0)) == max_fleet_cap]
-    else:
-        suitable_vehicles = [v for v in vehicles if int(_get(v, "capacity", 0)) >= passengers]
+        alternatives.append({
+            "type": "waitlist_recommendation",
+            "passengers": passengers,
+            "description": "Join the waitlist to be automatically promoted if fleet capacity is adjusted or larger vehicles become available.",
+        })
+        return alternatives
+
+    suitable_vehicles = [v for v in active_vehicles if int(_get(v, "capacity", 0)) >= passengers]
 
     # Helper: Check if vehicle is free in [start, blocked_until)
     def vehicle_free(veh: Any, slot_start: datetime, slot_blocked: datetime) -> bool:
         v_status = _get(veh, "status", "available")
-        if v_status != "available":
+        if v_status == "retired":
             return False
         m_until = _get(veh, "maintenance_until")
-        if m_until:
-            m_dt = _to_dt(m_until)
-            if m_dt > slot_start:
+        if v_status == "maintenance":
+            if m_until is None:
                 return False
+            m_dt = _to_dt(m_until)
+            if slot_start < m_dt:
+                return False
+        elif m_until is not None:
+            m_dt = _to_dt(m_until)
+            if slot_start < m_dt:
+                return False
+
         v_id = str(_get(veh, "id"))
         for b in bookings:
             b_id = str(_get(b, "id", ""))
@@ -113,18 +125,18 @@ def find_alternatives(
 
     # Helper: Find at least one eligible driver for slot
     def find_eligible_driver(slot_start: datetime, slot_end: datetime, slot_blocked: datetime) -> Optional[Any]:
+        excluded_set = {str(x) for x in exclude_driver_ids}
         for d in drivers:
             d_id = str(_get(d, "id"))
-            if d_id in exclude_driver_ids:
+            if d_id in excluded_set:
                 continue
             ok, _ = driver_ok(
                 d,
-                (slot_start, slot_blocked),
+                (slot_start, slot_end, slot_blocked),
                 bookings=bookings,
                 config=config,
                 exclude_driver_ids=exclude_driver_ids,
                 exclude_booking_id=exclude_booking_id,
-                end_time=slot_end,
             )
             if ok:
                 return d

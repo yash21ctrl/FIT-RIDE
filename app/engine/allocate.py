@@ -323,16 +323,10 @@ def driver_ok(
         w1 = _to_dt(window[1])
         if end_time is not None:
             trip_end_utc = _to_dt(end_time)
-            blocked_until_utc = w1
+            blocked_until_utc = w1 if w1 > trip_end_utc else (trip_end_utc + buffer_delta)
         else:
-            # Check if w1 is blocked_until or end_time
-            if w1 > start_utc + buffer_delta:
-                # w1 is likely blocked_until
-                blocked_until_utc = w1
-                trip_end_utc = w1 - buffer_delta
-            else:
-                trip_end_utc = w1
-                blocked_until_utc = w1 + buffer_delta
+            trip_end_utc = w1
+            blocked_until_utc = trip_end_utc + buffer_delta
     else:
         return DriverCheckResult(False, "Invalid window specification")
 
@@ -378,38 +372,41 @@ def driver_ok(
     # 4. Daily hours cap in driver's local day (Asia/Kolkata)
     max_daily_hours = float(config.get("driver_max_hours_per_day", 9.0))
     start_kolkata = start_utc.astimezone(KOLKATA_TZ)
-    local_day = start_kolkata.date()
-    day_start_kolkata = datetime.combine(local_day, dtime.min, tzinfo=KOLKATA_TZ)
-    day_end_kolkata = datetime.combine(local_day, dtime.max, tzinfo=KOLKATA_TZ)
+    end_kolkata = trip_end_utc.astimezone(KOLKATA_TZ)
 
-    # Calculate hours already driven on local_day
-    hours_driven_today = 0.0
-    for b in driver_bookings:
-        b_status = _get(b, "status", "")
-        # Count completed, in-progress, or active confirmed bookings for daily workload
-        if b_status not in ("COMPLETED", "IN_PROGRESS", "CONFIRMED", "APPROVED", "PENDING"):
-            continue
-        b_st_kol = _to_dt(_get(b, "start_time")).astimezone(KOLKATA_TZ)
-        b_end_kol = _to_dt(_get(b, "end_time")).astimezone(KOLKATA_TZ)
+    days_to_check = []
+    curr_d = start_kolkata.date()
+    while curr_d <= end_kolkata.date():
+        days_to_check.append(curr_d)
+        curr_d += timedelta(days=1)
 
-        overlap_start = max(b_st_kol, day_start_kolkata)
-        overlap_end = min(b_end_kol, day_end_kolkata)
-        if overlap_end > overlap_start:
-            hours_driven_today += (overlap_end - overlap_start).total_seconds() / 3600.0
+    for check_day in days_to_check:
+        day_start_kolkata = datetime.combine(check_day, dtime.min, tzinfo=KOLKATA_TZ)
+        day_end_kolkata = datetime.combine(check_day, dtime.max, tzinfo=KOLKATA_TZ)
 
-    # Add this trip's duration in local_day
-    req_overlap_start = max(start_kolkata, day_start_kolkata)
-    req_overlap_end = min(trip_end_utc.astimezone(KOLKATA_TZ), day_end_kolkata)
-    if req_overlap_end > req_overlap_start:
-        this_trip_local_hours = (req_overlap_end - req_overlap_start).total_seconds() / 3600.0
-    else:
-        this_trip_local_hours = this_trip_hours
+        hours_driven_day = 0.0
+        for b in driver_bookings:
+            b_status = _get(b, "status", "")
+            # Count completed, in-progress, or active confirmed bookings for daily workload
+            if b_status not in ("COMPLETED", "IN_PROGRESS", "CONFIRMED", "APPROVED", "PENDING"):
+                continue
+            b_st_kol = _to_dt(_get(b, "start_time")).astimezone(KOLKATA_TZ)
+            b_end_kol = _to_dt(_get(b, "end_time")).astimezone(KOLKATA_TZ)
 
-    if (hours_driven_today + this_trip_local_hours) > max_daily_hours:
-        return DriverCheckResult(
-            False,
-            f"Daily hours limit exceeded ({hours_driven_today + this_trip_local_hours:.1f}h > {max_daily_hours:.1f}h in Asia/Kolkata)"
-        )
+            overlap_start = max(b_st_kol, day_start_kolkata)
+            overlap_end = min(b_end_kol, day_end_kolkata)
+            if overlap_end > overlap_start:
+                hours_driven_day += (overlap_end - overlap_start).total_seconds() / 3600.0
+
+        req_overlap_start = max(start_kolkata, day_start_kolkata)
+        req_overlap_end = min(end_kolkata, day_end_kolkata)
+        this_trip_day_hours = max(0.0, (req_overlap_end - req_overlap_start).total_seconds() / 3600.0)
+
+        if (hours_driven_day + this_trip_day_hours) > max_daily_hours:
+            return DriverCheckResult(
+                False,
+                f"Daily hours limit exceeded on {check_day.strftime('%Y-%m-%d')} ({hours_driven_day + this_trip_day_hours:.1f}h > {max_daily_hours:.1f}h in Asia/Kolkata)"
+            )
 
     # 5. Rest gap since last completed trip end >= driver_min_rest_minutes (45m)
     min_rest_min = float(config.get("driver_min_rest_minutes", 45))
@@ -457,8 +454,10 @@ def driver_ok(
             f"Trip duration {this_trip_hours:.1f}h exceeds max continuous driving limit of {max_continuous_hours:.1f}h"
         )
 
-    # Accumulate continuous driving from consecutive trips with gaps < long_break_min
-    prior_trips = []
+    # Accumulate continuous driving in the contiguous block connecting to this trip
+    # Trips belong to this continuous block if gaps between them are < long_break_min
+    backward_trips = []
+    forward_trips = []
     for b in driver_bookings:
         b_status = _get(b, "status", "")
         if b_status not in ("COMPLETED", "IN_PROGRESS", "CONFIRMED", "APPROVED", "PENDING"):
@@ -466,29 +465,40 @@ def driver_ok(
         b_st = _to_dt(_get(b, "start_time"))
         b_ed = _to_dt(_get(b, "end_time"))
         if b_ed <= start_utc:
-            prior_trips.append((b_st, b_ed))
+            backward_trips.append((b_st, b_ed))
+        elif b_st >= trip_end_utc:
+            forward_trips.append((b_st, b_ed))
 
-    prior_trips.sort(key=lambda x: x[1])  # Sort by end time ascending
+    # Sort backward trips descending by end time to walk backward from this trip
+    backward_trips.sort(key=lambda x: x[1], reverse=True)
+    backward_hours = 0.0
+    curr_chain_start = start_utc
+    for t_st, t_ed in backward_trips:
+        gap_m = (curr_chain_start - t_ed).total_seconds() / 60.0
+        if gap_m < long_break_min:
+            backward_hours += max(0.0, (t_ed - t_st).total_seconds() / 3600.0)
+            curr_chain_start = t_st
+        else:
+            break
 
-    continuous_accumulated_hours = 0.0
-    prev_end = None
-    for trip_st, trip_ed in prior_trips:
-        dur = (trip_ed - trip_st).total_seconds() / 3600.0
-        if prev_end is not None:
-            gap_m = (trip_st - prev_end).total_seconds() / 60.0
-            if gap_m >= long_break_min:
-                continuous_accumulated_hours = 0.0
-        continuous_accumulated_hours += dur
-        prev_end = trip_ed
+    # Sort forward trips ascending by start time to walk forward from this trip
+    forward_trips.sort(key=lambda x: x[0])
+    forward_hours = 0.0
+    curr_chain_end = trip_end_utc
+    for t_st, t_ed in forward_trips:
+        gap_m = (t_st - curr_chain_end).total_seconds() / 60.0
+        if gap_m < long_break_min:
+            forward_hours += max(0.0, (t_ed - t_st).total_seconds() / 3600.0)
+            curr_chain_end = t_ed
+        else:
+            break
 
-    if prev_end is not None:
-        gap_to_new_trip = (start_utc - prev_end).total_seconds() / 60.0
-        if gap_to_new_trip < long_break_min:
-            if (continuous_accumulated_hours + this_trip_hours) > max_continuous_hours:
-                return DriverCheckResult(
-                    False,
-                    f"Continuous driving limit exceeded ({continuous_accumulated_hours + this_trip_hours:.1f}h > {max_continuous_hours:.1f}h)"
-                )
+    total_continuous_hours = backward_hours + this_trip_hours + forward_hours
+    if total_continuous_hours > max_continuous_hours:
+        return DriverCheckResult(
+            False,
+            f"Continuous driving limit exceeded ({total_continuous_hours:.1f}h > {max_continuous_hours:.1f}h without {long_break_min:.0f}m break)"
+        )
 
     return DriverCheckResult(True, "")
 
@@ -544,7 +554,11 @@ def allocate(
     skipped_candidates: List[str] = []
 
     # 3. Fleet Capacity Check: NO_VEHICLE_BIG_ENOUGH
-    max_cap = max([int(_get(v, "capacity", 0)) for v in vehicles], default=0)
+    active_vehicles = [
+        v for v in vehicles
+        if _get(v, "status", "available") != "retired"
+    ]
+    max_cap = max([int(_get(v, "capacity", 0)) for v in active_vehicles], default=0)
     if passengers > max_cap:
         alts = find_alternatives(
             request,
@@ -564,9 +578,8 @@ def allocate(
 
     # 4. Suitable Vehicles (capacity >= passengers and status != 'retired')
     capacity_matched_vehicles = [
-        v for v in vehicles
+        v for v in active_vehicles
         if int(_get(v, "capacity", 0)) >= passengers
-        and _get(v, "status", "available") != "retired"
     ]
 
     # 5. Maintenance Check: VEHICLES_IN_MAINTENANCE
@@ -661,22 +674,28 @@ def allocate(
     local_day = start_kolkata.date()
 
     # Pre-calculate trips today for each driver in fleet
+    import copy
     driver_trip_counts = {}
     for d in drivers:
         d_id = str(_get(d, "id"))
-        if hasattr(d, "trips_today") or (isinstance(d, dict) and "trips_today" in d):
-            driver_trip_counts[d_id] = float(_get(d, "trips_today", 0))
-        else:
-            # Count completed/scheduled trips on local_day
-            cnt = 0
-            for b in bookings:
-                if str(_get(b, "driver_id", "")) == d_id:
-                    b_st_kol = _to_dt(_get(b, "start_time")).astimezone(KOLKATA_TZ)
-                    if b_st_kol.date() == local_day and _get(b, "status") in (
-                        "COMPLETED", "IN_PROGRESS", "CONFIRMED", "APPROVED", "PENDING"
-                    ):
-                        cnt += 1
+        # Count from bookings on local_day
+        cnt = 0
+        has_driver_bookings = False
+        for b in bookings:
+            if str(_get(b, "driver_id", "")) == d_id:
+                if exclude_booking_id and str(_get(b, "id", "")) == str(exclude_booking_id):
+                    continue
+                has_driver_bookings = True
+                b_st_kol = _to_dt(_get(b, "start_time")).astimezone(KOLKATA_TZ)
+                if b_st_kol.date() == local_day and _get(b, "status") in (
+                    "COMPLETED", "IN_PROGRESS", "CONFIRMED", "APPROVED", "PENDING"
+                ):
+                    cnt += 1
+
+        if has_driver_bookings or not hasattr(d, "trips_today") and (not isinstance(d, dict) or "trips_today" not in d):
             driver_trip_counts[d_id] = float(cnt)
+        else:
+            driver_trip_counts[d_id] = float(_get(d, "trips_today", 0))
 
     avg_trips_today = (
         sum(driver_trip_counts.values()) / len(driver_trip_counts)
@@ -688,15 +707,18 @@ def allocate(
     for d in drivers:
         d_id = str(_get(d, "id"))
         d_name = _get(d, "name", "Driver")
-        # Attach trips_today
         d_trips = driver_trip_counts.get(d_id, 0.0)
+
+        # Create scoped driver object without mutating caller's original driver
         if isinstance(d, dict):
-            d["trips_today"] = d_trips
+            d_scoped = dict(d)
+            d_scoped["trips_today"] = d_trips
         else:
-            setattr(d, "trips_today", d_trips)
+            d_scoped = copy.copy(d)
+            setattr(d_scoped, "trips_today", d_trips)
 
         ok, check_reason = driver_ok(
-            d,
+            d_scoped,
             window,
             bookings=bookings,
             config=config,
@@ -705,7 +727,7 @@ def allocate(
             end_time=end_utc,
         )
         if ok:
-            eligible_drivers.append(d)
+            eligible_drivers.append(d_scoped)
         else:
             skipped_candidates.append(f"Driver {d_name}: {check_reason}")
 
