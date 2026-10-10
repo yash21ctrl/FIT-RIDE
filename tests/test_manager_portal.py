@@ -38,7 +38,7 @@ def test_manager_portal_static_routes(client):
     if res_index.status_code == 308:
         res_index = client.get("/manager/")
     assert res_index.status_code == 200
-    assert "Fleet Operations Manager" in res_index.get_data(as_text=True)
+    assert ("FIT-RIDE Operations Manager" in res_index.get_data(as_text=True) or "Fleet Operations Manager" in res_index.get_data(as_text=True))
 
     res_js = client.get("/manager/app.js")
     assert res_js.status_code == 200

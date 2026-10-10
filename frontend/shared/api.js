@@ -1,5 +1,5 @@
 /**
- * FleetRide Shared API Client (Team KNIGHT | PS 40)
+ * FIT-RIDE Shared API Client (Team KNIGHT | PS 40)
  * Handles token storage, standard error payload parsing, and HTTP requests.
  */
 

@@ -1,5 +1,5 @@
-// FleetRide Driver Service Worker - App Shell Cache
-const CACHE_NAME = 'fleetride-driver-v1';
+// FIT-RIDE Driver Service Worker - App Shell Cache
+const CACHE_NAME = 'fitride-driver-v1';
 const APP_SHELL = [
   '/driver',
   '/shared/styles.css',

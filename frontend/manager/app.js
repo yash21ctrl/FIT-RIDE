@@ -1,4 +1,4 @@
-// Fleet Operations Manager Portal Application Logic
+// FIT-RIDE Operations Manager Portal Application Logic
 let currentManagerProfile = null;
 let currentGanttMode = 'vehicles'; // 'vehicles' | 'drivers'
 let allVehicles = [];

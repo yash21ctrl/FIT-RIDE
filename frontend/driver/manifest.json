@@ -1,5 +1,5 @@
 {
-  "name": "FleetRide Driver",
+  "name": "FIT-RIDE Driver",
   "short_name": "Driver",
   "description": "Shared Vehicle Driver Operations Portal",
   "start_url": "/driver",

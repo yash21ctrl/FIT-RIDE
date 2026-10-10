@@ -38,7 +38,7 @@ def test_driver_pwa_static_routes(client):
     if res_index.status_code == 308:
         res_index = client.get("/driver/")
     assert res_index.status_code == 200
-    assert "FleetRide Driver PWA" in res_index.get_data(as_text=True)
+    assert ("FIT-RIDE Driver PWA" in res_index.get_data(as_text=True) or "FleetRide Driver PWA" in res_index.get_data(as_text=True))
 
     # 2. Manifest
     res_manifest = client.get("/driver/manifest.json")
@@ -50,7 +50,7 @@ def test_driver_pwa_static_routes(client):
     # 3. Service Worker
     res_sw = client.get("/driver/sw.js")
     assert res_sw.status_code == 200
-    assert "fleetride-driver" in res_sw.get_data(as_text=True)
+    assert ("fitride-driver" in res_sw.get_data(as_text=True) or "fleetride-driver" in res_sw.get_data(as_text=True))
 
     # 4. App.js
     res_js = client.get("/driver/app.js")

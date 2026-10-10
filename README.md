@@ -1,4 +1,4 @@
-# Shared Vehicle Booking App (FleetRide)
+# Shared Vehicle Booking App (FIT-RIDE)
 ### Team KNIGHT | PS 40 | Software & Web Development
 
 Deterministic fleet operations system for shared organizational vehicles. Guarantees **zero double-bookings** via PostgreSQL GiST exclusion constraints (`blocked_until`), soft-hold slot locking, plain-English decision reasoning, driver fatigue safety rules, and role-based web portals.

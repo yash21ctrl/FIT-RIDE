@@ -1,5 +1,5 @@
 /**
- * FleetRide Employee Portal Application (Team KNIGHT | PS 40)
+ * FIT-RIDE Employee Portal Application (Team KNIGHT | PS 40)
  * Single-page experience with deterministic allocation result explanation,
  * failure ladder alternatives, waitlisting, and realtime notifications.
  */

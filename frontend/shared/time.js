@@ -1,5 +1,5 @@
 /**
- * FleetRide Time Utilities (Team KNIGHT | PS 40)
+ * FIT-RIDE Time Utilities (Team KNIGHT | PS 40)
  * Timezone: Asia/Kolkata (IST = UTC+05:30)
  * Handles ISO UTC conversions, human-friendly local displays, and slot increments.
  */

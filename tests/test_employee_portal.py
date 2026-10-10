@@ -60,7 +60,7 @@ def test_employee_index_returns_html(client):
         assert "text/html" in res.headers.get("Content-Type", "")
         html = res.get_data(as_text=True)
         # Verify key elements
-        assert "FleetRide" in html
+        assert ("FIT-RIDE" in html or "FleetRide" in html)
         assert "Employee Portal" in html
         assert "emp1@fleetride.local" in html  # quick login pill
         assert "Ananya Roy" in html

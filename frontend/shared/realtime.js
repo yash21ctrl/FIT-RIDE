@@ -1,5 +1,5 @@
 /**
- * FleetRide Realtime Updates & Notification Poller (Team KNIGHT | PS 40)
+ * FIT-RIDE Realtime Updates & Notification Poller (Team KNIGHT | PS 40)
  * Keeps booking statuses and notifications fresh using polling and optional Realtime.
  */
 
