@@ -216,13 +216,15 @@ _in_memory_decision_log: List[Dict[str, Any]] = []
 _in_memory_driver_responses: List[Dict[str, Any]] = []
 _in_memory_trips: Dict[str, Dict[str, Any]] = {}
 _in_memory_notifications: List[Dict[str, Any]] = []
+_in_memory_locations: List[Dict[str, Any]] = []
+_in_memory_ratings: Dict[str, Dict[str, Any]] = {}
 
 
 def reset_seed_data() -> None:
     """Reset in-memory data store to original seed data."""
     global _in_memory_profiles, _in_memory_vehicles, _in_memory_drivers
     global _in_memory_bookings, _in_memory_decision_log, _in_memory_driver_responses
-    global _in_memory_trips, _in_memory_notifications
+    global _in_memory_trips, _in_memory_notifications, _in_memory_locations, _in_memory_ratings
     _in_memory_profiles = {k: dict(v) for k, v in SEED_PROFILES.items()}
     _in_memory_vehicles = {k: dict(v) for k, v in SEED_VEHICLES.items()}
     _in_memory_drivers = {k: dict(v) for k, v in SEED_DRIVERS.items()}
@@ -231,6 +233,8 @@ def reset_seed_data() -> None:
     _in_memory_driver_responses = []
     _in_memory_trips = {}
     _in_memory_notifications = []
+    _in_memory_locations = []
+    _in_memory_ratings = {}
 
 
 def register_test_profile(profile_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -1756,4 +1760,206 @@ def format_exclusion_error(alternatives: Optional[List[Dict[str, Any]]] = None) 
             "alternatives": alternatives or [],
         }
     }
+
+
+# ---------------------------------------------------------
+# GPS Telemetry Breadcrumbs & Ratings
+# ---------------------------------------------------------
+
+def add_trip_location(booking_id: str, lat: float, lng: float, recorded_at: Optional[Any] = None, conn=None) -> Dict[str, Any]:
+    """Record a GPS breadcrumb for a trip/booking."""
+    bid = str(booking_id)
+    rec_dt = _to_utc_dt(recorded_at) or datetime.now(timezone.utc)
+    entry = {
+        "id": len(_in_memory_locations) + 1,
+        "booking_id": bid,
+        "lat": float(lat),
+        "lng": float(lng),
+        "recorded_at": rec_dt.isoformat(),
+    }
+
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            trip = get_trip_by_booking_id(bid, conn=conn)
+            trip_id = trip["id"] if trip else None
+            if trip_id:
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    cur.execute("""
+                        INSERT INTO trip_locations (trip_id, lat, lng, recorded_at)
+                        VALUES (%s, %s, %s, %s)
+                        RETURNING id, trip_id, lat, lng, recorded_at;
+                    """, (trip_id, float(lat), float(lng), rec_dt))
+                    conn.commit()
+                    row = cur.fetchone()
+                    if row:
+                        res = dict(row)
+                        res["booking_id"] = bid
+                        return res
+        except Exception:
+            if conn:
+                conn.rollback()
+        finally:
+            if close_conn and conn:
+                conn.close()
+
+    _in_memory_locations.append(entry)
+    return dict(entry)
+
+
+def get_trip_locations(booking_id: str, limit: int = 100, conn=None) -> List[Dict[str, Any]]:
+    """Retrieve GPS trail for a trip/booking."""
+    bid = str(booking_id)
+
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            trip = get_trip_by_booking_id(bid, conn=conn)
+            trip_id = trip["id"] if trip else None
+            if trip_id:
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    cur.execute("""
+                        SELECT id, trip_id, lat, lng, recorded_at
+                        FROM trip_locations
+                        WHERE trip_id = %s
+                        ORDER BY recorded_at ASC
+                        LIMIT %s;
+                    """, (trip_id, limit))
+                    rows = cur.fetchall()
+                    res = []
+                    for r in rows:
+                        item = dict(r)
+                        item["booking_id"] = bid
+                        if isinstance(item.get("recorded_at"), datetime):
+                            item["recorded_at"] = item["recorded_at"].isoformat()
+                        res.append(item)
+                    return res
+        except Exception:
+            pass
+        finally:
+            if close_conn and conn:
+                conn.close()
+
+    locs = [l for l in _in_memory_locations if l.get("booking_id") == bid]
+    locs.sort(key=lambda x: x.get("recorded_at", ""))
+    return locs[-limit:]
+
+
+def create_rating(
+    booking_id: str,
+    rated_by: str,
+    driver_rating: int,
+    vehicle_rating: int,
+    comment: Optional[str] = None,
+    tags: Optional[List[str]] = None,
+    conn=None,
+) -> Dict[str, Any]:
+    """
+    Save rating for completed trip and update driver's rating_avg.
+    driver_rating and vehicle_rating must be 1 to 5.
+    """
+    bid = str(booking_id)
+    d_rate = max(1, min(5, int(driver_rating)))
+    v_rate = max(1, min(5, int(vehicle_rating)))
+    rate_id = str(uuid.uuid4())
+    record = {
+        "id": rate_id,
+        "booking_id": bid,
+        "rated_by": str(rated_by),
+        "driver_rating": d_rate,
+        "vehicle_rating": v_rate,
+        "tags": list(tags or []),
+        "comment": comment or "",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    # Update driver's rating_avg
+    bkg = get_booking_by_id(bid, conn=conn)
+    if bkg and bkg.get("driver_id"):
+        drv_id = str(bkg["driver_id"])
+        drv = get_driver_by_id(drv_id, conn=conn)
+        if drv:
+            curr_avg = float(drv.get("rating_avg", 5.0))
+            new_avg = round((curr_avg * 0.8) + (d_rate * 0.2), 2)
+            update_driver(drv_id, {"rating_avg": new_avg}, conn=conn)
+
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            trip = get_trip_by_booking_id(bid, conn=conn)
+            trip_id = trip["id"] if trip else None
+            if trip_id:
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    cur.execute("""
+                        INSERT INTO ratings (id, trip_id, rated_by, driver_rating, vehicle_rating, tags, comment)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (trip_id) DO UPDATE
+                        SET driver_rating = EXCLUDED.driver_rating,
+                            vehicle_rating = EXCLUDED.vehicle_rating,
+                            tags = EXCLUDED.tags,
+                            comment = EXCLUDED.comment
+                        RETURNING *;
+                    """, (rate_id, trip_id, rated_by, d_rate, v_rate, tags, comment))
+                    conn.commit()
+                    row = cur.fetchone()
+                    if row:
+                        res = dict(row)
+                        res["booking_id"] = bid
+                        return res
+        except Exception:
+            if conn:
+                conn.rollback()
+        finally:
+            if close_conn and conn:
+                conn.close()
+
+    _in_memory_ratings[bid] = record
+    return dict(record)
+
+
+def get_rating_by_booking_id(booking_id: str, conn=None) -> Optional[Dict[str, Any]]:
+    """Fetch rating for booking."""
+    bid = str(booking_id)
+
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            trip = get_trip_by_booking_id(bid, conn=conn)
+            trip_id = trip["id"] if trip else None
+            if trip_id:
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    cur.execute("SELECT * FROM ratings WHERE trip_id = %s;", (trip_id,))
+                    row = cur.fetchone()
+                    if row:
+                        res = dict(row)
+                        res["booking_id"] = bid
+                        return res
+        except Exception:
+            pass
+        finally:
+            if close_conn and conn:
+                conn.close()
+
+    return _in_memory_ratings.get(bid)
+
 

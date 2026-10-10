@@ -413,3 +413,106 @@ def manager_alerts():
         "bumped": bumped_items,
         "total_alerts": len(emergency_items) + len(waitlisted_items) + len(bumped_items),
     }), 200
+
+
+@manager_bp.route("/analytics", methods=["GET"])
+@require_role("manager")
+def manager_analytics():
+    """Operational analytics: vehicle utilization, driver trip fairness, reject reasons."""
+    from app.db import (
+        get_all_vehicles,
+        query_drivers,
+        query_bookings,
+        get_driver_responses,
+        _to_utc_dt,
+    )
+
+    all_vehicles = get_all_vehicles()
+    all_drivers = query_drivers()
+    all_bookings = query_bookings(active_only=False)
+    all_responses = get_driver_responses()
+
+    # 1. Vehicle Utilization
+    vehicle_stats = []
+    for v in all_vehicles:
+        vid = str(v["id"])
+        v_bkgs = [b for b in all_bookings if str(b.get("vehicle_id")) == vid]
+        total_hours = 0.0
+        for b in v_bkgs:
+            st = _to_utc_dt(b.get("start_time"))
+            et = _to_utc_dt(b.get("end_time"))
+            if st and et and et > st:
+                total_hours += (et - st).total_seconds() / 3600.0
+
+        vehicle_stats.append({
+            "id": vid,
+            "name": v.get("name", "Vehicle"),
+            "type": v.get("type", "car"),
+            "capacity": v.get("capacity", 4),
+            "status": v.get("status", "available"),
+            "odometer_km": v.get("odometer_km", 0),
+            "total_trips": len(v_bkgs),
+            "total_hours": round(total_hours, 1),
+            "utilization_pct": round(min(100.0, (total_hours / 24.0) * 100), 1),
+        })
+
+    # 2. Driver Fairness & Workload
+    driver_stats = []
+    for d in all_drivers:
+        did = str(d["id"])
+        d_bkgs = [b for b in all_bookings if str(b.get("driver_id")) == did]
+        d_hours = 0.0
+        for b in d_bkgs:
+            st = _to_utc_dt(b.get("start_time"))
+            et = _to_utc_dt(b.get("end_time"))
+            if st and et and et > st:
+                d_hours += (et - st).total_seconds() / 3600.0
+
+        driver_stats.append({
+            "id": did,
+            "name": d.get("name", "Driver"),
+            "phone": d.get("phone", ""),
+            "status": d.get("status", "available"),
+            "rating_avg": float(d.get("rating_avg", 5.0)),
+            "total_trips": len(d_bkgs),
+            "total_hours": round(d_hours, 1),
+        })
+
+    # 3. Reject Reasons Breakdown
+    reject_counts = {
+        "tired": 0,
+        "vehicle_issue": 0,
+        "personal": 0,
+        "too_far": 0,
+        "unsafe": 0,
+        "other": 0,
+        "timeout": 0,
+    }
+    for r in all_responses:
+        resp_type = r.get("response", "")
+        if resp_type == "timeout":
+            reject_counts["timeout"] += 1
+        elif resp_type == "rejected":
+            reason = r.get("reject_reason", "other")
+            if reason in reject_counts:
+                reject_counts[reason] += 1
+            else:
+                reject_counts["other"] += 1
+
+    # 4. Status Breakdown
+    status_counts = {}
+    for b in all_bookings:
+        st = b.get("status", "UNKNOWN")
+        status_counts[st] = status_counts.get(st, 0) + 1
+
+    return jsonify({
+        "vehicle_utilization": vehicle_stats,
+        "driver_fairness": driver_stats,
+        "reject_reasons": reject_counts,
+        "status_breakdown": status_counts,
+        "summary": {
+            "total_vehicles": len(all_vehicles),
+            "total_drivers": len(all_drivers),
+            "total_bookings": len(all_bookings),
+        },
+    }), 200

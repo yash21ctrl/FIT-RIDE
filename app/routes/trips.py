@@ -237,3 +237,154 @@ def end_trip(booking_id: str):
                 "alternatives": [],
             }
         }), 400
+
+
+@trips_bp.route("/<booking_id>/location", methods=["POST"])
+@require_role("driver", "manager")
+def post_location(booking_id: str):
+    """Ingest live GPS coordinate or batch of coordinates for active trip."""
+    from app.db import add_trip_location, get_booking_by_id
+
+    b = get_booking_by_id(booking_id)
+    if not b:
+        return jsonify({
+            "error": {
+                "code": "NOT_FOUND",
+                "message": f"Booking not found with ID {booking_id}",
+                "alternatives": [],
+            }
+        }), 404
+
+    data = request.get_json(silent=True) or {}
+    locations_to_add = []
+    if "locations" in data and isinstance(data["locations"], list):
+        locations_to_add = data["locations"]
+    elif "latitude" in data or "lat" in data:
+        locations_to_add = [data]
+
+    if not locations_to_add:
+        return jsonify({
+            "error": {
+                "code": "BAD_REQUEST",
+                "message": "Missing GPS coordinates (provide latitude & longitude)",
+                "alternatives": [],
+            }
+        }), 400
+
+    saved = []
+    for loc in locations_to_add:
+        lat = loc.get("latitude") if "latitude" in loc else loc.get("lat")
+        lng = loc.get("longitude") if "longitude" in loc else loc.get("lng")
+        if lat is None or lng is None:
+            continue
+        rec_at = loc.get("timestamp") or loc.get("recorded_at")
+        entry = add_trip_location(booking_id, float(lat), float(lng), recorded_at=rec_at)
+        saved.append(entry)
+
+    return jsonify({"saved_count": len(saved), "locations": saved}), 201
+
+
+@trips_bp.route("/<booking_id>/location", methods=["GET"])
+@require_role("employee", "manager", "driver")
+def get_location(booking_id: str):
+    """Fetch live GPS trail and latest coordinate for trip."""
+    from app.db import get_trip_locations, get_booking_by_id
+
+    b = get_booking_by_id(booking_id)
+    if not b:
+        return jsonify({
+            "error": {
+                "code": "NOT_FOUND",
+                "message": f"Booking not found with ID {booking_id}",
+                "alternatives": [],
+            }
+        }), 404
+
+    limit = int(request.args.get("limit", 100))
+    locs = get_trip_locations(booking_id, limit=limit)
+    latest = locs[-1] if locs else None
+
+    return jsonify({
+        "booking_id": booking_id,
+        "latest": latest,
+        "trail": locs,
+        "count": len(locs),
+    }), 200
+
+
+@trips_bp.route("/<booking_id>/rate", methods=["POST"])
+@require_role("employee", "manager")
+def rate_trip(booking_id: str):
+    """Employee rates driver & vehicle after trip completion."""
+    from app.db import get_booking_by_id, create_rating, get_rating_by_booking_id
+
+    b = get_booking_by_id(booking_id)
+    if not b:
+        return jsonify({
+            "error": {
+                "code": "NOT_FOUND",
+                "message": f"Booking not found with ID {booking_id}",
+                "alternatives": [],
+            }
+        }), 404
+
+    if b.get("status") != "COMPLETED":
+        return jsonify({
+            "error": {
+                "code": "INVALID_STATUS",
+                "message": f"Cannot rate trip in status '{b.get('status')}'; must be COMPLETED",
+                "alternatives": [],
+            }
+        }), 400
+
+    data = request.get_json(silent=True) or {}
+    d_rate = data.get("driver_rating") or data.get("rating")
+    v_rate = data.get("vehicle_rating") or d_rate or 5
+
+    if d_rate is None:
+        return jsonify({
+            "error": {
+                "code": "BAD_REQUEST",
+                "message": "Field 'driver_rating' (1-5) is required",
+                "alternatives": [],
+            }
+        }), 400
+
+    try:
+        d_rate = int(d_rate)
+        v_rate = int(v_rate)
+        if not (1 <= d_rate <= 5) or not (1 <= v_rate <= 5):
+            raise ValueError()
+    except (ValueError, TypeError):
+        return jsonify({
+            "error": {
+                "code": "BAD_REQUEST",
+                "message": "Ratings must be integers between 1 and 5",
+                "alternatives": [],
+            }
+        }), 400
+
+    rated_by = g.current_user["id"]
+    comment = data.get("comment") or data.get("comments") or ""
+    tags = data.get("tags") or []
+
+    saved = create_rating(
+        booking_id=booking_id,
+        rated_by=rated_by,
+        driver_rating=d_rate,
+        vehicle_rating=v_rate,
+        comment=comment,
+        tags=tags,
+    )
+    return jsonify({"rating": saved, "message": "Rating submitted successfully"}), 201
+
+
+@trips_bp.route("/<booking_id>/rate", methods=["GET"])
+@require_role("employee", "manager", "driver")
+def get_rate(booking_id: str):
+    """Fetch submitted rating for booking."""
+    from app.db import get_rating_by_booking_id
+    r = get_rating_by_booking_id(booking_id)
+    if not r:
+        return jsonify({"rating": None}), 200
+    return jsonify({"rating": r}), 200
