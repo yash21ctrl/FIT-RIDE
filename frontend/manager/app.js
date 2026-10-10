@@ -731,3 +731,35 @@ async function triggerSimulateChaos() {
   }
 }
 
+// RESET ALL SIMULATION DATA TO CLEAN SLATE
+async function triggerResetData() {
+  if (!confirm('Are you sure you want to remove all simulation and demo bookings? This restores the fleet to a clean initial state.')) {
+    return;
+  }
+  const btn = document.getElementById('btn-reset-data');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ Clearing...';
+  }
+  try {
+    const res = await api.post('/api/admin/reset', {});
+    alert(res.message || 'All simulation data and bookings wiped successfully!');
+    await loadInitialData();
+  } catch (err) {
+    alert('Reset failed: ' + (err.message || 'Error'));
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '🗑️ Reset Data';
+    }
+  }
+}
+
+// Auto-poll approval queue every 6 seconds so requests appear in real time
+setInterval(() => {
+  const queueView = document.getElementById('view-queue');
+  if (queueView && queueView.style.display !== 'none' && currentManagerProfile) {
+    loadApprovalQueue();
+  }
+}, 6000);
+

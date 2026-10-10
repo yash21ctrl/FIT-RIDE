@@ -46,6 +46,18 @@ def ping():
     return jsonify({"blueprint": "admin", "status": "pong"})
 
 
+@admin_bp.route("/reset", methods=["POST"])
+@require_role("manager")
+def reset_system_data():
+    """Wipe all bookings, trips, logs, and simulation data back to clean seed slate."""
+    from app.db import reset_seed_data
+    reset_seed_data()
+    return jsonify({
+        "ok": True,
+        "message": "All simulation data and bookings wiped successfully. System restored to clean initial state.",
+    }), 200
+
+
 @admin_bp.route("/trip-merge-check", methods=["POST"])
 @require_role("manager", "employee")
 def trip_merge_check():
