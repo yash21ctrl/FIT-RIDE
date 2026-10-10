@@ -429,7 +429,7 @@ function renderActiveTripView() {
       <div class="touch-card" style="text-align: center; padding: 2.5rem 1rem;">
         <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🅿️</div>
         <h3 style="color: #f1f5f9; margin-bottom: 0.25rem;">No Active Trip</h3>
-        <p style="color: #94a3b8; font-size: 0.9rem; margin: 0;">Accept an incoming trip request to begin checklist and start odometer logging.</p>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin: 0;">Accept an incoming trip request to begin driving.</p>
       </div>
     `;
     return;
@@ -443,7 +443,7 @@ function renderActiveTripView() {
     container.innerHTML = `
       <div class="touch-card" style="border: 2px solid #38bdf8;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-          <span style="font-size: 0.8rem; font-weight: bold; color: #38bdf8; text-transform: uppercase;">STEP 1: PRE-TRIP CHECKLIST</span>
+          <span style="font-size: 0.8rem; font-weight: bold; color: #38bdf8; text-transform: uppercase;">STEP 1: READY TO DEPART</span>
           <span class="driver-status-badge status-available">CONFIRMED</span>
         </div>
 
@@ -453,7 +453,7 @@ function renderActiveTripView() {
         </p>
 
         <!-- Checklist -->
-        <div style="background: #1e293b; padding: 1rem; border-radius: 12px; margin-bottom: 1.25rem;">
+        <div style="background: #1e293b; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
           <div style="font-weight: 700; font-size: 0.9rem; color: #f8fafc; margin-bottom: 0.75rem;">Vehicle Inspection Checklist</div>
           <div style="display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.9rem; color: #cbd5e1;">
             <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer;">
@@ -475,14 +475,6 @@ function renderActiveTripView() {
           </div>
         </div>
 
-        <!-- Starting Odometer Input -->
-        <div style="margin-bottom: 1.5rem;">
-          <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.4rem;">
-            Starting Odometer Reading (KM)
-          </label>
-          <input type="number" id="start-odometer-input" value="12500" style="width: 100%; font-size: 1.25rem; font-weight: bold; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.75rem 1rem; border-radius: 10px;">
-        </div>
-
         <button class="btn btn-big btn-start" onclick="handleStartTrip('${b.id}')">
           🚀 Start Trip (Begin Driving)
         </button>
@@ -502,21 +494,9 @@ function renderActiveTripView() {
         </p>
 
         <!-- Live Telemetry Card -->
-        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1rem; border-radius: 12px; margin-bottom: 1.25rem;">
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
           <div style="color: #10b981; font-weight: bold; font-size: 0.95rem;">● Live Location Broadcasting</div>
           <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem;">Trip telemetry is being synchronized with employee and manager dashboards.</div>
-        </div>
-
-        <!-- End Odometer and Fuel Input -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.5rem;">
-          <div>
-            <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.4rem;">End Odometer (KM)</label>
-            <input type="number" id="end-odometer-input" value="12545" style="width: 100%; font-size: 1.15rem; font-weight: bold; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.75rem; border-radius: 10px;">
-          </div>
-          <div>
-            <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.4rem;">Fuel Added (L)</label>
-            <input type="number" id="fuel-added-input" value="0" style="width: 100%; font-size: 1.15rem; font-weight: bold; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.75rem; border-radius: 10px;">
-          </div>
         </div>
 
         <button class="btn btn-big btn-end" onclick="handleEndTrip('${b.id}')">
@@ -527,21 +507,17 @@ function renderActiveTripView() {
   }
 }
 
-// Start Trip Action
+// Start Trip Action (1-Tap, no odometer required)
 async function handleStartTrip(bookingId) {
-  const odoInput = document.getElementById('start-odometer-input');
-  const startOdometer = parseFloat(odoInput.value) || 0;
-
   const checklist = {
-    tires: document.getElementById('chk-tires').checked,
-    fuel: document.getElementById('chk-fuel').checked,
-    mirrors: document.getElementById('chk-mirrors').checked,
-    clean: document.getElementById('chk-clean').checked
+    tires: document.getElementById('chk-tires') ? document.getElementById('chk-tires').checked : true,
+    fuel: document.getElementById('chk-fuel') ? document.getElementById('chk-fuel').checked : true,
+    mirrors: document.getElementById('chk-mirrors') ? document.getElementById('chk-mirrors').checked : true,
+    clean: document.getElementById('chk-clean') ? document.getElementById('chk-clean').checked : true
   };
 
   try {
     await api.post(`/api/trips/${bookingId}/start`, {
-      start_odometer: startOdometer,
       checklist: checklist
     });
     alert('Trip marked IN_PROGRESS! Driver status updated to ON_TRIP.');
@@ -553,16 +529,10 @@ async function handleStartTrip(bookingId) {
   }
 }
 
-// End Trip Action
+// End Trip Action (1-Tap, no odometer required)
 async function handleEndTrip(bookingId) {
-  const endOdo = parseFloat(document.getElementById('end-odometer-input').value) || 0;
-  const fuel = parseFloat(document.getElementById('fuel-added-input').value) || 0;
-
   try {
-    await api.post(`/api/trips/${bookingId}/end`, {
-      end_odometer: endOdo,
-      fuel_added: fuel
-    });
+    await api.post(`/api/trips/${bookingId}/end`, {});
     alert('Trip COMPLETED! Vehicle and driver are now freed to AVAILABLE.');
     activeTripBooking = null;
     await refreshDriverRequests();

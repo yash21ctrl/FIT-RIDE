@@ -501,7 +501,7 @@ function renderFleetLists() {
         <div>
           <div style="font-weight: 700; color: #f8fafc; font-size: 1rem;">${v.name}</div>
           <div style="font-size: 0.8rem; color: #94a3b8;">
-            ${v.type.toUpperCase()} · ${v.capacity} Seats · ${v.odometer_km} km
+            ${v.type.toUpperCase()} · ${v.capacity} Seats
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.6rem;">
