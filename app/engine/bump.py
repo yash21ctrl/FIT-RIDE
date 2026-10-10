@@ -1,0 +1,1 @@
+"""Emergency bump candidate logic."""
