@@ -414,6 +414,12 @@ def create_profile(profile_data: Dict[str, Any], conn=None) -> Dict[str, Any]:
     # In-memory execution
     with _in_memory_lock:
         _in_memory_profiles[new_id] = dict(record)
+        sb = get_supabase_client()
+        if sb is not None:
+            try:
+                sb.table("profiles").upsert(dict(record)).execute()
+            except Exception:
+                pass
         return dict(record)
 
 
@@ -867,6 +873,13 @@ def create_driver(data: Dict[str, Any], conn=None) -> Dict[str, Any]:
     _in_memory_drivers[new_id] = dict(record)
     if profile_id in _in_memory_profiles:
         _in_memory_profiles[profile_id]["role"] = "driver"
+    sb = get_supabase_client()
+    if sb is not None:
+        try:
+            sb.table("drivers").upsert(dict(record)).execute()
+            sb.table("profiles").update({"role": "driver"}).eq("id", profile_id).execute()
+        except Exception:
+            pass
     prof = _in_memory_profiles.get(profile_id, {})
     result = dict(record)
     result["name"] = prof.get("name", "")
