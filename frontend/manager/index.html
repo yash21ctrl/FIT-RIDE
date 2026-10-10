@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#090d16">
+  <meta name="theme-color" content="var(--bg)">
   <title>FIT-RIDE Operations Manager</title>
   
   <link rel="stylesheet" href="/shared/styles.css">
@@ -19,20 +19,20 @@
       justify-content: space-between;
       align-items: center;
       padding-bottom: 1.25rem;
-      border-bottom: 1px solid var(--border-subtle, #1e293b);
+      border-bottom: 1px solid var(--border-subtle, var(--line));
       margin-bottom: 1.5rem;
     }
     .manager-nav-tabs {
       display: flex;
       gap: 0.5rem;
-      border-bottom: 1px solid #1e293b;
+      border-bottom: 1px solid var(--line);
       margin-bottom: 1.5rem;
       overflow-x: auto;
     }
     .manager-tab-btn {
       background: none;
       border: none;
-      color: #94a3b8;
+      color: var(--muted);
       font-size: 0.95rem;
       font-weight: 600;
       padding: 0.75rem 1.25rem;
@@ -42,15 +42,15 @@
       white-space: nowrap;
     }
     .manager-tab-btn.active {
-      color: #38bdf8;
-      border-bottom-color: #38bdf8;
+      color: var(--cyan);
+      border-bottom-color: var(--cyan);
       background: rgba(56, 189, 248, 0.05);
     }
     
     /* CSS Grid Gantt Chart */
     .gantt-wrapper {
-      background: #0f172a;
-      border: 1px solid #1e293b;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
       border-radius: 16px;
       padding: 1.25rem;
       overflow-x: auto;
@@ -59,18 +59,18 @@
     .gantt-header-row {
       display: grid;
       grid-template-columns: 180px repeat(24, minmax(48px, 1fr));
-      border-bottom: 2px solid #334155;
+      border-bottom: 2px solid var(--line);
       padding-bottom: 0.5rem;
       margin-bottom: 0.5rem;
       font-size: 0.75rem;
       font-weight: 700;
-      color: #94a3b8;
+      color: var(--muted);
       text-align: center;
     }
     .gantt-row {
       display: grid;
       grid-template-columns: 180px repeat(24, minmax(48px, 1fr));
-      border-bottom: 1px solid #1e293b;
+      border-bottom: 1px solid var(--line);
       min-height: 52px;
       align-items: center;
       position: relative;
@@ -79,9 +79,9 @@
       padding: 0.5rem 0.75rem;
       font-weight: 600;
       font-size: 0.85rem;
-      color: #f1f5f9;
-      background: #111827;
-      border-right: 2px solid #334155;
+      color: var(--text);
+      background: var(--panel);
+      border-right: 2px solid var(--line);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -123,13 +123,13 @@
       filter: brightness(1.15);
       z-index: 30;
     }
-    .block-pending { background: linear-gradient(135deg, #f59e0b, #d97706); }
-    .block-driver_pending { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-    .block-confirmed { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-    .block-in_progress { background: linear-gradient(135deg, #06b6d4, #0891b2); }
-    .block-completed { background: linear-gradient(135deg, #10b981, #059669); }
-    .block-emergency { background: linear-gradient(135deg, #ef4444, #dc2626); border: 1px solid #fecaca; }
-    .block-bumped { background: linear-gradient(135deg, #ea580c, #c2410c); }
+    .block-pending { background: var(--amber); color: #080a0d; }
+    .block-driver_pending { background: var(--cyan-soft); border: 1px solid var(--cyan); color: var(--cyan); }
+    .block-confirmed { background: var(--cyan); color: #080a0d; }
+    .block-in_progress { background: var(--cyan); color: #080a0d; }
+    .block-completed { background: var(--green); color: #080a0d; }
+    .block-emergency { background: var(--red); color: white; border: 1px solid var(--red); }
+    .block-bumped { background: var(--amber); color: #080a0d; }
 
     /* Tables */
     .manager-table {
@@ -140,15 +140,15 @@
     }
     .manager-table th {
       padding: 0.75rem 1rem;
-      background: #1e293b;
-      color: #94a3b8;
+      background: var(--line);
+      color: var(--muted);
       font-weight: 700;
-      border-bottom: 2px solid #334155;
+      border-bottom: 2px solid var(--line);
     }
     .manager-table td {
       padding: 0.85rem 1rem;
-      border-bottom: 1px solid #1e293b;
-      color: #cbd5e1;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
     }
     .manager-table tr:hover td {
       background: rgba(30, 41, 59, 0.5);
@@ -161,45 +161,53 @@
     <!-- 1. LOGIN SCREEN -->
     <div id="manager-login-view" style="display: block; max-width: 480px; margin: 4rem auto;">
       <div style="text-align: center; margin-bottom: 2rem;">
-        <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">🏢</div>
-        <h1 style="font-size: 1.85rem; margin: 0 0 0.5rem; color: #f8fafc;">FIT-RIDE Operations Manager</h1>
-        <p style="color: #94a3b8; font-size: 0.95rem; margin-bottom: 0.5rem;">Administrative Control, Approvals &amp; Scheduling</p>
-        <div><a href="/landing" style="color: #38bdf8; font-size: 0.8rem; text-decoration: none; padding: 4px 10px; border-radius: 9999px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25);">✨ View 3D Fleet Story</a></div>
+        <div class="brand-lockup" style="justify-content: center; margin-bottom: 0.5rem; font-size: 1.5rem;">
+            <div class="brand-mark" style="width: 52px; height: 52px;">
+                <svg class="brand-glyph" style="width: 32px; height: 32px;" viewBox="0 0 42 42" role="presentation">
+                    <path class="brand-glyph-f" d="M11 33V9h22v6H18v5h13v6H18v7z" />
+                    <path class="brand-glyph-route" d="M8 35c4-8 10-11 18-11 4 0 7-2 9-6m-5-1 5 7-7 2" />
+                </svg>
+            </div>
+            FITRIDE
+        </div>
+        <h1 style="font-size: 1.85rem; margin: 0 0 0.5rem; color: var(--text);">Operations Manager</h1>
+        <p style="color: var(--muted); font-size: 0.95rem; margin-bottom: 0.5rem;">Administrative Control, Approvals &amp; Scheduling</p>
+        <div><a href="/landing" style="color: var(--cyan); font-size: 0.8rem; text-decoration: none; padding: 4px 10px; border-radius: 9999px; background: rgba(0, 217, 245, 0.1); border: 1px solid rgba(0, 217, 245, 0.25);">✨ View 3D Fleet Story</a></div>
       </div>
 
       <div class="card" style="padding: 1.5rem;">
-        <h3 style="margin-top: 0; color: #f1f5f9; font-size: 1.1rem; margin-bottom: 0.25rem;">Sign In to Console</h3>
-        <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1.25rem;">Enter Manager ID (e.g. <b>manager1</b>) &amp; Password: <b>123</b></p>
+        <h3 style="margin-top: 0; color: var(--text); font-size: 1.1rem; margin-bottom: 0.25rem;">Sign In to Console</h3>
+        <p style="color: var(--muted); font-size: 0.85rem; margin-bottom: 1.25rem;">Enter Manager ID (e.g. <b>manager1</b>) &amp; Password: <b>123</b></p>
 
         <form id="manager-login-form" onsubmit="handleManagerManualLogin(event)" style="margin-bottom: 1.5rem;">
           <div style="margin-bottom: 0.85rem;">
-            <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Manager ID or Email</label>
-            <input type="text" id="manager-login-id" placeholder="manager1" value="manager1" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.65rem; border-radius: 8px; font-size: 0.95rem;">
+            <label style="display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem;">Manager ID or Email</label>
+            <input type="text" id="manager-login-id" placeholder="manager1" value="manager1" style="width: 100%; background: var(--line); color: white; border: 1px solid var(--line); padding: 0.65rem; border-radius: 8px; font-size: 0.95rem;">
           </div>
           <div style="margin-bottom: 1.25rem;">
-            <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Password</label>
-            <input type="password" id="manager-login-password" value="123" placeholder="123" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.65rem; border-radius: 8px; font-size: 0.95rem;">
+            <label style="display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem;">Password</label>
+            <input type="password" id="manager-login-password" value="123" placeholder="123" style="width: 100%; background: var(--line); color: white; border: 1px solid var(--line); padding: 0.65rem; border-radius: 8px; font-size: 0.95rem;">
           </div>
-          <button type="submit" id="manager-login-submit-btn" class="btn" style="width: 100%; background: #0ea5e9; color: white; font-weight: bold; padding: 0.75rem; border-radius: 8px;">
+          <button type="submit" id="manager-login-submit-btn" class="btn" style="width: 100%; background: var(--cyan); color: white; font-weight: bold; padding: 0.75rem; border-radius: 8px;">
             Sign In to Console
           </button>
         </form>
 
-        <div style="border-top: 1px solid #1e293b; padding-top: 1.25rem;">
-          <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; margin-bottom: 0.75rem;">1-Click Quick Login</div>
+        <div style="border-top: 1px solid var(--line); padding-top: 1.25rem;">
+          <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 0.75rem;">1-Click Quick Login</div>
           <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <button type="button" class="btn" style="background: #1e293b; color: #f8fafc; padding: 0.85rem 1rem; text-align: left; display: flex; justify-content: space-between; align-items: center;" onclick="quickLoginManager('manager1')">
+            <button type="button" class="btn" style="background: var(--line); color: var(--text); padding: 0.85rem 1rem; text-align: left; display: flex; justify-content: space-between; align-items: center;" onclick="quickLoginManager('manager1')">
               <div>
                 <div style="font-weight: bold; font-size: 0.95rem;">manager1 · Yashwanth M</div>
-                <div style="font-size: 0.75rem; color: #38bdf8;">Lead Operations Manager</div>
+                <div style="font-size: 0.75rem; color: var(--cyan);">Lead Operations Manager</div>
               </div>
               <span>→</span>
             </button>
 
-            <button type="button" class="btn" style="background: #1e293b; color: #f8fafc; padding: 0.85rem 1rem; text-align: left; display: flex; justify-content: space-between; align-items: center;" onclick="quickLoginManager('manager2')">
+            <button type="button" class="btn" style="background: var(--line); color: var(--text); padding: 0.85rem 1rem; text-align: left; display: flex; justify-content: space-between; align-items: center;" onclick="quickLoginManager('manager2')">
               <div>
                 <div style="font-weight: bold; font-size: 0.95rem;">manager2 · Kavana</div>
-                <div style="font-size: 0.75rem; color: #38bdf8;">Fleet Controller</div>
+                <div style="font-size: 0.75rem; color: var(--cyan);">Fleet Controller</div>
               </div>
               <span>→</span>
             </button>
@@ -215,26 +223,35 @@
       <header class="manager-header">
         <div>
           <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <h1 style="font-size: 1.5rem; margin: 0; color: #f8fafc;">FIT-RIDE Operations Console</h1>
-            <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">MANAGER ROLE</span>
+            <div class="brand-lockup">
+                <div class="brand-mark" style="width: 32px; height: 32px;">
+                    <svg class="brand-glyph" style="width: 20px; height: 20px;" viewBox="0 0 42 42" role="presentation">
+                        <path class="brand-glyph-f" d="M11 33V9h22v6H18v5h13v6H18v7z" />
+                        <path class="brand-glyph-route" d="M8 35c4-8 10-11 18-11 4 0 7-2 9-6m-5-1 5 7-7 2" />
+                    </svg>
+                </div>
+                <span>FITRIDE</span>
+            </div>
+            <h1 style="font-size: 1.25rem; margin: 0; color: var(--muted); border-left: 1px solid var(--line); padding-left: 0.75rem;">Operations Console</h1>
+            <span class="badge" style="background: var(--cyan-soft); color: var(--cyan); border: 1px solid rgba(0, 217, 245, 0.3);">MANAGER ROLE</span>
           </div>
-          <div id="manager-name-display" style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.25rem;">Yashwanth M</div>
+          <div id="manager-name-display" style="font-size: 0.85rem; color: var(--muted); margin-top: 0.25rem;">Yashwanth M</div>
         </div>
 
         <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <a href="/landing" class="btn" style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25); font-size: 0.85rem;" title="View 3D Animated Fleet Story">✨ Fleet Story</a>
-          <button id="btn-reset-data" class="btn" style="background: #1e293b; color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); font-weight: 600; font-size: 0.85rem;" onclick="triggerResetData()">🗑️ Reset Data</button>
-          <button id="btn-simulate-chaos" class="btn" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; font-weight: bold; font-size: 0.85rem;" onclick="triggerSimulateChaos()">⚡ Simulate Chaos</button>
-          <a href="/employee" target="_blank" class="btn" style="background: #1e293b; color: #cbd5e1; font-size: 0.85rem;">↗ Employee View</a>
-          <a href="/driver" target="_blank" class="btn" style="background: #1e293b; color: #cbd5e1; font-size: 0.85rem;">↗ Driver PWA</a>
-          <button class="btn" style="background: #334155; color: #f8fafc; font-size: 0.85rem;" onclick="handleManagerLogout()">Sign Out</button>
+          <a href="/landing" class="btn" style="background: rgba(56, 189, 248, 0.12); color: var(--cyan); border: 1px solid rgba(56, 189, 248, 0.25); font-size: 0.85rem;" title="View 3D Animated Fleet Story">✨ Fleet Story</a>
+          <button id="btn-reset-data" class="btn" style="background: var(--line); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.4); font-weight: 600; font-size: 0.85rem;" onclick="triggerResetData()">🗑️ Reset Data</button>
+          <button id="btn-simulate-chaos" class="btn" style="background: linear-gradient(135deg, var(--amber), var(--red)); color: white; font-weight: bold; font-size: 0.85rem;" onclick="triggerSimulateChaos()">⚡ Simulate Chaos</button>
+          <a href="/employee" target="_blank" class="btn" style="background: var(--line); color: var(--muted); font-size: 0.85rem;">↗ Employee View</a>
+          <a href="/driver" target="_blank" class="btn" style="background: var(--line); color: var(--muted); font-size: 0.85rem;">↗ Driver PWA</a>
+          <button class="btn" style="background: var(--line); color: var(--text); font-size: 0.85rem;" onclick="handleManagerLogout()">Sign Out</button>
         </div>
       </header>
 
       <!-- Navigation Tabs -->
       <nav class="manager-nav-tabs">
         <button id="mgr-tab-queue" class="manager-tab-btn active" onclick="switchManagerTab('queue')">
-          📋 Approval Queue <span id="queue-badge" class="badge" style="background: #f59e0b; color: black; display: none;">0</span>
+          📋 Approval Queue <span id="queue-badge" class="badge" style="background: var(--amber); color: black; display: none;">0</span>
         </button>
         <button id="mgr-tab-gantt" class="manager-tab-btn" onclick="switchManagerTab('gantt')">
           📊 Gantt Timeline
@@ -249,7 +266,7 @@
           📜 Audit History
         </button>
         <button id="mgr-tab-alerts" class="manager-tab-btn" onclick="switchManagerTab('alerts')">
-          🚨 Alerts &amp; Queue <span id="alerts-badge" class="badge" style="background: #ef4444; color: white; display: none;">0</span>
+          🚨 Alerts &amp; Queue <span id="alerts-badge" class="badge" style="background: var(--red); color: white; display: none;">0</span>
         </button>
       </nav>
 
@@ -257,10 +274,10 @@
       <section id="view-queue" class="mgr-page" style="display: block;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
           <div>
-            <h2 style="font-size: 1.25rem; margin: 0; color: #f8fafc;">Bookings Awaiting Review</h2>
-            <p style="font-size: 0.85rem; color: #94a3b8; margin: 0.25rem 0 0;">Inspect deterministic engine recommendations, rationale, and make decisions.</p>
+            <h2 style="font-size: 1.25rem; margin: 0; color: var(--text);">Bookings Awaiting Review</h2>
+            <p style="font-size: 0.85rem; color: var(--muted); margin: 0.25rem 0 0;">Inspect deterministic engine recommendations, rationale, and make decisions.</p>
           </div>
-          <button class="btn" style="background: #1e293b; color: #38bdf8; font-size: 0.85rem;" onclick="loadApprovalQueue()">↻ Refresh Queue</button>
+          <button class="btn" style="background: var(--line); color: var(--cyan); font-size: 0.85rem;" onclick="loadApprovalQueue()">↻ Refresh Queue</button>
         </div>
 
         <div id="approval-queue-list">
@@ -272,32 +289,32 @@
       <section id="view-gantt" class="mgr-page" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
           <div>
-            <h2 style="font-size: 1.25rem; margin: 0; color: #f8fafc;">Live Conflict &amp; Allocation Gantt</h2>
-            <p style="font-size: 0.85rem; color: #94a3b8; margin: 0.25rem 0 0;">Visual schedule verifying zero double-bookings. Times shown in Asia/Kolkata.</p>
+            <h2 style="font-size: 1.25rem; margin: 0; color: var(--text);">Live Conflict &amp; Allocation Gantt</h2>
+            <p style="font-size: 0.85rem; color: var(--muted); margin: 0.25rem 0 0;">Visual schedule verifying zero double-bookings. Times shown in Asia/Kolkata.</p>
           </div>
 
           <div style="display: flex; gap: 0.75rem; align-items: center;">
             <div style="display: flex; align-items: center; gap: 0.35rem;">
-              <span style="font-size: 0.8rem; color: #94a3b8;">Date:</span>
-              <input type="date" id="gantt-date-picker" onchange="loadGanttData()" style="background: #1e293b; color: white; border: 1px solid #334155; padding: 0.35rem 0.6rem; border-radius: 8px; font-size: 0.8rem;">
+              <span style="font-size: 0.8rem; color: var(--muted);">Date:</span>
+              <input type="date" id="gantt-date-picker" onchange="loadGanttData()" style="background: var(--line); color: white; border: 1px solid var(--line); padding: 0.35rem 0.6rem; border-radius: 8px; font-size: 0.8rem;">
             </div>
-            <div style="background: #1e293b; border-radius: 8px; padding: 0.2rem; display: flex;">
-              <button id="gantt-toggle-veh" class="btn" style="background: #38bdf8; color: black; font-size: 0.8rem; padding: 0.35rem 0.75rem;" onclick="toggleGanttView('vehicles')">Vehicles View</button>
-              <button id="gantt-toggle-drv" class="btn" style="background: transparent; color: #94a3b8; font-size: 0.8rem; padding: 0.35rem 0.75rem;" onclick="toggleGanttView('drivers')">Drivers View</button>
+            <div style="background: var(--line); border-radius: 8px; padding: 0.2rem; display: flex;">
+              <button id="gantt-toggle-veh" class="btn" style="background: var(--cyan); color: black; font-size: 0.8rem; padding: 0.35rem 0.75rem;" onclick="toggleGanttView('vehicles')">Vehicles View</button>
+              <button id="gantt-toggle-drv" class="btn" style="background: transparent; color: var(--muted); font-size: 0.8rem; padding: 0.35rem 0.75rem;" onclick="toggleGanttView('drivers')">Drivers View</button>
             </div>
-            <button class="btn" style="background: #1e293b; color: #38bdf8; font-size: 0.85rem;" onclick="loadGanttData()">↻ Reload</button>
+            <button class="btn" style="background: var(--line); color: var(--cyan); font-size: 0.85rem;" onclick="loadGanttData()">↻ Reload</button>
           </div>
         </div>
 
         <!-- Gantt Legend -->
         <div style="display: flex; gap: 1rem; font-size: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
-          <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 12px; height: 12px; border-radius: 3px; background: #f59e0b;"></span> PENDING</div>
-          <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 12px; height: 12px; border-radius: 3px; background: #8b5cf6;"></span> DRIVER PENDING</div>
-          <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 12px; height: 12px; border-radius: 3px; background: #3b82f6;"></span> CONFIRMED</div>
-          <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 12px; height: 12px; border-radius: 3px; background: #06b6d4;"></span> IN PROGRESS</div>
-          <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 12px; height: 12px; border-radius: 3px; background: #10b981;"></span> COMPLETED</div>
-          <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 12px; height: 12px; border-radius: 3px; background: #ef4444;"></span> EMERGENCY</div>
-          <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 12px; height: 12px; border-radius: 3px; background: #ea580c;"></span> BUMPED</div>
+          <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 12px; height: 12px; border-radius: 3px; background: var(--amber);"></span> PENDING</div>
+          <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 12px; height: 12px; border-radius: 3px; background: var(--cyan-soft); border: 1px solid var(--cyan);"></span> DRIVER PENDING</div>
+          <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 12px; height: 12px; border-radius: 3px; background: var(--cyan);"></span> CONFIRMED</div>
+          <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 12px; height: 12px; border-radius: 3px; background: var(--cyan);"></span> IN PROGRESS</div>
+          <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 12px; height: 12px; border-radius: 3px; background: var(--green);"></span> COMPLETED</div>
+          <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 12px; height: 12px; border-radius: 3px; background: var(--red);"></span> EMERGENCY</div>
+          <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 12px; height: 12px; border-radius: 3px; background: var(--amber);"></span> BUMPED</div>
         </div>
 
         <!-- Rendered Gantt Matrix -->
@@ -322,8 +339,8 @@
           <!-- Vehicles Column -->
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-              <h2 style="font-size: 1.2rem; margin: 0; color: #f8fafc;">Vehicles Fleet</h2>
-              <button class="btn" style="background: #0ea5e9; color: white; font-size: 0.8rem;" onclick="openAddVehicleModal()">+ Add Vehicle</button>
+              <h2 style="font-size: 1.2rem; margin: 0; color: var(--text);">Vehicles Fleet</h2>
+              <button class="btn" style="background: var(--cyan); color: white; font-size: 0.8rem;" onclick="openAddVehicleModal()">+ Add Vehicle</button>
             </div>
             <div id="manager-vehicles-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
               <!-- Vehicle cards -->
@@ -333,8 +350,8 @@
           <!-- Drivers Column -->
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-              <h2 style="font-size: 1.2rem; margin: 0; color: #f8fafc;">Driver Roster</h2>
-              <button class="btn" style="background: #10b981; color: white; font-size: 0.8rem;" onclick="openAddDriverModal()">+ Add Driver</button>
+              <h2 style="font-size: 1.2rem; margin: 0; color: var(--text);">Driver Roster</h2>
+              <button class="btn" style="background: var(--green); color: white; font-size: 0.8rem;" onclick="openAddDriverModal()">+ Add Driver</button>
             </div>
             <div id="manager-drivers-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
               <!-- Driver cards -->
@@ -347,10 +364,10 @@
         <div style="margin-top: 2rem;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <div>
-              <h2 style="font-size: 1.2rem; margin: 0; color: #f8fafc;">Registered Employees</h2>
-              <p style="font-size: 0.8rem; color: #94a3b8; margin: 0.2rem 0 0;">Employees can request trips using their Employee ID &amp; Password: 123</p>
+              <h2 style="font-size: 1.2rem; margin: 0; color: var(--text);">Registered Employees</h2>
+              <p style="font-size: 0.8rem; color: var(--muted); margin: 0.2rem 0 0;">Employees can request trips using their Employee ID &amp; Password: 123</p>
             </div>
-            <button class="btn" style="background: #6366f1; color: white; font-size: 0.8rem;" onclick="openAddEmployeeModal()">+ Add Employee</button>
+            <button class="btn" style="background: var(--cyan); color: #080a0d; font-weight: bold; font-size: 0.8rem;" onclick="openAddEmployeeModal()">+ Add Employee</button>
           </div>
           <div id="manager-employees-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem;">
             <!-- Employee cards -->
@@ -362,35 +379,35 @@
       <section id="view-analytics" class="mgr-page" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
           <div>
-            <h2 style="font-size: 1.25rem; margin: 0; color: #f8fafc;">Operational Fleet Analytics</h2>
-            <p style="font-size: 0.85rem; color: #94a3b8; margin: 0.25rem 0 0;">Vehicle utilization, driver workload equity, and fatigue rejection metrics.</p>
+            <h2 style="font-size: 1.25rem; margin: 0; color: var(--text);">Operational Fleet Analytics</h2>
+            <p style="font-size: 0.85rem; color: var(--muted); margin: 0.25rem 0 0;">Vehicle utilization, driver workload equity, and fatigue rejection metrics.</p>
           </div>
-          <button class="btn" style="background: #1e293b; color: #38bdf8; font-size: 0.85rem;" onclick="loadAnalyticsData()">↻ Refresh Analytics</button>
+          <button class="btn" style="background: var(--line); color: var(--cyan); font-size: 0.85rem;" onclick="loadAnalyticsData()">↻ Refresh Analytics</button>
         </div>
 
         <!-- Metric KPI Cards -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-          <div class="card" style="padding: 1.25rem; background: #0f172a; border-left: 4px solid #38bdf8;">
-            <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase;">Active Fleet</div>
-            <div id="metric-total-vehicles" style="font-size: 1.8rem; font-weight: bold; color: #f8fafc; margin-top: 0.25rem;">6</div>
+          <div class="card" style="padding: 1.25rem; background: var(--bg-soft); border-left: 4px solid var(--cyan);">
+            <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase;">Active Fleet</div>
+            <div id="metric-total-vehicles" style="font-size: 1.8rem; font-weight: bold; color: var(--text); margin-top: 0.25rem;">6</div>
           </div>
-          <div class="card" style="padding: 1.25rem; background: #0f172a; border-left: 4px solid #10b981;">
-            <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase;">Total Drivers</div>
-            <div id="metric-total-drivers" style="font-size: 1.8rem; font-weight: bold; color: #f8fafc; margin-top: 0.25rem;">5</div>
+          <div class="card" style="padding: 1.25rem; background: var(--bg-soft); border-left: 4px solid var(--green);">
+            <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase;">Total Drivers</div>
+            <div id="metric-total-drivers" style="font-size: 1.8rem; font-weight: bold; color: var(--text); margin-top: 0.25rem;">5</div>
           </div>
-          <div class="card" style="padding: 1.25rem; background: #0f172a; border-left: 4px solid #f59e0b;">
-            <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase;">Total Bookings</div>
-            <div id="metric-total-bookings" style="font-size: 1.8rem; font-weight: bold; color: #f8fafc; margin-top: 0.25rem;">0</div>
+          <div class="card" style="padding: 1.25rem; background: var(--bg-soft); border-left: 4px solid var(--amber);">
+            <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase;">Total Bookings</div>
+            <div id="metric-total-bookings" style="font-size: 1.8rem; font-weight: bold; color: var(--text); margin-top: 0.25rem;">0</div>
           </div>
-          <div class="card" style="padding: 1.25rem; background: #0f172a; border-left: 4px solid #ef4444;">
-            <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase;">Driver Rejections</div>
-            <div id="metric-total-rejects" style="font-size: 1.8rem; font-weight: bold; color: #f8fafc; margin-top: 0.25rem;">0</div>
+          <div class="card" style="padding: 1.25rem; background: var(--bg-soft); border-left: 4px solid var(--red);">
+            <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase;">Driver Rejections</div>
+            <div id="metric-total-rejects" style="font-size: 1.8rem; font-weight: bold; color: var(--text); margin-top: 0.25rem;">0</div>
           </div>
         </div>
 
         <!-- Vehicle Utilization Table -->
-        <h3 style="font-size: 1.1rem; color: #f8fafc; margin-bottom: 0.75rem;">Vehicle Utilization</h3>
-        <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.1rem; color: var(--text); margin-bottom: 0.75rem;">Vehicle Utilization</h3>
+        <div style="background: var(--bg-soft); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem;">
           <table class="manager-table">
             <thead>
               <tr>
@@ -410,8 +427,8 @@
         </div>
 
         <!-- Driver Fairness & Workload -->
-        <h3 style="font-size: 1.1rem; color: #f8fafc; margin-bottom: 0.75rem;">Driver Fairness &amp; Fatigue Equity</h3>
-        <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.1rem; color: var(--text); margin-bottom: 0.75rem;">Driver Fairness &amp; Fatigue Equity</h3>
+        <div style="background: var(--bg-soft); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem;">
           <table class="manager-table">
             <thead>
               <tr>
@@ -430,7 +447,7 @@
         </div>
 
         <!-- Reject Reasons Breakdown -->
-        <h3 style="font-size: 1.1rem; color: #f8fafc; margin-bottom: 0.75rem;">Driver Rejection Reasons Breakdown</h3>
+        <h3 style="font-size: 1.1rem; color: var(--text); margin-bottom: 0.75rem;">Driver Rejection Reasons Breakdown</h3>
         <div id="analytics-reject-reasons-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem;">
           <!-- Dynamically populated -->
         </div>
@@ -439,11 +456,11 @@
       <!-- TAB 4: AUDIT HISTORY -->
       <section id="view-history" class="mgr-page" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-          <h2 style="font-size: 1.25rem; margin: 0; color: #f8fafc;">Trip Operations Audit Log</h2>
+          <h2 style="font-size: 1.25rem; margin: 0; color: var(--text);">Trip Operations Audit Log</h2>
           
           <!-- Filters -->
           <div style="display: flex; gap: 0.75rem;">
-            <select id="history-status-filter" style="background: #1e293b; color: white; border: 1px solid #334155; padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.85rem;" onchange="loadHistoryData()">
+            <select id="history-status-filter" style="background: var(--line); color: white; border: 1px solid var(--line); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.85rem;" onchange="loadHistoryData()">
               <option value="ALL">All Statuses</option>
               <option value="COMPLETED">Completed</option>
               <option value="IN_PROGRESS">In Progress</option>
@@ -452,11 +469,11 @@
               <option value="BUMPED">Bumped</option>
               <option value="REJECTED">Rejected</option>
             </select>
-            <button class="btn" style="background: #1e293b; color: #38bdf8; font-size: 0.85rem;" onclick="loadHistoryData()">Filter</button>
+            <button class="btn" style="background: var(--line); color: var(--cyan); font-size: 0.85rem;" onclick="loadHistoryData()">Filter</button>
           </div>
         </div>
 
-        <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden;">
+        <div style="background: var(--bg-soft); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;">
           <table class="manager-table">
             <thead>
               <tr>
@@ -478,7 +495,7 @@
 
       <!-- TAB 5: ALERTS & ESCALATIONS -->
       <section id="view-alerts" class="mgr-page" style="display: none;">
-        <h2 style="font-size: 1.25rem; margin: 0 0 1rem; color: #f8fafc;">Operational Alerts &amp; Waitlist</h2>
+        <h2 style="font-size: 1.25rem; margin: 0 0 1rem; color: var(--text);">Operational Alerts &amp; Waitlist</h2>
         <div id="alerts-cards-container" style="display: flex; flex-direction: column; gap: 1rem;">
           <!-- Emergency and waitlist cards -->
         </div>
@@ -489,26 +506,26 @@
     <!-- MODAL: OVERRIDE VEHICLE / DRIVER -->
     <div id="override-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 1.5rem;">
       <div class="card" style="width: 100%; max-width: 500px; padding: 1.5rem;">
-        <h3 style="margin-top: 0; color: #f59e0b; font-size: 1.2rem;">Override Vehicle or Driver</h3>
-        <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1.25rem;">Select an alternative vehicle or driver. Constraints will be re-validated automatically.</p>
+        <h3 style="margin-top: 0; color: var(--amber); font-size: 1.2rem;">Override Vehicle or Driver</h3>
+        <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 1.25rem;">Select an alternative vehicle or driver. Constraints will be re-validated automatically.</p>
 
         <div style="margin-bottom: 1rem;">
-          <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Reassign Vehicle</label>
-          <select id="override-vehicle-select" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+          <label style="display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem;">Reassign Vehicle</label>
+          <select id="override-vehicle-select" style="width: 100%; background: var(--line); color: white; border: 1px solid var(--line); padding: 0.6rem; border-radius: 8px;">
             <!-- Options populated dynamically -->
           </select>
         </div>
 
         <div style="margin-bottom: 1.25rem;">
-          <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Reassign Driver</label>
-          <select id="override-driver-select" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+          <label style="display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem;">Reassign Driver</label>
+          <select id="override-driver-select" style="width: 100%; background: var(--line); color: white; border: 1px solid var(--line); padding: 0.6rem; border-radius: 8px;">
             <!-- Options populated dynamically -->
           </select>
         </div>
 
         <div style="display: flex; gap: 0.75rem;">
-          <button class="btn" style="flex: 1; background: #334155; color: white;" onclick="closeOverrideModal()">Cancel</button>
-          <button class="btn" style="flex: 1; background: #f59e0b; color: black; font-weight: bold;" onclick="submitOverride()">Apply Override</button>
+          <button class="btn" style="flex: 1; background: var(--line); color: white;" onclick="closeOverrideModal()">Cancel</button>
+          <button class="btn" style="flex: 1; background: var(--amber); color: black; font-weight: bold;" onclick="submitOverride()">Apply Override</button>
         </div>
       </div>
     </div>
@@ -516,14 +533,14 @@
     <!-- MODAL: REJECT BOOKING -->
     <div id="mgr-reject-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 1.5rem;">
       <div class="card" style="width: 100%; max-width: 440px; padding: 1.5rem;">
-        <h3 style="margin-top: 0; color: #ef4444; font-size: 1.2rem;">Reject Booking Request</h3>
-        <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem;">Provide a reason for the requesting employee:</p>
+        <h3 style="margin-top: 0; color: var(--red); font-size: 1.2rem;">Reject Booking Request</h3>
+        <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem;">Provide a reason for the requesting employee:</p>
 
-        <textarea id="mgr-reject-reason-input" rows="3" placeholder="e.g. No vehicles available due to executive summit" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.75rem; border-radius: 8px; margin-bottom: 1.25rem; font-family: inherit; font-size: 0.9rem;"></textarea>
+        <textarea id="mgr-reject-reason-input" rows="3" placeholder="e.g. No vehicles available due to executive summit" style="width: 100%; background: var(--line); color: white; border: 1px solid var(--line); padding: 0.75rem; border-radius: 8px; margin-bottom: 1.25rem; font-family: inherit; font-size: 0.9rem;"></textarea>
 
         <div style="display: flex; gap: 0.75rem;">
-          <button class="btn" style="flex: 1; background: #334155; color: white;" onclick="closeMgrRejectModal()">Cancel</button>
-          <button class="btn" style="flex: 1; background: #dc2626; color: white; font-weight: bold;" onclick="submitMgrReject()">Confirm Rejection</button>
+          <button class="btn" style="flex: 1; background: var(--line); color: white;" onclick="closeMgrRejectModal()">Cancel</button>
+          <button class="btn" style="flex: 1; background: var(--red); color: white; font-weight: bold;" onclick="submitMgrReject()">Confirm Rejection</button>
         </div>
       </div>
     </div>
@@ -531,31 +548,31 @@
     <!-- MODAL: ADD VEHICLE -->
     <div id="add-vehicle-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 1.5rem;">
       <div class="card" style="width: 100%; max-width: 440px; padding: 1.5rem;">
-        <h3 style="margin-top: 0; color: #0ea5e9; font-size: 1.2rem;">Add Fleet Vehicle</h3>
+        <h3 style="margin-top: 0; color: var(--cyan); font-size: 1.2rem;">Add Fleet Vehicle</h3>
         
         <div style="margin-bottom: 0.75rem;">
-          <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Vehicle Name / Model</label>
-          <input type="text" id="add-veh-name" placeholder="e.g. Hyundai Creta" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+          <label style="display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem;">Vehicle Name / Model</label>
+          <input type="text" id="add-veh-name" placeholder="e.g. Hyundai Creta" style="width: 100%; background: var(--line); color: white; border: 1px solid var(--line); padding: 0.6rem; border-radius: 8px;">
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
           <div>
-            <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Type</label>
-            <select id="add-veh-type" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+            <label style="display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem;">Type</label>
+            <select id="add-veh-type" style="width: 100%; background: var(--line); color: white; border: 1px solid var(--line); padding: 0.6rem; border-radius: 8px;">
               <option value="car">Car (4 seats)</option>
               <option value="van">Van / MUV (7 seats)</option>
               <option value="minibus">Minibus (12+ seats)</option>
             </select>
           </div>
           <div>
-            <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Capacity (Seats)</label>
-            <input type="number" id="add-veh-cap" value="4" min="1" max="60" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+            <label style="display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem;">Capacity (Seats)</label>
+            <input type="number" id="add-veh-cap" value="4" min="1" max="60" style="width: 100%; background: var(--line); color: white; border: 1px solid var(--line); padding: 0.6rem; border-radius: 8px;">
           </div>
         </div>
 
         <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
-          <button class="btn" style="flex: 1; background: #334155; color: white;" onclick="closeAddVehicleModal()">Cancel</button>
-          <button class="btn" style="flex: 1; background: #0ea5e9; color: white; font-weight: bold;" onclick="submitAddVehicle()">Add to Fleet</button>
+          <button class="btn" style="flex: 1; background: var(--line); color: white;" onclick="closeAddVehicleModal()">Cancel</button>
+          <button class="btn" style="flex: 1; background: var(--cyan); color: white; font-weight: bold;" onclick="submitAddVehicle()">Add to Fleet</button>
         </div>
       </div>
     </div>
@@ -564,11 +581,11 @@
     <div id="gantt-detail-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 1.5rem;">
       <div class="card" style="width: 100%; max-width: 500px; padding: 1.5rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h3 id="gantt-detail-title" style="margin: 0; color: #f8fafc; font-size: 1.2rem;">Booking Details</h3>
-          <button class="btn" style="background: transparent; color: #94a3b8; font-size: 1.2rem; padding: 0.2rem 0.5rem;" onclick="closeGanttDetailModal()">✕</button>
+          <h3 id="gantt-detail-title" style="margin: 0; color: var(--text); font-size: 1.2rem;">Booking Details</h3>
+          <button class="btn" style="background: transparent; color: var(--muted); font-size: 1.2rem; padding: 0.2rem 0.5rem;" onclick="closeGanttDetailModal()">✕</button>
         </div>
         
-        <div id="gantt-detail-body" style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.6;">
+        <div id="gantt-detail-body" style="font-size: 0.9rem; color: var(--muted); line-height: 1.6;">
           <!-- Populated dynamically -->
         </div>
       </div>
@@ -577,32 +594,32 @@
     <!-- MODAL: ADD DRIVER -->
     <div id="add-driver-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 1.5rem;">
       <div class="card" style="width: 100%; max-width: 440px; padding: 1.5rem;">
-        <h3 style="margin-top: 0; color: #10b981; font-size: 1.2rem;">Add New Driver</h3>
+        <h3 style="margin-top: 0; color: var(--green); font-size: 1.2rem;">Add New Driver</h3>
         
         <div style="margin-bottom: 0.75rem;">
-          <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Driver Full Name</label>
-          <input type="text" id="add-drv-name" placeholder="e.g. Ramesh Kumar" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+          <label style="display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem;">Driver Full Name</label>
+          <input type="text" id="add-drv-name" placeholder="e.g. Ramesh Kumar" style="width: 100%; background: var(--line); color: white; border: 1px solid var(--line); padding: 0.6rem; border-radius: 8px;">
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
           <div>
-            <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Driver ID / Login</label>
-            <input type="text" id="add-drv-id" placeholder="e.g. driver6" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+            <label style="display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem;">Driver ID / Login</label>
+            <input type="text" id="add-drv-id" placeholder="e.g. driver6" style="width: 100%; background: var(--line); color: white; border: 1px solid var(--line); padding: 0.6rem; border-radius: 8px;">
           </div>
           <div>
-            <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Phone Number</label>
-            <input type="text" id="add-drv-phone" placeholder="+919876543299" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+            <label style="display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem;">Phone Number</label>
+            <input type="text" id="add-drv-phone" placeholder="+919876543299" style="width: 100%; background: var(--line); color: white; border: 1px solid var(--line); padding: 0.6rem; border-radius: 8px;">
           </div>
         </div>
 
         <div style="margin-bottom: 1.25rem;">
-          <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Driver License No</label>
-          <input type="text" id="add-drv-license" placeholder="DL-KA-05-2024-999" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+          <label style="display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem;">Driver License No</label>
+          <input type="text" id="add-drv-license" placeholder="DL-KA-05-2024-999" style="width: 100%; background: var(--line); color: white; border: 1px solid var(--line); padding: 0.6rem; border-radius: 8px;">
         </div>
 
         <div style="display: flex; gap: 0.75rem;">
-          <button class="btn" style="flex: 1; background: #334155; color: white;" onclick="closeAddDriverModal()">Cancel</button>
-          <button class="btn" style="flex: 1; background: #10b981; color: white; font-weight: bold;" onclick="submitAddDriver()">Register Driver</button>
+          <button class="btn" style="flex: 1; background: var(--line); color: white;" onclick="closeAddDriverModal()">Cancel</button>
+          <button class="btn" style="flex: 1; background: var(--green); color: white; font-weight: bold;" onclick="submitAddDriver()">Register Driver</button>
         </div>
       </div>
     </div>
@@ -610,32 +627,32 @@
     <!-- MODAL: ADD EMPLOYEE -->
     <div id="add-employee-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 1.5rem;">
       <div class="card" style="width: 100%; max-width: 440px; padding: 1.5rem;">
-        <h3 style="margin-top: 0; color: #6366f1; font-size: 1.2rem;">Add New Employee</h3>
+        <h3 style="margin-top: 0; color: var(--cyan); font-size: 1.2rem;">Add New Employee</h3>
         
         <div style="margin-bottom: 0.75rem;">
-          <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Employee Full Name</label>
-          <input type="text" id="add-emp-name" placeholder="e.g. Pooja Reddy" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+          <label style="display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem;">Employee Full Name</label>
+          <input type="text" id="add-emp-name" placeholder="e.g. Pooja Reddy" style="width: 100%; background: var(--line); color: white; border: 1px solid var(--line); padding: 0.6rem; border-radius: 8px;">
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
           <div>
-            <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Employee ID / Login</label>
-            <input type="text" id="add-emp-id" placeholder="e.g. emp6" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+            <label style="display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem;">Employee ID / Login</label>
+            <input type="text" id="add-emp-id" placeholder="e.g. emp6" style="width: 100%; background: var(--line); color: white; border: 1px solid var(--line); padding: 0.6rem; border-radius: 8px;">
           </div>
           <div>
-            <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Phone Number</label>
-            <input type="text" id="add-emp-phone" placeholder="+919876543288" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+            <label style="display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem;">Phone Number</label>
+            <input type="text" id="add-emp-phone" placeholder="+919876543288" style="width: 100%; background: var(--line); color: white; border: 1px solid var(--line); padding: 0.6rem; border-radius: 8px;">
           </div>
         </div>
 
         <div style="margin-bottom: 1.25rem;">
-          <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem;">Email Address</label>
-          <input type="text" id="add-emp-email" placeholder="pooja@company.local" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.6rem; border-radius: 8px;">
+          <label style="display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem;">Email Address</label>
+          <input type="text" id="add-emp-email" placeholder="pooja@company.local" style="width: 100%; background: var(--line); color: white; border: 1px solid var(--line); padding: 0.6rem; border-radius: 8px;">
         </div>
 
         <div style="display: flex; gap: 0.75rem;">
-          <button class="btn" style="flex: 1; background: #334155; color: white;" onclick="closeAddEmployeeModal()">Cancel</button>
-          <button class="btn" style="flex: 1; background: #6366f1; color: white; font-weight: bold;" onclick="submitAddEmployee()">Register Employee</button>
+          <button class="btn" style="flex: 1; background: var(--line); color: white;" onclick="closeAddEmployeeModal()">Cancel</button>
+          <button class="btn" style="flex: 1; background: var(--cyan); color: #080a0d; font-weight: bold;" onclick="submitAddEmployee()">Register Employee</button>
         </div>
       </div>
     </div>
