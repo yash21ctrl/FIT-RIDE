@@ -177,6 +177,7 @@ def create_app():
     from app.routes.manager import manager_bp
     from app.routes.analytics import analytics_bp
     from app.routes.ratings import ratings_bp
+    from app.routes.notifications import notifications_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(bookings_bp)
@@ -187,5 +188,36 @@ def create_app():
     app.register_blueprint(manager_bp)
     app.register_blueprint(analytics_bp)
     app.register_blueprint(ratings_bp)
+    app.register_blueprint(notifications_bp)
+
+    # Static file routes for frontend portals (Phase 5: Employee Portal)
+    from flask import send_from_directory, redirect
+
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    frontend_dir = os.path.join(base_dir, "frontend")
+    shared_dir = os.path.join(frontend_dir, "shared")
+    employee_dir = os.path.join(frontend_dir, "employee")
+
+    @app.route("/", methods=["GET"])
+    def root_redirect():
+        return redirect("/employee", code=302)
+
+    @app.route("/employee", methods=["GET"])
+    @app.route("/employee/", methods=["GET"])
+    def employee_index():
+        return send_from_directory(employee_dir, "index.html")
+
+    @app.route("/employee/<path:filename>", methods=["GET"])
+    def employee_static(filename):
+        return send_from_directory(employee_dir, filename)
+
+    @app.route("/shared/<path:filename>", methods=["GET"])
+    def shared_static(filename):
+        return send_from_directory(shared_dir, filename)
+
+    @app.route("/frontend/<path:filename>", methods=["GET"])
+    def frontend_static(filename):
+        return send_from_directory(frontend_dir, filename)
 
     return app
+

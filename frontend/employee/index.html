@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FleetRide — Employee Portal | Team KNIGHT</title>
+  <link rel="stylesheet" href="/shared/styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header Bar -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="brand-icon">⚡</div>
+        <div class="brand-title">
+          <span class="brand-name">FleetRide</span>
+          <span class="brand-sub">Employee Portal</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs (Only visible when logged in) -->
+      <nav id="nav-section" class="nav-controls" style="display: none;">
+        <div class="nav-tabs">
+          <button id="tab-book-btn" class="nav-tab-btn active" onclick="app.showView('book')">
+            <span>📅</span> New Booking
+          </button>
+          <button id="tab-trips-btn" class="nav-tab-btn" onclick="app.showView('trips')">
+            <span>🚗</span> My Trips
+          </button>
+        </div>
+
+        <div class="user-bar">
+          <!-- Notification Bell -->
+          <button id="notif-bell" class="notif-bell-btn" title="Notifications" onclick="app.toggleNotifications()">
+            🔔
+            <span id="notif-badge" class="notif-badge-count" style="display: none;">0</span>
+          </button>
+
+          <!-- User Pill -->
+          <div class="user-pill">
+            <div id="user-avatar" class="user-avatar-circle">E</div>
+            <span id="user-display-name">Employee</span>
+            <button class="btn-logout" title="Sign out" onclick="app.logout()">Sign out</button>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- 1. LOGIN VIEW -->
+    <section id="view-login" class="login-wrapper">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h1 class="card-title">Sign In to FleetRide</h1>
+            <p class="card-subtitle">Shared fleet allocation & operations system</p>
+          </div>
+        </div>
+
+        <form id="login-form" onsubmit="app.handleLoginSubmit(event)">
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label" for="login-email">Email Address</label>
+            <input type="email" id="login-email" class="form-control" required placeholder="emp1@fleetride.local">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label class="form-label" for="login-password">Password</label>
+            <input type="password" id="login-password" class="form-control" required value="Password@123">
+          </div>
+
+          <button type="submit" id="login-submit-btn" class="btn btn-primary" style="width: 100%;">
+            Sign In
+          </button>
+        </form>
+
+        <!-- 1-Click Quick Login Pills for Seed Employees -->
+        <div class="quick-login-section">
+          <div class="quick-login-title">Quick Demo Login (Seed Employees)</div>
+          <div class="quick-login-grid">
+            <button class="quick-login-btn" onclick="app.quickLogin('emp1@fleetride.local')">
+              <div>
+                <div class="quick-login-name">Ananya Roy (Employee 1)</div>
+                <div class="quick-login-email">emp1@fleetride.local</div>
+              </div>
+              <span>➔</span>
+            </button>
+            <button class="quick-login-btn" onclick="app.quickLogin('emp2@fleetride.local')">
+              <div>
+                <div class="quick-login-name">Vikram Das (Employee 2)</div>
+                <div class="quick-login-email">emp2@fleetride.local</div>
+              </div>
+              <span>➔</span>
+            </button>
+            <button class="quick-login-btn" onclick="app.quickLogin('emp3@fleetride.local')">
+              <div>
+                <div class="quick-login-name">Neha Nair (Employee 3)</div>
+                <div class="quick-login-email">emp3@fleetride.local</div>
+              </div>
+              <span>➔</span>
+            </button>
+            <button class="quick-login-btn" onclick="app.quickLogin('emp4@fleetride.local')">
+              <div>
+                <div class="quick-login-name">Rahul Mehra (Employee 4)</div>
+                <div class="quick-login-email">emp4@fleetride.local</div>
+              </div>
+              <span>➔</span>
+            </button>
+            <button class="quick-login-btn" onclick="app.quickLogin('emp5@fleetride.local')">
+              <div>
+                <div class="quick-login-name">Sneha Patel (Employee 5)</div>
+                <div class="quick-login-email">emp5@fleetride.local</div>
+              </div>
+              <span>➔</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. NEW REQUEST FORM VIEW -->
+    <section id="view-book" style="display: none;">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Book a Shared Vehicle</h2>
+            <p class="card-subtitle">Deterministic allocation guarantees zero double-booking</p>
+          </div>
+        </div>
+
+        <!-- Mode Switcher: Scheduled vs. Emergency -->
+        <div class="type-selector-box">
+          <div id="type-opt-scheduled" class="type-option-card selected" onclick="app.setBookingType('scheduled')">
+            <div class="type-option-title">
+              <span>📅</span> Scheduled Trip
+            </div>
+            <div class="type-option-desc">Planned in advance. Normal approval and driver dispatch.</div>
+          </div>
+
+          <div id="type-opt-emergency" class="type-option-card" onclick="app.setBookingType('emergency')">
+            <div class="type-option-title" style="color: var(--brand-orange);">
+              <span>🚨</span> Emergency Booking
+            </div>
+            <div class="type-option-desc">Urgent priority. Bumps scheduled low-priority trips if needed.</div>
+          </div>
+        </div>
+
+        <!-- Emergency Banner Notice (Shown only when emergency is toggled) -->
+        <div id="emergency-banner" class="emergency-notice" style="display: none;">
+          <div class="emergency-notice-icon">⚠️</div>
+          <div>
+            <strong>Emergency Trip Protocol Activated:</strong>
+            This request bypasses the standard approval queue and directly triggers driver dispatch (2-minute window).
+            If no vehicle is free, the engine will automatically bump an eligible lower-priority trip. Mandatory operational justification required.
+          </div>
+        </div>
+
+        <!-- Booking Form -->
+        <form id="booking-form" onsubmit="app.handleBookingSubmit(event)">
+          <div class="form-grid">
+            <!-- Date -->
+            <div class="form-group">
+              <label class="form-label" for="book-date">
+                Date (Asia/Kolkata)
+                <span class="helper">Required</span>
+              </label>
+              <input type="date" id="book-date" class="form-control" required>
+            </div>
+
+            <!-- Start Time -->
+            <div class="form-group">
+              <label class="form-label" for="book-start-time">
+                Start Time
+                <span class="helper">30-min increments</span>
+              </label>
+              <input type="time" id="book-start-time" class="form-control" step="1800" required>
+            </div>
+
+            <!-- Duration Selector -->
+            <div class="form-group">
+              <label class="form-label">
+                Trip Duration
+                <span id="duration-display" class="helper">2 hours</span>
+              </label>
+              <div class="preset-pills">
+                <button type="button" class="preset-pill" onclick="app.setDuration(30)">30m</button>
+                <button type="button" class="preset-pill" onclick="app.setDuration(60)">1h</button>
+                <button type="button" class="preset-pill" onclick="app.setDuration(90)">1.5h</button>
+                <button type="button" class="preset-pill active" onclick="app.setDuration(120)">2h</button>
+                <button type="button" class="preset-pill" onclick="app.setDuration(180)">3h</button>
+                <button type="button" class="preset-pill" onclick="app.setDuration(240)">4h</button>
+              </div>
+            </div>
+
+            <!-- End Time (Auto-calculated or editable) -->
+            <div class="form-group">
+              <label class="form-label" for="book-end-time">
+                End Time
+                <span class="helper">Calculated</span>
+              </label>
+              <input type="time" id="book-end-time" class="form-control" step="1800" required>
+            </div>
+
+            <!-- Passenger Count -->
+            <div class="form-group">
+              <label class="form-label" for="book-passengers">
+                Passengers (1–60)
+                <span class="helper">Affects vehicle fit</span>
+              </label>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="number" id="book-passengers" class="form-control" min="1" max="60" value="3" required style="width: 100px;">
+                <div class="preset-pills" style="margin-top: 0;">
+                  <button type="button" class="preset-pill" onclick="app.setPassengers(2, this)">2</button>
+                  <button type="button" class="preset-pill" onclick="app.setPassengers(4, this)">4</button>
+                  <button type="button" class="preset-pill" onclick="app.setPassengers(6, this)">6</button>
+                  <button type="button" class="preset-pill" onclick="app.setPassengers(12, this)">12</button>
+                  <button type="button" class="preset-pill" onclick="app.setPassengers(15, this)">15 (Failure demo)</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Destination -->
+            <div class="form-group full-width">
+              <label class="form-label" for="book-destination">
+                Destination
+                <span class="helper">Preset Bangalore locations</span>
+              </label>
+              <input type="text" id="book-destination" class="form-control" placeholder="e.g. Kempegowda Airport (BLR)" required>
+              <div class="preset-pills">
+                <button type="button" class="preset-pill" onclick="app.setDestination('Bengaluru Tech Park', this)">Bengaluru Tech Park</button>
+                <button type="button" class="preset-pill" onclick="app.setDestination('Kempegowda Airport (BLR)', this)">Kempegowda Airport (BLR)</button>
+                <button type="button" class="preset-pill" onclick="app.setDestination('Electronic City Campus', this)">Electronic City Campus</button>
+                <button type="button" class="preset-pill" onclick="app.setDestination('Whitefield R&D Center', this)">Whitefield R&D Center</button>
+                <button type="button" class="preset-pill" onclick="app.setDestination('City Center HQ', this)">City Center HQ</button>
+              </div>
+            </div>
+
+            <!-- Trip Reason -->
+            <div class="form-group full-width">
+              <label class="form-label" for="book-reason">
+                Trip Purpose & Justification
+                <span class="helper">Mandatory</span>
+              </label>
+              <textarea id="book-reason" class="form-control" placeholder="Describe the business need or emergency justification..." required>Client meeting & technical presentation</textarea>
+            </div>
+          </div>
+
+          <!-- Submit Button with Double-Submit Prevention -->
+          <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <button type="button" class="btn btn-secondary" onclick="app.resetBookingForm()">Reset</button>
+            <button type="submit" id="book-submit-btn" class="btn btn-primary">
+              <span id="submit-spinner" class="spinner" style="display: none;"></span>
+              <span id="submit-btn-text">Submit Booking Request</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- 3. RESULT SCREEN VIEW -->
+    <section id="view-result" class="result-box" style="display: none;">
+      <!-- Content populated dynamically via app.js -->
+      <div id="result-content"></div>
+    </section>
+
+    <!-- 4. MY TRIPS VIEW -->
+    <section id="view-trips" style="display: none;">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">My Bookings & History</h2>
+            <p class="card-subtitle">Real-time status updates, engine rationale, and trip lifecycle</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="app.loadMyTrips()">🔄 Refresh</button>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="trips-filter-bar">
+          <div class="trips-tabs">
+            <button class="trip-tab-btn active" onclick="app.filterTrips('ALL', this)">All</button>
+            <button class="trip-tab-btn" onclick="app.filterTrips('ACTIVE', this)">Active</button>
+            <button class="trip-tab-btn" onclick="app.filterTrips('WAITLISTED', this)">Waitlisted</button>
+            <button class="trip-tab-btn" onclick="app.filterTrips('COMPLETED', this)">Completed</button>
+            <button class="trip-tab-btn" onclick="app.filterTrips('CANCELLED', this)">Cancelled / Bumped</button>
+          </div>
+        </div>
+
+        <!-- Trips List Container -->
+        <div id="trips-list-container">
+          <div class="empty-state">
+            <div class="empty-icon">🚗</div>
+            <p>Loading your trips...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Notification Drawer / Popover -->
+    <div id="notif-drawer-backdrop" class="drawer-backdrop" onclick="app.closeNotifications()">
+      <div class="drawer-panel" onclick="event.stopPropagation()">
+        <div class="drawer-header">
+          <div class="drawer-title">Notifications</div>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button class="btn btn-secondary btn-sm" onclick="app.markAllNotificationsRead()">Mark all read</button>
+            <button class="btn-logout" onclick="app.closeNotifications()" style="font-size: 1.25rem;">✕</button>
+          </div>
+        </div>
+        <div id="notif-list" class="drawer-content">
+          <div class="empty-state">
+            <p>No notifications yet</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Alerts Container -->
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/shared/time.js"></script>
+  <script src="/shared/api.js"></script>
+  <script src="/shared/realtime.js"></script>
+  <script src="/employee/app.js"></script>
+</body>
+</html>

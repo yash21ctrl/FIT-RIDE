@@ -183,6 +183,39 @@ def create_booking_request():
     buffer_min = int(config.get("buffer_minutes", 15))
     blocked_until = end_utc + timedelta(minutes=buffer_min)
 
+    # 3b. Direct waitlist request
+    if data.get("waitlist") is True:
+        wait_record = {
+            "employee_id": employee_id,
+            "vehicle_id": None,
+            "driver_id": None,
+            "start_time": start_utc,
+            "end_time": end_utc,
+            "blocked_until": blocked_until,
+            "destination": destination,
+            "dest_lat": data.get("dest_lat"),
+            "dest_lng": data.get("dest_lng"),
+            "passengers": passengers,
+            "reason": reason,
+            "type": booking_type,
+            "priority": priority,
+            "status": "WAITLISTED",
+            "decision_reason": "Waitlisted upon employee request",
+            "failure_reason": data.get("failure_reason", "WAITLISTED"),
+            "was_bumped": False,
+        }
+        created = transition(
+            booking_id=None,
+            new_status="WAITLISTED",
+            actor=current_user,
+            note="Employee joined waitlist for requested slot",
+            extra_data=wait_record,
+        )
+        return jsonify({
+            "booking": serialize_booking(created),
+            "status": "WAITLISTED",
+        }), 201
+
     # 4. Run allocation engine
     req_obj = BookingRequest(
         start=start_utc,

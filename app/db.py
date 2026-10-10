@@ -1622,6 +1622,77 @@ def get_notifications(user_id: Optional[str] = None, conn=None) -> List[Dict[str
     return res
 
 
+def mark_notification_as_read(notif_id: str, user_id: Optional[str] = None, conn=None) -> bool:
+    """Mark a notification as read."""
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                if user_id:
+                    cur.execute(
+                        "UPDATE notifications SET read = TRUE WHERE id = %s AND user_id = %s RETURNING id;",
+                        (str(notif_id), str(user_id)),
+                    )
+                else:
+                    cur.execute(
+                        "UPDATE notifications SET read = TRUE WHERE id = %s RETURNING id;",
+                        (str(notif_id),),
+                    )
+                conn.commit()
+                row = cur.fetchone()
+                return bool(row)
+        except Exception:
+            conn.rollback()
+        finally:
+            if close_conn:
+                conn.close()
+
+    for n in _in_memory_notifications:
+        if str(n.get("id")) == str(notif_id):
+            if not user_id or str(n.get("user_id")) == str(user_id):
+                n["read"] = True
+                return True
+    return False
+
+
+def mark_all_notifications_as_read(user_id: str, conn=None) -> int:
+    """Mark all notifications for a specific user as read."""
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(
+                    "UPDATE notifications SET read = TRUE WHERE user_id = %s RETURNING id;",
+                    (str(user_id),),
+                )
+                conn.commit()
+                rows = cur.fetchall()
+                return len(rows)
+        except Exception:
+            conn.rollback()
+        finally:
+            if close_conn:
+                conn.close()
+
+    count = 0
+    for n in _in_memory_notifications:
+        if str(n.get("user_id")) == str(user_id) and not n.get("read", False):
+            n["read"] = True
+            count += 1
+    return count
+
+
+
 class ExclusionViolationError(Exception):
     """Exception representing PostgreSQL GiST exclusion constraint violation (code 23P01)."""
     def __init__(self, message: str = "Conflicting booking exists for the requested slot", pgcode: str = "23P01", alternatives: Optional[List[Dict[str, Any]]] = None):
