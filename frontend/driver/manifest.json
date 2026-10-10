@@ -1,0 +1,17 @@
+{
+  "name": "FleetRide Driver",
+  "short_name": "Driver",
+  "description": "Shared Vehicle Driver Operations Portal",
+  "start_url": "/driver",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#0ea5e9",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%230ea5e9'/><text x='50' y='65' font-size='40' font-family='sans-serif' text-anchor='middle' fill='white' font-weight='bold'>FR</text></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

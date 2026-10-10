@@ -338,7 +338,7 @@ def handle_driver_reject(booking_id: str):
         }), 400
 
     data = request.get_json(silent=True) or {}
-    reason = str(data.get("reason", "")).strip().lower()
+    reason = str(data.get("reason") or data.get("reject_reason") or "").strip().lower()
     if not reason or reason not in ALLOWED_REJECT_REASONS:
         return jsonify({
             "error": {

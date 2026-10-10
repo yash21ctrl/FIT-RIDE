@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#090d16">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="FleetRide Driver Operations PWA">
+  <title>FleetRide Driver PWA</title>
+  
+  <link rel="manifest" href="/driver/manifest.json">
+  <link rel="stylesheet" href="/shared/styles.css">
+  <style>
+    /* Mobile-first Driver PWA specific styles */
+    body {
+      background-color: var(--bg-body, #090d16);
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .driver-container {
+      max-width: 520px;
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .driver-header {
+      padding: 1rem 1.25rem;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle, #1e293b);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .driver-status-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      letter-spacing: 0.05em;
+    }
+    .status-available { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .status-on_trip { background: rgba(14, 165, 233, 0.2); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.4); }
+    .status-break { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .status-off { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.4); }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.98);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border-subtle, #1e293b);
+      display: flex;
+      justify-content: space-around;
+      padding: 0.6rem 0.5rem 1rem;
+      z-index: 50;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0.4rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .nav-btn.active {
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+    }
+    .nav-badge {
+      position: absolute;
+      top: 2px;
+      right: 25%;
+      background: #ef4444;
+      color: white;
+      font-size: 0.65rem;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 9999px;
+    }
+    .main-content {
+      flex: 1;
+      padding: 1.25rem;
+      padding-bottom: 5.5rem;
+    }
+    .touch-card {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 16px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .btn-big {
+      width: 100%;
+      min-height: 52px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.1s ease, filter 0.2s ease;
+    }
+    .btn-big:active {
+      transform: scale(0.98);
+    }
+    .btn-accept {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+    }
+    .btn-reject {
+      background: #1f2937;
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .btn-start {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+    }
+    .btn-end {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: white;
+    }
+    .countdown-timer {
+      font-family: monospace;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      display: inline-block;
+    }
+    .pwa-banner {
+      background: #1e293b;
+      border: 1px solid #334155;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="driver-container">
+
+    <!-- PWA Install Banner -->
+    <div id="pwa-install-banner" class="pwa-banner" style="display: none;">
+      <div>
+        <strong style="color: #38bdf8;">Install Driver App</strong>
+        <p style="font-size: 0.8rem; margin: 0; color: #94a3b8;">Add to home screen for 1-tap dispatch</p>
+      </div>
+      <button id="pwa-install-btn" class="btn" style="background:#0ea5e9; color:white; padding:0.4rem 0.8rem; font-size:0.85rem;">Install</button>
+    </div>
+
+    <!-- 1. LOGIN SCREEN -->
+    <div id="driver-login-view" class="main-content" style="display: block;">
+      <div style="text-align: center; margin-top: 2rem; margin-bottom: 2rem;">
+        <div style="font-size: 3rem; margin-bottom: 0.5rem;">🚖</div>
+        <h1 style="font-size: 1.75rem; margin-bottom: 0.25rem; color: #f8fafc;">FleetRide Driver</h1>
+        <p style="color: #94a3b8; font-size: 0.9rem;">Mobile Dispatch &amp; Trip Operations Portal</p>
+      </div>
+
+      <div class="touch-card">
+        <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; color: #e2e8f0;">Quick Driver Login</h3>
+        <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem;">Select a seeded driver to log in immediately:</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+          <button type="button" class="btn btn-big" style="background: #1e293b; color: #f1f5f9; font-size: 0.95rem; text-align: left; justify-content: flex-start; padding: 0.8rem 1rem;" onclick="quickLoginDriver('driver1@fleetride.local')">
+            <div>
+              <div style="font-weight: 700;">Ravi Kumar (Driver 1)</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">★ 4.8 · Recent Trip (Fatigue Demo)</div>
+            </div>
+          </button>
+          
+          <button type="button" class="btn btn-big" style="background: #1e293b; color: #f1f5f9; font-size: 0.95rem; text-align: left; justify-content: flex-start; padding: 0.8rem 1rem;" onclick="quickLoginDriver('driver2@fleetride.local')">
+            <div>
+              <div style="font-weight: 700;">Suresh Patil (Driver 2)</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">★ 4.9 · 3 Trips Today (Fairness Demo)</div>
+            </div>
+          </button>
+
+          <button type="button" class="btn btn-big" style="background: #1e293b; color: #f1f5f9; font-size: 0.95rem; text-align: left; justify-content: flex-start; padding: 0.8rem 1rem;" onclick="quickLoginDriver('driver3@fleetride.local')">
+            <div>
+              <div style="font-weight: 700;">Amit Singh (Driver 3)</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">★ 4.7 · Available</div>
+            </div>
+          </button>
+
+          <button type="button" class="btn btn-big" style="background: #1e293b; color: #f1f5f9; font-size: 0.95rem; text-align: left; justify-content: flex-start; padding: 0.8rem 1rem;" onclick="quickLoginDriver('driver4@fleetride.local')">
+            <div>
+              <div style="font-weight: 700;">Priya Sharma (Driver 4)</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">★ 4.6 · Available</div>
+            </div>
+          </button>
+
+          <button type="button" class="btn btn-big" style="background: #1e293b; color: #f1f5f9; font-size: 0.95rem; text-align: left; justify-content: flex-start; padding: 0.8rem 1rem;" onclick="quickLoginDriver('driver5@fleetride.local')">
+            <div>
+              <div style="font-weight: 700;">Rajesh Verma (Driver 5)</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">★ 4.9 · Available</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. AUTHENTICATED PORTAL VIEW -->
+    <div id="driver-app-view" style="display: none; flex-direction: column; flex: 1;">
+      
+      <!-- Top Driver Bar -->
+      <header class="driver-header">
+        <div>
+          <div style="font-size: 0.75rem; color: #94a3b8;">DRIVER CONSOLE</div>
+          <div id="driver-name-display" style="font-weight: 700; color: #f8fafc; font-size: 1rem;">Driver Name</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span id="driver-status-badge" class="driver-status-badge status-available">AVAILABLE</span>
+          <button class="btn" style="padding: 0.35rem 0.6rem; font-size: 0.75rem; background: #1e293b; color: #94a3b8;" onclick="handleDriverLogout()">Exit</button>
+        </div>
+      </header>
+
+      <!-- Main Tabs Content -->
+      <main class="main-content">
+
+        <!-- TAB 1: INCOMING REQUESTS -->
+        <section id="tab-requests" class="tab-page">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="font-size: 1.2rem; margin: 0; color: #f8fafc;">Incoming Trips</h2>
+            <button class="btn" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; background: #1e293b; color: #38bdf8;" onclick="refreshDriverRequests()">↻ Refresh</button>
+          </div>
+
+          <div id="requests-list-container">
+            <!-- Rendered incoming request cards -->
+          </div>
+        </section>
+
+        <!-- TAB 2: ACTIVE TRIP -->
+        <section id="tab-active" class="tab-page" style="display: none;">
+          <h2 style="font-size: 1.2rem; margin-top: 0; margin-bottom: 1rem; color: #f8fafc;">Active Trip Operations</h2>
+          <div id="active-trip-container">
+            <!-- Rendered start/end trip controls -->
+          </div>
+        </section>
+
+        <!-- TAB 3: SCHEDULE & METRICS -->
+        <section id="tab-schedule" class="tab-page" style="display: none;">
+          <h2 style="font-size: 1.2rem; margin-top: 0; margin-bottom: 1rem; color: #f8fafc;">Duty &amp; Schedule</h2>
+
+          <!-- Fatigue Guard Metrics Card -->
+          <div class="touch-card">
+            <h3 style="margin-top: 0; font-size: 1rem; color: #38bdf8;">Driver Safety Telemetry</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem;">
+              <div style="background: #1e293b; padding: 0.75rem; border-radius: 10px;">
+                <div style="font-size: 0.75rem; color: #94a3b8;">HOURS DRIVEN TODAY</div>
+                <div id="metric-hours-today" style="font-size: 1.25rem; font-weight: 800; color: #f8fafc;">0.0 / 9.0h</div>
+              </div>
+              <div style="background: #1e293b; padding: 0.75rem; border-radius: 10px;">
+                <div style="font-size: 0.75rem; color: #94a3b8;">DRIVER RATING</div>
+                <div id="metric-rating" style="font-size: 1.25rem; font-weight: 800; color: #f59e0b;">★ 4.9</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Schedule List -->
+          <div class="touch-card">
+            <h3 style="margin-top: 0; font-size: 1rem; color: #f8fafc;">My Assignments</h3>
+            <div id="schedule-list-container" style="margin-top: 0.75rem;">
+              <!-- Assigned trips list -->
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- Bottom Navigation Bar -->
+      <nav class="bottom-nav">
+        <button id="nav-btn-requests" class="nav-btn active" onclick="switchDriverTab('requests')">
+          <span style="font-size: 1.3rem;">🔔</span>
+          <span>Requests</span>
+          <span id="requests-count-badge" class="nav-badge" style="display: none;">0</span>
+        </button>
+        <button id="nav-btn-active" class="nav-btn" onclick="switchDriverTab('active')">
+          <span style="font-size: 1.3rem;">🚗</span>
+          <span>Active Trip</span>
+        </button>
+        <button id="nav-btn-schedule" class="nav-btn" onclick="switchDriverTab('schedule')">
+          <span style="font-size: 1.3rem;">📅</span>
+          <span>My Duty</span>
+        </button>
+      </nav>
+
+    </div>
+
+    <!-- REJECT REASON MODAL -->
+    <div id="reject-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 1.5rem;">
+      <div class="touch-card" style="width: 100%; max-width: 440px; margin: 0;">
+        <h3 style="margin-top: 0; color: #f87171; font-size: 1.2rem;">Reject Assigned Trip</h3>
+        <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem;">A mandatory reason is required by fleet operations policy:</p>
+
+        <div style="margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.4rem;">Select Reason</label>
+          <select id="reject-reason-select" style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 0.8rem; border-radius: 8px; font-size: 0.95rem;">
+            <option value="tired">Tired / Driver Fatigue (Rest needed)</option>
+            <option value="vehicle_issue">Vehicle Issue (Defect or inspection required)</option>
+            <option value="personal">Personal Emergency</option>
+            <option value="too_far">Too Far from Base</option>
+            <option value="unsafe">Unsafe Weather / Road Conditions</option>
+            <option value="other">Other Operational Reason</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="button" class="btn" style="flex: 1; background: #334155; color: white; min-height: 48px;" onclick="closeRejectModal()">Cancel</button>
+          <button type="button" id="confirm-reject-btn" class="btn" style="flex: 1; background: #dc2626; color: white; font-weight: bold; min-height: 48px;" onclick="submitRejectReason()">Confirm Reject</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Shared Scripts -->
+  <script src="/shared/time.js"></script>
+  <script src="/shared/api.js"></script>
+  <script src="/shared/realtime.js"></script>
+  <!-- Driver App Logic -->
+  <script src="/driver/app.js"></script>
+</body>
+</html>
