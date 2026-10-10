@@ -1,4 +1,4 @@
-// FleetRide Driver PWA Application Logic
+// FIT-RIDE Driver PWA Application Logic
 let currentDriverProfile = null;
 let currentDriverRecord = null;
 let assignedRequests = [];

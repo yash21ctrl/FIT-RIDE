@@ -25,7 +25,7 @@ def create_app():
     # Health check route
     @app.route("/api/health", methods=["GET"])
     def health_check():
-        return jsonify({"status": "ok", "app": "FleetRide API"}), 200
+        return jsonify({"status": "ok", "app": "FIT-RIDE API"}), 200
 
     # Test route to simulate PostgreSQL exclusion violation (23P01)
     @app.route("/api/test/simulate-23p01", methods=["GET", "POST"])
