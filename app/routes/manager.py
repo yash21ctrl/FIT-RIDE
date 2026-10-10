@@ -329,3 +329,87 @@ def reject_booking(booking_id: str):
                 "alternatives": [],
             }
         }), 400
+
+
+@manager_bp.route("/gantt", methods=["GET"])
+@require_role("manager")
+def manager_gantt():
+    """Returns bookings, vehicles, and drivers structured for the CSS Grid Gantt chart."""
+    from app.db import get_all_vehicles, get_all_drivers
+
+    all_bookings = query_bookings(active_only=False)
+    vehicles = get_all_vehicles()
+    drivers = get_all_drivers()
+
+    serialized_bookings = []
+    for b in all_bookings:
+        item = serialize_booking(b)
+        if b.get("vehicle_id"):
+            veh = get_vehicle_by_id(b["vehicle_id"])
+            if veh:
+                item["vehicle_name"] = veh.get("name")
+        if b.get("driver_id"):
+            drv = get_driver_by_id(b["driver_id"])
+            if drv:
+                item["driver_name"] = drv.get("name")
+        serialized_bookings.append(item)
+
+    return jsonify({
+        "vehicles": vehicles,
+        "drivers": drivers,
+        "bookings": serialized_bookings,
+    }), 200
+
+
+@manager_bp.route("/history", methods=["GET"])
+@require_role("manager")
+def manager_history():
+    """Filterable audit history of bookings."""
+    status_filter = request.args.get("status")
+    vehicle_filter = request.args.get("vehicle_id")
+    driver_filter = request.args.get("driver_id")
+
+    all_bookings = query_bookings(active_only=False)
+    filtered = []
+
+    for b in all_bookings:
+        if status_filter and status_filter.upper() != "ALL" and b.get("status") != status_filter.upper():
+            continue
+        if vehicle_filter and str(b.get("vehicle_id")) != vehicle_filter:
+            continue
+        if driver_filter and str(b.get("driver_id")) != driver_filter:
+            continue
+
+        item = serialize_booking(b)
+        if b.get("vehicle_id"):
+            veh = get_vehicle_by_id(b["vehicle_id"])
+            if veh:
+                item["vehicle_name"] = veh.get("name")
+        if b.get("driver_id"):
+            drv = get_driver_by_id(b["driver_id"])
+            if drv:
+                item["driver_name"] = drv.get("name")
+        filtered.append(item)
+
+    return jsonify({"history": filtered, "count": len(filtered)}), 200
+
+
+@manager_bp.route("/alerts", methods=["GET"])
+@require_role("manager")
+def manager_alerts():
+    """Fetch system alerts: emergencies, waitlisted trips, and recent escalations."""
+    emergencies = query_bookings(active_only=False, status="DRIVER_PENDING")
+    emergency_items = [serialize_booking(b) for b in emergencies if b.get("type") == "emergency" or b.get("priority") == "emergency"]
+
+    waitlisted = query_bookings(active_only=False, status="WAITLISTED")
+    waitlisted_items = [serialize_booking(b) for b in waitlisted]
+
+    bumped = query_bookings(active_only=False, status="BUMPED")
+    bumped_items = [serialize_booking(b) for b in bumped]
+
+    return jsonify({
+        "emergencies": emergency_items,
+        "waitlisted": waitlisted_items,
+        "bumped": bumped_items,
+        "total_alerts": len(emergency_items) + len(waitlisted_items) + len(bumped_items),
+    }), 200

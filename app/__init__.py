@@ -199,6 +199,7 @@ def create_app():
     employee_dir = os.path.join(frontend_dir, "employee")
 
     driver_dir = os.path.join(frontend_dir, "driver")
+    manager_dir = os.path.join(frontend_dir, "manager")
 
     @app.route("/", methods=["GET"])
     def root_redirect():
@@ -221,6 +222,15 @@ def create_app():
     @app.route("/driver/<path:filename>", methods=["GET"])
     def driver_static(filename):
         return send_from_directory(driver_dir, filename)
+
+    @app.route("/manager", methods=["GET"])
+    @app.route("/manager/", methods=["GET"])
+    def manager_index():
+        return send_from_directory(manager_dir, "index.html")
+
+    @app.route("/manager/<path:filename>", methods=["GET"])
+    def manager_static(filename):
+        return send_from_directory(manager_dir, filename)
 
     @app.route("/shared/<path:filename>", methods=["GET"])
     def shared_static(filename):
