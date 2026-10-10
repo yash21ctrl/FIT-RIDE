@@ -1,6 +1,6 @@
-"""Supabase and Postgres client helpers with in-memory fallback for testing."""
 import os
 import uuid
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -211,14 +211,26 @@ SEED_DRIVERS: Dict[str, Dict[str, Any]] = {
 _in_memory_profiles: Dict[str, Dict[str, Any]] = {k: dict(v) for k, v in SEED_PROFILES.items()}
 _in_memory_vehicles: Dict[str, Dict[str, Any]] = {k: dict(v) for k, v in SEED_VEHICLES.items()}
 _in_memory_drivers: Dict[str, Dict[str, Any]] = {k: dict(v) for k, v in SEED_DRIVERS.items()}
+_in_memory_bookings: Dict[str, Dict[str, Any]] = {}
+_in_memory_decision_log: List[Dict[str, Any]] = []
+_in_memory_driver_responses: List[Dict[str, Any]] = []
+_in_memory_trips: Dict[str, Dict[str, Any]] = {}
+_in_memory_notifications: List[Dict[str, Any]] = []
 
 
 def reset_seed_data() -> None:
     """Reset in-memory data store to original seed data."""
     global _in_memory_profiles, _in_memory_vehicles, _in_memory_drivers
+    global _in_memory_bookings, _in_memory_decision_log, _in_memory_driver_responses
+    global _in_memory_trips, _in_memory_notifications
     _in_memory_profiles = {k: dict(v) for k, v in SEED_PROFILES.items()}
     _in_memory_vehicles = {k: dict(v) for k, v in SEED_VEHICLES.items()}
     _in_memory_drivers = {k: dict(v) for k, v in SEED_DRIVERS.items()}
+    _in_memory_bookings = {}
+    _in_memory_decision_log = []
+    _in_memory_driver_responses = []
+    _in_memory_trips = {}
+    _in_memory_notifications = []
 
 
 def register_test_profile(profile_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -854,40 +866,760 @@ def update_driver(driver_id: str, updates: Dict[str, Any], conn=None) -> Optiona
 # Bookings & Exclusion Violations
 # ---------------------------------------------------------
 
-def query_bookings(conn=None, active_only: bool = True) -> List[Dict[str, Any]]:
-    """Fetch bookings from database."""
+SLOT_HOLDING_STATUSES = ("PENDING", "APPROVED", "DRIVER_PENDING", "CONFIRMED", "IN_PROGRESS")
+
+
+def _to_utc_dt(val: Any) -> Optional[datetime]:
+    """Normalize datetime or ISO string to UTC timezone-aware datetime."""
+    if val is None:
+        return None
+    if isinstance(val, datetime):
+        if val.tzinfo is None:
+            return val.replace(tzinfo=timezone.utc)
+        return val.astimezone(timezone.utc)
+    if isinstance(val, str):
+        v = val.strip()
+        if v.endswith("Z") or v.endswith("z"):
+            v = v[:-1] + "+00:00"
+        dt = datetime.fromisoformat(v)
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
+    return None
+
+
+def _format_dt(val: Any) -> Optional[str]:
+    """Format datetime to ISO string."""
+    dt = _to_utc_dt(val)
+    if dt is None:
+        return None
+    return dt.isoformat()
+
+
+def serialize_booking(b: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """Format booking record for JSON API responses with ISO datetimes."""
+    if not b:
+        return None
+    res = dict(b)
+    for dt_col in ("start_time", "end_time", "blocked_until", "respond_by", "created_at"):
+        if res.get(dt_col) is not None:
+            res[dt_col] = _format_dt(res[dt_col])
+    if res.get("passengers") is not None:
+        res["passengers"] = int(res["passengers"])
+    return res
+
+
+def _check_in_memory_exclusions(booking_data: Dict[str, Any], exclude_booking_id: Optional[str] = None) -> None:
+    """Enforce GiST exclusion constraints in-memory when PostgreSQL is offline."""
+    status = booking_data.get("status", "PENDING")
+    if status not in SLOT_HOLDING_STATUSES:
+        return
+
+    veh_id = str(booking_data.get("vehicle_id")) if booking_data.get("vehicle_id") else None
+    drv_id = str(booking_data.get("driver_id")) if booking_data.get("driver_id") else None
+    if not veh_id and not drv_id:
+        return
+
+    st = _to_utc_dt(booking_data["start_time"])
+    bu = _to_utc_dt(booking_data.get("blocked_until") or booking_data["end_time"])
+    if not st or not bu:
+        return
+
+    for b_id, b in _in_memory_bookings.items():
+        if exclude_booking_id and b_id == str(exclude_booking_id):
+            continue
+        if b.get("status") not in SLOT_HOLDING_STATUSES:
+            continue
+
+        b_st = _to_utc_dt(b["start_time"])
+        b_bu = _to_utc_dt(b.get("blocked_until") or b["end_time"])
+        if not b_st or not b_bu:
+            continue
+
+        # Half-open interval overlap [st, bu) with [b_st, b_bu)
+        if b_st < bu and st < b_bu:
+            b_veh = str(b.get("vehicle_id")) if b.get("vehicle_id") else None
+            b_drv = str(b.get("driver_id")) if b.get("driver_id") else None
+
+            if veh_id and b_veh and veh_id == b_veh:
+                raise ExclusionViolationError(
+                    message='conflicting key value violates exclusion constraint "no_vehicle_overlap"',
+                    pgcode="23P01",
+                )
+            if drv_id and b_drv and drv_id == b_drv:
+                raise ExclusionViolationError(
+                    message='conflicting key value violates exclusion constraint "no_driver_overlap"',
+                    pgcode="23P01",
+                )
+
+
+def create_booking(booking_data: Dict[str, Any], conn=None) -> Dict[str, Any]:
+    """Create a new booking, enforcing PostgreSQL GiST exclusion constraints or in-memory checks."""
+    new_id = str(booking_data.get("id") or uuid.uuid4())
+    record = dict(booking_data)
+    record["id"] = new_id
+    record["created_at"] = _to_utc_dt(record.get("created_at") or datetime.now(timezone.utc))
+    record["start_time"] = _to_utc_dt(record["start_time"])
+    record["end_time"] = _to_utc_dt(record["end_time"])
+    record["blocked_until"] = _to_utc_dt(record.get("blocked_until") or record["end_time"])
+    if record.get("respond_by"):
+        record["respond_by"] = _to_utc_dt(record["respond_by"])
+    record.setdefault("status", "PENDING")
+    record.setdefault("type", "scheduled")
+    record.setdefault("priority", "normal")
+    record.setdefault("was_bumped", False)
+    record["passengers"] = int(record["passengers"])
+
     close_conn = False
     if conn is None:
         conn = get_db_connection()
         if conn is not None:
             close_conn = True
 
-    if conn is None:
-        return []
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    INSERT INTO bookings (
+                        id, employee_id, vehicle_id, driver_id, start_time, end_time,
+                        blocked_until, destination, dest_lat, dest_lng, passengers,
+                        reason, type, priority, status, decision_reason, failure_reason,
+                        respond_by, was_bumped, created_at
+                    ) VALUES (
+                        %s, %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s, %s,
+                        %s, %s, %s
+                    )
+                    RETURNING *;
+                """, (
+                    record["id"],
+                    record["employee_id"],
+                    record.get("vehicle_id"),
+                    record.get("driver_id"),
+                    record["start_time"],
+                    record["end_time"],
+                    record["blocked_until"],
+                    record["destination"],
+                    record.get("dest_lat"),
+                    record.get("dest_lng"),
+                    record["passengers"],
+                    record["reason"],
+                    record["type"],
+                    record["priority"],
+                    record["status"],
+                    record.get("decision_reason"),
+                    record.get("failure_reason"),
+                    record.get("respond_by"),
+                    record["was_bumped"],
+                    record["created_at"],
+                ))
+                conn.commit()
+                row = cur.fetchone()
+                if row:
+                    res = dict(row)
+                    res["id"] = str(res["id"])
+                    return res
+        except Exception as exc:
+            conn.rollback()
+            pgcode = getattr(exc, "pgcode", "") or getattr(getattr(exc, "orig", None), "pgcode", "")
+            err_str = str(exc).lower()
+            if pgcode == "23P01" or "23p01" in err_str or "exclusion_violation" in err_str:
+                raise ExclusionViolationError(
+                    message='conflicting key value violates exclusion constraint "no_vehicle_overlap"',
+                    pgcode="23P01",
+                )
+            raise
+        finally:
+            if close_conn:
+                conn.close()
 
-    try:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+    # In-memory execution
+    _check_in_memory_exclusions(record)
+    _in_memory_bookings[new_id] = dict(record)
+    return dict(record)
+
+
+def get_booking_by_id(booking_id: str, conn=None) -> Optional[Dict[str, Any]]:
+    """Fetch booking by ID."""
+    if not booking_id:
+        return None
+    bid = str(booking_id)
+
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("SELECT * FROM bookings WHERE id = %s;", (bid,))
+                row = cur.fetchone()
+                if row:
+                    res = dict(row)
+                    res["id"] = str(res["id"])
+                    return res
+        except Exception:
+            pass
+        finally:
+            if close_conn:
+                conn.close()
+
+    if bid in _in_memory_bookings:
+        return dict(_in_memory_bookings[bid])
+    return None
+
+
+def update_booking(booking_id: str, updates: Dict[str, Any], conn=None) -> Optional[Dict[str, Any]]:
+    """Update booking record with exclusion checking."""
+    bid = str(booking_id)
+    existing = get_booking_by_id(bid, conn=conn)
+    if not existing:
+        return None
+
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    # Normalize dates in updates
+    clean_updates = dict(updates)
+    for dt_col in ("start_time", "end_time", "blocked_until", "respond_by"):
+        if dt_col in clean_updates and clean_updates[dt_col] is not None:
+            clean_updates[dt_col] = _to_utc_dt(clean_updates[dt_col])
+
+    if conn is not None:
+        try:
+            set_clauses = []
+            vals = []
+            allowed_cols = (
+                "vehicle_id", "driver_id", "start_time", "end_time", "blocked_until",
+                "destination", "dest_lat", "dest_lng", "passengers", "reason",
+                "type", "priority", "status", "decision_reason", "failure_reason",
+                "respond_by", "was_bumped"
+            )
+            for col in allowed_cols:
+                if col in clean_updates:
+                    set_clauses.append(f"{col} = %s")
+                    vals.append(clean_updates[col])
+
+            if set_clauses:
+                vals.append(bid)
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    query = f"UPDATE bookings SET {', '.join(set_clauses)} WHERE id = %s RETURNING *;"
+                    cur.execute(query, tuple(vals))
+                    conn.commit()
+                    row = cur.fetchone()
+                    if row:
+                        res = dict(row)
+                        res["id"] = str(res["id"])
+                        return res
+            return existing
+        except Exception as exc:
+            conn.rollback()
+            pgcode = getattr(exc, "pgcode", "") or getattr(getattr(exc, "orig", None), "pgcode", "")
+            err_str = str(exc).lower()
+            if pgcode == "23P01" or "23p01" in err_str or "exclusion_violation" in err_str:
+                raise ExclusionViolationError(
+                    message='conflicting key value violates exclusion constraint "no_vehicle_overlap"',
+                    pgcode="23P01",
+                )
+            raise
+        finally:
+            if close_conn:
+                conn.close()
+
+    # In-memory execution
+    if bid in _in_memory_bookings:
+        candidate = dict(_in_memory_bookings[bid])
+        candidate.update(clean_updates)
+        _check_in_memory_exclusions(candidate, exclude_booking_id=bid)
+        _in_memory_bookings[bid].update(clean_updates)
+        return dict(_in_memory_bookings[bid])
+    return None
+
+
+def query_bookings(
+    conn=None,
+    active_only: bool = True,
+    employee_id: Optional[str] = None,
+    driver_id: Optional[str] = None,
+    status: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """Fetch bookings from database or in-memory store."""
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            where_clauses = []
+            params = []
             if active_only:
+                where_clauses.append("status IN ('PENDING', 'APPROVED', 'DRIVER_PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED')")
+            if employee_id:
+                where_clauses.append("employee_id = %s")
+                params.append(str(employee_id))
+            if driver_id:
+                where_clauses.append("driver_id = %s")
+                params.append(str(driver_id))
+            if status:
+                where_clauses.append("status = %s")
+                params.append(str(status))
+
+            where_str = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+            query = f"SELECT * FROM bookings {where_str} ORDER BY start_time ASC;"
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(query, tuple(params))
+                rows = cur.fetchall()
+                res = []
+                for r in rows:
+                    item = dict(r)
+                    item["id"] = str(item["id"])
+                    if item.get("employee_id"):
+                        item["employee_id"] = str(item["employee_id"])
+                    if item.get("vehicle_id"):
+                        item["vehicle_id"] = str(item["vehicle_id"])
+                    if item.get("driver_id"):
+                        item["driver_id"] = str(item["driver_id"])
+                    res.append(item)
+                return res
+        except Exception:
+            pass
+        finally:
+            if close_conn:
+                conn.close()
+
+    # In-memory filtering
+    res = []
+    for b in _in_memory_bookings.values():
+        if active_only and b.get("status") not in ('PENDING', 'APPROVED', 'DRIVER_PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'):
+            continue
+        if employee_id and str(b.get("employee_id")) != str(employee_id):
+            continue
+        if driver_id and str(b.get("driver_id")) != str(driver_id):
+            continue
+        if status and b.get("status") != status:
+            continue
+        res.append(dict(b))
+    res.sort(key=lambda x: _to_utc_dt(x.get("start_time")) or datetime.min.replace(tzinfo=timezone.utc))
+    return res
+
+
+def get_recent_pending_booking(employee_id: str, within_seconds: int = 30, conn=None) -> Optional[Dict[str, Any]]:
+    """Idempotency guard: find any recent active booking request by employee created within window."""
+    if not employee_id:
+        return None
+    eid = str(employee_id)
+    cutoff = datetime.now(timezone.utc) - timedelta(seconds=within_seconds)
+
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 cur.execute("""
-                    SELECT id, employee_id, vehicle_id, driver_id, start_time, end_time,
-                           blocked_until, destination, passengers, reason, type, priority,
-                           status, was_bumped, created_at
-                    FROM bookings
-                    WHERE status IN ('PENDING', 'APPROVED', 'DRIVER_PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED')
-                    ORDER BY start_time ASC;
-                """)
-            else:
+                    SELECT * FROM bookings
+                    WHERE employee_id = %s
+                      AND status IN ('PENDING', 'APPROVED', 'DRIVER_PENDING')
+                      AND created_at >= %s
+                    ORDER BY created_at DESC
+                    LIMIT 1;
+                """, (eid, cutoff))
+                row = cur.fetchone()
+                if row:
+                    res = dict(row)
+                    res["id"] = str(res["id"])
+                    return res
+        except Exception:
+            pass
+        finally:
+            if close_conn:
+                conn.close()
+
+    # In-memory check
+    for b in _in_memory_bookings.values():
+        if str(b.get("employee_id")) == eid and b.get("status") in ("PENDING", "APPROVED", "DRIVER_PENDING"):
+            created = _to_utc_dt(b.get("created_at"))
+            if created and created >= cutoff:
+                return dict(b)
+    return None
+
+
+# ---------------------------------------------------------
+# Decision Log Repository
+# ---------------------------------------------------------
+
+def add_decision_log(booking_id: str, actor_id: Optional[str], action: str, note: Optional[str] = None, conn=None) -> Dict[str, Any]:
+    """Record an audit trail event in decision_log."""
+    log_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    record = {
+        "id": log_id,
+        "booking_id": str(booking_id) if booking_id else None,
+        "actor_id": str(actor_id) if actor_id else None,
+        "action": str(action),
+        "note": note,
+        "created_at": now,
+    }
+
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 cur.execute("""
-                    SELECT id, employee_id, vehicle_id, driver_id, start_time, end_time,
-                           blocked_until, destination, passengers, reason, type, priority,
-                           status, was_bumped, created_at
-                    FROM bookings
-                    ORDER BY start_time ASC;
-                """)
-            return list(cur.fetchall())
-    finally:
-        if close_conn and conn:
-            conn.close()
+                    INSERT INTO decision_log (id, booking_id, actor_id, action, note, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING *;
+                """, (record["id"], record["booking_id"], record["actor_id"], record["action"], record["note"], record["created_at"]))
+                conn.commit()
+                row = cur.fetchone()
+                if row:
+                    res = dict(row)
+                    res["id"] = str(res["id"])
+                    return res
+        except Exception:
+            conn.rollback()
+        finally:
+            if close_conn:
+                conn.close()
+
+    _in_memory_decision_log.append(dict(record))
+    return dict(record)
+
+
+def get_decision_logs(booking_id: Optional[str] = None, conn=None) -> List[Dict[str, Any]]:
+    """Retrieve decision logs optionally filtered by booking ID."""
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                if booking_id:
+                    cur.execute("SELECT * FROM decision_log WHERE booking_id = %s ORDER BY created_at ASC;", (str(booking_id),))
+                else:
+                    cur.execute("SELECT * FROM decision_log ORDER BY created_at ASC;")
+                rows = cur.fetchall()
+                return [dict(r) for r in rows]
+        except Exception:
+            pass
+        finally:
+            if close_conn:
+                conn.close()
+
+    res = []
+    for l in _in_memory_decision_log:
+        if not booking_id or str(l.get("booking_id")) == str(booking_id):
+            res.append(dict(l))
+    return res
+
+
+# ---------------------------------------------------------
+# Driver Responses Repository
+# ---------------------------------------------------------
+
+def add_driver_response(
+    booking_id: str,
+    driver_id: str,
+    response: str,
+    reject_reason: Optional[str] = None,
+    conn=None,
+) -> Dict[str, Any]:
+    """Record driver acceptance, rejection, or timeout in driver_responses."""
+    resp_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    record = {
+        "id": resp_id,
+        "booking_id": str(booking_id),
+        "driver_id": str(driver_id),
+        "response": str(response),
+        "reject_reason": reject_reason,
+        "responded_at": now,
+    }
+
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    INSERT INTO driver_responses (id, booking_id, driver_id, response, reject_reason, responded_at)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING *;
+                """, (record["id"], record["booking_id"], record["driver_id"], record["response"], record["reject_reason"], record["responded_at"]))
+                conn.commit()
+                row = cur.fetchone()
+                if row:
+                    res = dict(row)
+                    res["id"] = str(res["id"])
+                    return res
+        except Exception:
+            conn.rollback()
+        finally:
+            if close_conn:
+                conn.close()
+
+    _in_memory_driver_responses.append(dict(record))
+    return dict(record)
+
+
+def get_driver_responses(booking_id: Optional[str] = None, driver_id: Optional[str] = None, conn=None) -> List[Dict[str, Any]]:
+    """Retrieve driver responses."""
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                clauses = []
+                params = []
+                if booking_id:
+                    clauses.append("booking_id = %s")
+                    params.append(str(booking_id))
+                if driver_id:
+                    clauses.append("driver_id = %s")
+                    params.append(str(driver_id))
+                w = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+                cur.execute(f"SELECT * FROM driver_responses {w} ORDER BY responded_at ASC;", tuple(params))
+                rows = cur.fetchall()
+                return [dict(r) for r in rows]
+        except Exception:
+            pass
+        finally:
+            if close_conn:
+                conn.close()
+
+    res = []
+    for r in _in_memory_driver_responses:
+        if booking_id and str(r.get("booking_id")) != str(booking_id):
+            continue
+        if driver_id and str(r.get("driver_id")) != str(driver_id):
+            continue
+        res.append(dict(r))
+    return res
+
+
+# ---------------------------------------------------------
+# Trips Repository
+# ---------------------------------------------------------
+
+def create_or_update_trip(booking_id: str, trip_data: Dict[str, Any], conn=None) -> Dict[str, Any]:
+    """Create or update trip record for a booking."""
+    bid = str(booking_id)
+    clean = dict(trip_data)
+    for dt_col in ("actual_start", "actual_end"):
+        if dt_col in clean and clean[dt_col] is not None:
+            clean[dt_col] = _to_utc_dt(clean[dt_col])
+
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("SELECT * FROM trips WHERE booking_id = %s;", (bid,))
+                existing = cur.fetchone()
+                if existing:
+                    set_clauses = []
+                    vals = []
+                    for k in ("start_odometer", "end_odometer", "fuel_added", "checklist", "actual_start", "actual_end"):
+                        if k in clean:
+                            set_clauses.append(f"{k} = %s")
+                            vals.append(clean[k])
+                    if set_clauses:
+                        vals.append(bid)
+                        cur.execute(f"UPDATE trips SET {', '.join(set_clauses)} WHERE booking_id = %s RETURNING *;", tuple(vals))
+                else:
+                    trip_id = str(clean.get("id") or uuid.uuid4())
+                    cur.execute("""
+                        INSERT INTO trips (id, booking_id, start_odometer, end_odometer, fuel_added, checklist, actual_start, actual_end)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        RETURNING *;
+                    """, (
+                        trip_id,
+                        bid,
+                        clean.get("start_odometer"),
+                        clean.get("end_odometer"),
+                        clean.get("fuel_added"),
+                        clean.get("checklist"),
+                        clean.get("actual_start"),
+                        clean.get("actual_end"),
+                    ))
+                conn.commit()
+                row = cur.fetchone()
+                if row:
+                    res = dict(row)
+                    res["id"] = str(res["id"])
+                    res["booking_id"] = str(res["booking_id"])
+                    return res
+        except Exception:
+            conn.rollback()
+        finally:
+            if close_conn:
+                conn.close()
+
+    # In-memory execution
+    if bid in _in_memory_trips:
+        _in_memory_trips[bid].update(clean)
+    else:
+        new_record = {
+            "id": str(clean.get("id") or uuid.uuid4()),
+            "booking_id": bid,
+            "start_odometer": clean.get("start_odometer"),
+            "end_odometer": clean.get("end_odometer"),
+            "fuel_added": clean.get("fuel_added"),
+            "checklist": clean.get("checklist"),
+            "actual_start": clean.get("actual_start"),
+            "actual_end": clean.get("actual_end"),
+        }
+        _in_memory_trips[bid] = new_record
+    return dict(_in_memory_trips[bid])
+
+
+def get_trip_by_booking_id(booking_id: str, conn=None) -> Optional[Dict[str, Any]]:
+    """Retrieve trip record by booking ID."""
+    if not booking_id:
+        return None
+    bid = str(booking_id)
+
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("SELECT * FROM trips WHERE booking_id = %s;", (bid,))
+                row = cur.fetchone()
+                if row:
+                    res = dict(row)
+                    res["id"] = str(res["id"])
+                    res["booking_id"] = str(res["booking_id"])
+                    return res
+        except Exception:
+            pass
+        finally:
+            if close_conn:
+                conn.close()
+
+    if bid in _in_memory_trips:
+        return dict(_in_memory_trips[bid])
+    return None
+
+
+# ---------------------------------------------------------
+# Notifications Repository
+# ---------------------------------------------------------
+
+def create_notification(
+    user_id: str,
+    message: str,
+    booking_id: Optional[str] = None,
+    channel: str = "in_app",
+    conn=None,
+) -> Dict[str, Any]:
+    """Create in-app or dispatch notification."""
+    notif_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    record = {
+        "id": notif_id,
+        "user_id": str(user_id),
+        "message": str(message),
+        "booking_id": str(booking_id) if booking_id else None,
+        "channel": str(channel),
+        "read": False,
+        "created_at": now,
+    }
+
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    INSERT INTO notifications (id, user_id, message, booking_id, channel, read, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    RETURNING *;
+                """, (record["id"], record["user_id"], record["message"], record["booking_id"], record["channel"], record["read"], record["created_at"]))
+                conn.commit()
+                row = cur.fetchone()
+                if row:
+                    res = dict(row)
+                    res["id"] = str(res["id"])
+                    return res
+        except Exception:
+            conn.rollback()
+        finally:
+            if close_conn:
+                conn.close()
+
+    _in_memory_notifications.append(dict(record))
+    return dict(record)
+
+
+def get_notifications(user_id: Optional[str] = None, conn=None) -> List[Dict[str, Any]]:
+    """Retrieve notifications."""
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        if conn is not None:
+            close_conn = True
+
+    if conn is not None:
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                if user_id:
+                    cur.execute("SELECT * FROM notifications WHERE user_id = %s ORDER BY created_at DESC;", (str(user_id),))
+                else:
+                    cur.execute("SELECT * FROM notifications ORDER BY created_at DESC;")
+                rows = cur.fetchall()
+                return [dict(r) for r in rows]
+        except Exception:
+            pass
+        finally:
+            if close_conn:
+                conn.close()
+
+    res = []
+    for n in _in_memory_notifications:
+        if not user_id or str(n.get("user_id")) == str(user_id):
+            res.append(dict(n))
+    res.sort(key=lambda x: _to_utc_dt(x.get("created_at")) or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+    return res
 
 
 class ExclusionViolationError(Exception):
@@ -908,3 +1640,4 @@ def format_exclusion_error(alternatives: Optional[List[Dict[str, Any]]] = None) 
             "alternatives": alternatives or [],
         }
     }
+

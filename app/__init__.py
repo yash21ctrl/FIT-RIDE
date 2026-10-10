@@ -145,11 +145,34 @@ def create_app():
             }
         }), 500
 
+    # State machine error handlers
+    from app.services.transitions import IllegalTransitionError, ForbiddenTransitionError
+
+    @app.errorhandler(IllegalTransitionError)
+    def handle_illegal_transition(err):
+        return jsonify({
+            "error": {
+                "code": "ILLEGAL_TRANSITION",
+                "message": str(err),
+                "alternatives": [],
+            }
+        }), 400
+
+    @app.errorhandler(ForbiddenTransitionError)
+    def handle_forbidden_transition(err):
+        return jsonify({
+            "error": {
+                "code": "FORBIDDEN",
+                "message": str(err),
+                "alternatives": [],
+            }
+        }), 403
+
     # Register blueprints
     from app.routes.auth import auth_bp
     from app.routes.bookings import bookings_bp
     from app.routes.vehicles import vehicles_bp
-    from app.routes.drivers import drivers_bp
+    from app.routes.drivers import drivers_bp, driver_bp
     from app.routes.trips import trips_bp
     from app.routes.manager import manager_bp
     from app.routes.analytics import analytics_bp
@@ -159,6 +182,7 @@ def create_app():
     app.register_blueprint(bookings_bp)
     app.register_blueprint(vehicles_bp)
     app.register_blueprint(drivers_bp)
+    app.register_blueprint(driver_bp)
     app.register_blueprint(trips_bp)
     app.register_blueprint(manager_bp)
     app.register_blueprint(analytics_bp)
