@@ -512,10 +512,11 @@ def allocate(
     bookings: Optional[List[Any]] = None,
     config: Optional[Dict[str, Any]] = None,
     db_conn=None,
+    exclude_vehicle_ids: tuple = (),
 ) -> AllocationResult:
     """
     Main allocation engine entry point:
-    allocate(request, exclude_driver_ids=(), exclude_booking_id=None) -> AllocationResult
+    allocate(request, exclude_driver_ids=(), exclude_booking_id=None, exclude_vehicle_ids=()) -> AllocationResult
     """
     from app.engine.alternatives import find_alternatives
 
@@ -554,9 +555,10 @@ def allocate(
     skipped_candidates: List[str] = []
 
     # 3. Fleet Capacity Check: NO_VEHICLE_BIG_ENOUGH
+    exclude_veh_set = {str(x) for x in exclude_vehicle_ids}
     active_vehicles = [
         v for v in vehicles
-        if _get(v, "status", "available") != "retired"
+        if _get(v, "status", "available") != "retired" and str(_get(v, "id")) not in exclude_veh_set
     ]
     max_cap = max([int(_get(v, "capacity", 0)) for v in active_vehicles], default=0)
     if passengers > max_cap:
@@ -568,6 +570,7 @@ def allocate(
             config=config,
             exclude_driver_ids=exclude_driver_ids,
             exclude_booking_id=exclude_booking_id,
+            exclude_vehicle_ids=exclude_vehicle_ids,
         )
         return AllocationResult(
             ok=False,
@@ -613,6 +616,7 @@ def allocate(
             config=config,
             exclude_driver_ids=exclude_driver_ids,
             exclude_booking_id=exclude_booking_id,
+            exclude_vehicle_ids=exclude_vehicle_ids,
         )
         return AllocationResult(
             ok=False,
@@ -661,6 +665,7 @@ def allocate(
             config=config,
             exclude_driver_ids=exclude_driver_ids,
             exclude_booking_id=exclude_booking_id,
+            exclude_vehicle_ids=exclude_vehicle_ids,
         )
         return AllocationResult(
             ok=False,
@@ -740,6 +745,7 @@ def allocate(
             config=config,
             exclude_driver_ids=exclude_driver_ids,
             exclude_booking_id=exclude_booking_id,
+            exclude_vehicle_ids=exclude_vehicle_ids,
         )
         return AllocationResult(
             ok=False,

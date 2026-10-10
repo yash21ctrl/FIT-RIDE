@@ -49,10 +49,10 @@ ALLOWED: Dict[Optional[str], Set[str]] = {
     None: {"PENDING", "WAITLISTED"},
     "(new)": {"PENDING", "WAITLISTED"},
     "": {"PENDING", "WAITLISTED"},
-    "PENDING": {"APPROVED", "REJECTED", "CANCELLED", "BUMPED"},
-    "APPROVED": {"DRIVER_PENDING", "CANCELLED", "BUMPED"},
-    "DRIVER_PENDING": {"CONFIRMED", "PENDING", "CANCELLED", "BUMPED", "DRIVER_PENDING"},
-    "CONFIRMED": {"IN_PROGRESS", "CANCELLED", "BUMPED"},
+    "PENDING": {"APPROVED", "REJECTED", "CANCELLED", "BUMPED", "WAITLISTED"},
+    "APPROVED": {"DRIVER_PENDING", "CANCELLED", "BUMPED", "WAITLISTED"},
+    "DRIVER_PENDING": {"CONFIRMED", "PENDING", "CANCELLED", "BUMPED", "DRIVER_PENDING", "WAITLISTED"},
+    "CONFIRMED": {"IN_PROGRESS", "CANCELLED", "BUMPED", "WAITLISTED"},
     "IN_PROGRESS": {"COMPLETED"},
     "BUMPED": {"PENDING", "WAITLISTED", "CANCELLED"},
     "WAITLISTED": {"PENDING", "CANCELLED"},
@@ -358,9 +358,15 @@ def transition(
         for m_id in MANAGER_PROFILE_IDS:
             create_notification(m_id, f"Booking {bid} was bumped by an emergency request.", booking_id=bid, conn=conn)
 
-    elif new_status == "WAITLISTED" and current_status == "BUMPED":
-        updates["was_bumped"] = True
-        action_name = action_name or "bumped_waitlisted"
+    elif new_status == "WAITLISTED":
+        action_name = action_name or ("bumped_waitlisted" if current_status == "BUMPED" else "waitlisted")
+        updates["vehicle_id"] = None
+        updates["driver_id"] = None
+        if current_status == "BUMPED" or booking.get("was_bumped"):
+            updates["was_bumped"] = True
+        emp_id = booking.get("employee_id")
+        if emp_id:
+            create_notification(emp_id, f"Booking {bid} was placed on the waitlist.", booking_id=bid, conn=conn)
 
     elif new_status == "PENDING" and current_status == "WAITLISTED":
         action_name = action_name or "waitlist_promoted"
@@ -370,7 +376,7 @@ def transition(
 
     # Apply any extra data fields passed in (safeguard: do not let rejected driver overwrite reallocated driver)
     if extra_data:
-        for field in ("vehicle_id", "driver_id", "decision_reason", "blocked_until", "respond_by"):
+        for field in ("vehicle_id", "driver_id", "decision_reason", "failure_reason", "blocked_until", "respond_by", "was_bumped"):
             if field in extra_data:
                 if field == "driver_id" and new_status == "PENDING" and current_status == "DRIVER_PENDING":
                     continue

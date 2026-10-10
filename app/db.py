@@ -1171,6 +1171,7 @@ def query_bookings(
     employee_id: Optional[str] = None,
     driver_id: Optional[str] = None,
     status: Optional[str] = None,
+    vehicle_id: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """Fetch bookings from database or in-memory store."""
     close_conn = False
@@ -1191,6 +1192,9 @@ def query_bookings(
             if driver_id:
                 where_clauses.append("driver_id = %s")
                 params.append(str(driver_id))
+            if vehicle_id:
+                where_clauses.append("vehicle_id = %s")
+                params.append(str(vehicle_id))
             if status:
                 where_clauses.append("status = %s")
                 params.append(str(status))
@@ -1226,6 +1230,8 @@ def query_bookings(
         if employee_id and str(b.get("employee_id")) != str(employee_id):
             continue
         if driver_id and str(b.get("driver_id")) != str(driver_id):
+            continue
+        if vehicle_id and str(b.get("vehicle_id")) != str(vehicle_id):
             continue
         if status and b.get("status") != status:
             continue

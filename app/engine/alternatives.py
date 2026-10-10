@@ -35,6 +35,7 @@ def find_alternatives(
     config: Optional[Dict[str, Any]] = None,
     exclude_driver_ids: tuple = (),
     exclude_booking_id: Optional[str] = None,
+    exclude_vehicle_ids: tuple = (),
 ) -> List[Dict[str, Any]]:
     """
     Generate alternative booking slots when direct allocation fails:
@@ -87,7 +88,11 @@ def find_alternatives(
         })
         return alternatives
 
-    suitable_vehicles = [v for v in active_vehicles if int(_get(v, "capacity", 0)) >= passengers]
+    exclude_veh_set = {str(x) for x in exclude_vehicle_ids}
+    suitable_vehicles = [
+        v for v in active_vehicles
+        if int(_get(v, "capacity", 0)) >= passengers and str(_get(v, "id")) not in exclude_veh_set
+    ]
 
     # Helper: Check if vehicle is free in [start, blocked_until)
     def vehicle_free(veh: Any, slot_start: datetime, slot_blocked: datetime) -> bool:

@@ -234,6 +234,33 @@ def create_booking_request():
 
     # 5. Handle allocation failure
     if not alloc_result.ok:
+        # Check if emergency bump can be performed
+        if booking_type == "emergency" or priority == "emergency":
+            from app.engine.bump import find_bump_candidate, execute_bump
+            bump_candidate = find_bump_candidate(req_obj)
+            if bump_candidate:
+                emg_data = {
+                    "employee_id": employee_id,
+                    "start_time": start_utc,
+                    "end_time": end_utc,
+                    "blocked_until": blocked_until,
+                    "destination": destination,
+                    "dest_lat": data.get("dest_lat"),
+                    "dest_lng": data.get("dest_lng"),
+                    "passengers": passengers,
+                    "reason": reason,
+                    "type": "emergency",
+                    "priority": "emergency",
+                }
+                final_emg, bumped_bkg = execute_bump(bump_candidate, emg_data, actor=current_user)
+                return jsonify({
+                    "booking": serialize_booking(final_emg),
+                    "bumped_booking_id": bumped_bkg["id"],
+                    "bumped": True,
+                    "status": "DRIVER_PENDING",
+                    "auto_approved": True,
+                }), 201
+
         alternatives = [
             a.to_dict() if hasattr(a, "to_dict") else a
             for a in alloc_result.alternatives
