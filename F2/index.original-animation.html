@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smooth Scroll Animation</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+        }
+
+        #scroll-container {
+            /* Adjust this value to control how long the user needs to scroll */
+            height: 500vh;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        canvas {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="scroll-container">
+        <div id="canvas-container">
+            <canvas id="animation-canvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("animation-canvas");
+        const context = canvas.getContext("2d", { alpha: false });
+
+        // Total number of frames available
+        const frameCount = 234;
+
+        // Function to format the image filename (0001.jpg, 0002.jpg, etc.)
+        const currentFrame = index => `./${index.toString().padStart(4, '0')}.jpg`;
+
+        // Array to store preloaded images
+        const images = [];
+
+        // Preload all images
+        for (let i = 1; i <= frameCount; i++) {
+            const img = new Image();
+            img.src = currentFrame(i);
+            images.push(img);
+        }
+
+        // Once the first image is loaded, set canvas dimensions and draw it
+        images[0].onload = () => {
+            canvas.width = images[0].width;
+            canvas.height = images[0].height;
+            render();
+        }
+
+        let frameIndex = 0;
+
+        // Function to draw the current frame onto the canvas
+        function render() {
+            if (images[frameIndex] && images[frameIndex].complete) {
+                // Draw the image exactly as its original size, CSS object-fit will scale it
+                context.drawImage(images[frameIndex], 0, 0);
+            }
+        }
+
+        // Use a ticking variable for requestAnimationFrame (scroll optimization)
+        let ticking = false;
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const html = document.documentElement;
+                    // Calculate scroll progress from 0.0 to 1.0
+                    const scrollFraction = html.scrollTop / (html.scrollHeight - html.clientHeight);
+                    
+                    // Map scroll progress to the correct frame index
+                    frameIndex = Math.min(
+                        frameCount - 1,
+                        Math.max(0, Math.floor(scrollFraction * frameCount))
+                    );
+                    
+                    render();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+    </script>
+</body>
+</html>

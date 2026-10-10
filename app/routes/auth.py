@@ -37,6 +37,7 @@ def login():
         or data.get("username")
         or data.get("email")
         or data.get("profile_id")
+        or data.get("driver_id")
     )
     password = str(data.get("password") or "").strip()
 
@@ -52,6 +53,12 @@ def login():
     profile = resolve_profile_from_identifier(str(identifier))
     if not profile:
         profile = get_profile_by_id(str(identifier)) or get_profile_by_email(str(identifier))
+
+    if not profile:
+        from app.db import get_driver_by_id
+        drv = get_driver_by_id(str(identifier))
+        if drv and drv.get("profile_id"):
+            profile = get_profile_by_id(drv["profile_id"])
 
     if not profile:
         return jsonify({

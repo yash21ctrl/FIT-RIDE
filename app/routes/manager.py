@@ -82,6 +82,7 @@ def approval_queue():
             drv = get_driver_by_id(b["driver_id"])
             if drv:
                 item["driver_name"] = drv.get("name")
+                item["driver_profile_id"] = drv.get("profile_id")
 
         queue_items.append(item)
         if b.get("status") == "PENDING":

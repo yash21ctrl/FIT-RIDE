@@ -1,0 +1,2862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#080a0d">
+    <title>FITRIDE — Every Journey. The Right Vehicle.</title>
+    <style>
+        :root {
+            --bg: #080a0d;
+            --bg-soft: #0d1117;
+            --panel: #121820;
+            --panel-strong: #171f29;
+            --line: #27313d;
+            --text: #f5f8fb;
+            --muted: #9ba9b8;
+            --cyan: #00d9f5;
+            --cyan-soft: rgba(0, 217, 245, 0.12);
+            --green: #32d583;
+            --amber: #f5b942;
+            --red: #f97066;
+            --shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+            --radius: 22px;
+        }
+
+        * { box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+            background: var(--bg);
+        }
+
+        body {
+            margin: 0;
+            min-width: 320px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.5;
+        }
+
+        body, button, input, select, textarea { font: inherit; }
+
+        button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+
+        button, a { cursor: pointer; }
+
+        button { border: 0; }
+
+        a { color: inherit; text-decoration: none; }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .skip-link {
+            position: fixed;
+            left: 16px;
+            top: 16px;
+            z-index: 100;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: var(--cyan);
+            color: #001014;
+            font-weight: 800;
+            transform: translateY(-150%);
+            transition: transform 160ms ease;
+        }
+
+        .skip-link:focus { transform: translateY(0); }
+
+        .animation-section {
+            position: relative;
+            height: 500vh;
+            min-height: 2800px;
+            overflow: clip;
+            background: #020304;
+        }
+
+        .animation-viewport {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            height: 100vh;
+            min-height: 560px;
+            overflow: hidden;
+            background: #020304;
+            isolation: isolate;
+        }
+
+        .animation-viewport::after {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            content: "";
+            background:
+                linear-gradient(180deg, rgba(0, 0, 0, 0.66), transparent 28%, transparent 64%, rgba(0, 0, 0, 0.72)),
+                linear-gradient(90deg, rgba(0, 0, 0, 0.42), transparent 42%, rgba(0, 0, 0, 0.18));
+        }
+
+        #animation-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .intro-header,
+        .intro-copy,
+        .intro-progress {
+            position: absolute;
+            z-index: 2;
+        }
+
+        .intro-header {
+            top: clamp(22px, 4vw, 48px);
+            left: clamp(22px, 6vw, 92px);
+            right: clamp(22px, 6vw, 92px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand-lockup {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text);
+            letter-spacing: 0.22em;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 34px;
+            height: 34px;
+            place-items: center;
+            border: 1px solid rgba(0, 217, 245, 0.55);
+            border-radius: 50%;
+            color: var(--cyan);
+            box-shadow: 0 0 28px rgba(0, 217, 245, 0.22);
+            letter-spacing: 0;
+            font-size: 0.72rem;
+        }
+
+        .brand-glyph {
+            width: 22px;
+            height: 22px;
+            overflow: visible;
+        }
+
+        .brand-glyph-f {
+            fill: #07100d;
+        }
+
+        .brand-glyph-route {
+            fill: none;
+            stroke: #07100d;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 2.2;
+        }
+
+        .intro-meta {
+            color: rgba(245, 248, 251, 0.72);
+            letter-spacing: 0.16em;
+            font-size: 0.66rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .intro-copy {
+            left: clamp(22px, 6vw, 92px);
+            bottom: clamp(74px, 12vh, 132px);
+            max-width: 660px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+            color: var(--cyan);
+            letter-spacing: 0.2em;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .eyebrow::before {
+            width: 24px;
+            height: 1px;
+            background: currentColor;
+            content: "";
+        }
+
+        .intro-copy h1 {
+            max-width: 660px;
+            margin: 0;
+            letter-spacing: -0.065em;
+            font-size: clamp(3.1rem, 8vw, 7.8rem);
+            font-weight: 800;
+            line-height: 0.92;
+        }
+
+        .intro-copy h1 span { color: var(--cyan); }
+
+        .intro-copy p {
+            max-width: 470px;
+            margin: 22px 0 0;
+            color: rgba(245, 248, 251, 0.76);
+            font-size: clamp(0.96rem, 1.45vw, 1.15rem);
+        }
+
+        .intro-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .intro-progress {
+            right: clamp(22px, 6vw, 92px);
+            bottom: clamp(28px, 5vh, 52px);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(245, 248, 251, 0.72);
+            letter-spacing: 0.12em;
+            font-size: 0.66rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .progress-track {
+            width: 130px;
+            height: 2px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.22);
+        }
+
+        .progress-bar {
+            display: block;
+            width: 0;
+            height: 100%;
+            background: var(--cyan);
+            transition: width 120ms ease-out;
+        }
+
+        .button {
+            display: inline-flex;
+            min-height: 46px;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            padding: 0 18px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            color: #061014;
+            background: var(--cyan);
+            font-size: 0.9rem;
+            font-weight: 800;
+            transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+        }
+
+        .button:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0, 217, 245, 0.2); }
+        .button:active { transform: translateY(0); }
+
+        .button.secondary {
+            border-color: rgba(255, 255, 255, 0.18);
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .button.secondary:hover { border-color: rgba(0, 217, 245, 0.5); background: rgba(0, 217, 245, 0.1); }
+
+        .button.ghost {
+            min-height: 38px;
+            padding: 0 12px;
+            border-color: var(--line);
+            color: var(--muted);
+            background: transparent;
+            font-size: 0.78rem;
+        }
+
+        .button.danger { color: #fff; background: var(--red); }
+        .button.success { color: #04150d; background: var(--green); }
+        .button.warning { color: #1f1600; background: var(--amber); }
+
+        .site-nav {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            background: rgba(8, 10, 13, 0.86);
+            backdrop-filter: blur(18px);
+        }
+
+        .nav-inner {
+            display: flex;
+            width: min(1380px, calc(100% - 44px));
+            min-height: 76px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            margin: 0 auto;
+        }
+
+        .site-nav .brand-lockup { flex: 0 0 auto; }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-link {
+            padding: 10px 12px;
+            border-radius: 9px;
+            color: var(--muted);
+            background: transparent;
+            font-size: 0.82rem;
+            font-weight: 700;
+            transition: color 160ms ease, background 160ms ease;
+        }
+
+        .nav-link:hover, .nav-link.is-active { color: var(--text); background: rgba(255, 255, 255, 0.07); }
+        .nav-link.is-active { box-shadow: inset 0 -2px 0 var(--cyan); }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .demo-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 10px;
+            border: 1px solid rgba(50, 213, 131, 0.24);
+            border-radius: 999px;
+            color: var(--green);
+            background: rgba(50, 213, 131, 0.08);
+            font-size: 0.68rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .demo-pill::before {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 0 4px rgba(50, 213, 131, 0.1);
+            content: "";
+        }
+
+        .app-shell { min-height: 100vh; background: radial-gradient(circle at 85% 0%, rgba(0, 217, 245, 0.08), transparent 32%), var(--bg); }
+
+        .app-main {
+            width: min(1380px, calc(100% - 44px));
+            margin: 0 auto;
+            padding: 58px 0 100px;
+        }
+
+        .view { display: none; animation: view-in 260ms ease both; }
+        .view.is-active { display: block; }
+
+        @keyframes view-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .view-header {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 22px;
+            margin-bottom: 32px;
+        }
+
+        .view-header h2, .hero-copy h2 {
+            margin: 0;
+            letter-spacing: -0.055em;
+            font-size: clamp(2.2rem, 4vw, 4.5rem);
+            line-height: 0.98;
+        }
+
+        .view-header p, .hero-copy p { max-width: 580px; margin: 14px 0 0; color: var(--muted); }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+            gap: 22px;
+            align-items: stretch;
+            margin-bottom: 22px;
+        }
+
+        .hero-panel, .hero-card, .panel, .metric-card, .vehicle-card, .booking-card {
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: linear-gradient(145deg, rgba(23, 31, 41, 0.94), rgba(12, 16, 22, 0.98));
+            box-shadow: var(--shadow);
+        }
+
+        .hero-panel {
+            min-height: 390px;
+            padding: clamp(26px, 5vw, 58px);
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 90% 18%, rgba(0, 217, 245, 0.18), transparent 30%),
+                linear-gradient(135deg, rgba(0, 217, 245, 0.07), transparent 43%),
+                linear-gradient(145deg, #17212b, #0b0f14 74%);
+        }
+
+        .hero-copy { position: relative; z-index: 1; max-width: 650px; }
+        .hero-copy h2 { font-size: clamp(2.8rem, 5.8vw, 6rem); }
+        .hero-copy h2 span { color: var(--cyan); }
+
+        .hero-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+
+        .hero-vehicle {
+            position: relative;
+            min-height: 390px;
+            overflow: hidden;
+            border-radius: var(--radius);
+            background: #06080b;
+        }
+
+        .hero-vehicle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.66;
+            filter: saturate(0.8) contrast(1.04);
+        }
+
+        .hero-vehicle::after {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 30%, rgba(4, 7, 9, 0.92));
+            content: "";
+        }
+
+        .hero-vehicle-label {
+            position: absolute;
+            z-index: 1;
+            right: 24px;
+            bottom: 22px;
+            left: 24px;
+        }
+
+        .hero-vehicle-label strong { display: block; font-size: 1.35rem; }
+        .hero-vehicle-label span { color: var(--muted); font-size: 0.82rem; }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+
+        .metric-card { padding: 20px; box-shadow: none; }
+        .metric-label { color: var(--muted); font-size: 0.75rem; font-weight: 700; }
+        .metric-value { margin-top: 7px; letter-spacing: -0.04em; font-size: 2rem; font-weight: 800; }
+        .metric-note { margin-top: 4px; color: var(--cyan); font-size: 0.72rem; }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(290px, 0.8fr);
+            gap: 22px;
+        }
+
+        .panel { padding: 24px; box-shadow: none; }
+        .panel-header { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
+        .panel-header h3 { margin: 0; font-size: 1.08rem; }
+        .panel-header span { color: var(--muted); font-size: 0.78rem; }
+
+        .booking-list { display: grid; gap: 10px; }
+        .booking-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: center;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        .booking-row strong { display: block; font-size: 0.91rem; }
+        .booking-row small { display: block; margin-top: 3px; color: var(--muted); font-size: 0.74rem; }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            min-height: 24px;
+            padding: 0 8px;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: capitalize;
+        }
+
+        .status.pending { color: var(--amber); background: rgba(245, 185, 66, 0.12); }
+        .status.approved, .status.available { color: var(--green); background: rgba(50, 213, 131, 0.12); }
+        .status.rejected, .status.maintenance, .status.cancelled { color: var(--red); background: rgba(249, 112, 102, 0.12); }
+
+        .quick-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .quick-action {
+            display: flex;
+            min-height: 96px;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 16px;
+            border: 1px solid var(--line);
+            border-radius: 15px;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.025);
+            text-align: left;
+            transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+        }
+
+        .quick-action:hover { transform: translateY(-2px); border-color: rgba(0, 217, 245, 0.44); background: var(--cyan-soft); }
+        .quick-action .icon { color: var(--cyan); font-size: 1.35rem; }
+        .quick-action strong { font-size: 0.82rem; }
+
+        .filter-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+
+        .field, .select {
+            width: 100%;
+            min-height: 46px;
+            padding: 0 13px;
+            border: 1px solid var(--line);
+            border-radius: 11px;
+            outline: none;
+            color: var(--text);
+            background: #0b1016;
+            font-size: 0.86rem;
+        }
+
+        textarea.field { min-height: 96px; padding-top: 12px; resize: vertical; }
+        .field:focus, .select:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0, 217, 245, 0.12); }
+        .field::placeholder { color: #627181; }
+
+        .fleet-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .vehicle-card { overflow: hidden; box-shadow: none; }
+
+        .vehicle-art {
+            position: relative;
+            display: grid;
+            min-height: 170px;
+            place-items: center;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 50% 25%, rgba(0, 217, 245, 0.2), transparent 38%),
+                linear-gradient(145deg, #1b2833, #090d12);
+        }
+
+        .vehicle-art::before {
+            position: absolute;
+            width: 190px;
+            height: 60px;
+            border-radius: 55% 55% 35% 35%;
+            background: linear-gradient(180deg, rgba(0, 217, 245, 0.6), rgba(0, 217, 245, 0.07));
+            box-shadow: 0 26px 0 -12px rgba(0, 217, 245, 0.32), 0 34px 34px rgba(0, 0, 0, 0.55);
+            content: "";
+            transform: skewX(-12deg);
+        }
+
+        .vehicle-art::after {
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #05070a;
+            box-shadow: 126px 0 0 #05070a;
+            content: "";
+            transform: translateX(-63px) translateY(35px);
+        }
+
+        .vehicle-icon { position: relative; z-index: 1; margin-top: -35px; font-size: 2.7rem; filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.42)); }
+
+        .vehicle-card-body { padding: 18px; }
+        .vehicle-topline { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+        .vehicle-topline h3 { margin: 0; font-size: 1rem; }
+        .vehicle-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 18px; color: var(--muted); font-size: 0.74rem; }
+        .vehicle-meta span { padding: 5px 8px; border: 1px solid var(--line); border-radius: 999px; }
+        .vehicle-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+        .form-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr); gap: 22px; align-items: start; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+        .form-field { display: grid; gap: 7px; }
+        .form-field.full { grid-column: 1 / -1; }
+        .form-field label { color: var(--muted); font-size: 0.76rem; font-weight: 700; }
+        .form-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
+        .match-summary { min-height: 114px; padding: 16px; border: 1px dashed rgba(0, 217, 245, 0.34); border-radius: 15px; color: var(--muted); background: rgba(0, 217, 245, 0.05); }
+        .match-summary strong { display: block; margin-bottom: 6px; color: var(--text); }
+        .match-summary .match-vehicle { color: var(--cyan); font-weight: 800; }
+
+        .admin-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr); gap: 22px; }
+        .admin-list { display: grid; gap: 12px; }
+        .admin-item { padding: 16px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 15px; background: rgba(255, 255, 255, 0.025); }
+        .admin-item-top { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+        .admin-item strong { font-size: 0.9rem; }
+        .admin-item small { display: block; margin-top: 4px; color: var(--muted); font-size: 0.74rem; }
+        .admin-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+        .fleet-admin-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 13px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+        .fleet-admin-row:last-child { border-bottom: 0; }
+        .fleet-admin-row strong { display: block; font-size: 0.86rem; }
+        .fleet-admin-row small { color: var(--muted); font-size: 0.72rem; }
+
+        .empty-state { padding: 28px 18px; border: 1px dashed var(--line); border-radius: 15px; color: var(--muted); text-align: center; }
+        .empty-state strong { display: block; margin-bottom: 6px; color: var(--text); }
+
+        .toast {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            z-index: 40;
+            max-width: min(420px, calc(100% - 44px));
+            padding: 14px 16px;
+            border: 1px solid rgba(0, 217, 245, 0.35);
+            border-radius: 13px;
+            color: var(--text);
+            background: #101820;
+            box-shadow: var(--shadow);
+            font-size: 0.82rem;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(12px);
+            transition: opacity 180ms ease, transform 180ms ease;
+        }
+
+        .toast.is-visible { opacity: 1; transform: translateY(0); }
+        .toast.error { border-color: rgba(249, 112, 102, 0.5); }
+
+        .status.driver_pending { color: #c4b5fd; background: rgba(139, 92, 246, 0.16); }
+        .status.confirmed { color: #2dd4bf; background: rgba(20, 184, 166, 0.16); }
+        .status.in_progress { color: #93c5fd; background: rgba(59, 130, 246, 0.18); }
+        .status.completed { color: #6ee7b7; background: rgba(16, 185, 129, 0.16); }
+        .status.waitlisted { color: #d8b4fe; background: rgba(168, 85, 247, 0.16); }
+        .status.bumped { color: #fda4af; background: rgba(244, 63, 94, 0.18); }
+
+        .role-selector-wrap { display: inline-flex; align-items: center; }
+        .role-select {
+            height: 38px;
+            padding: 0 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(200, 243, 109, 0.4);
+            background: rgba(11, 18, 25, 0.9);
+            color: var(--green);
+            font-size: 0.74rem;
+            font-weight: 700;
+            cursor: pointer;
+            outline: none;
+            backdrop-filter: blur(8px);
+        }
+        .portal-links { display: inline-flex; align-items: center; gap: 6px; }
+        .portal-nav-btn {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: #9ab0c2;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 160ms ease;
+            white-space: nowrap;
+        }
+        .portal-nav-btn:hover {
+            color: var(--text);
+            border-color: var(--cyan);
+            background: rgba(0, 217, 245, 0.12);
+        }
+        .button.success {
+            background: #10b981;
+            color: #04140e;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2);
+        }
+        .button.success:hover {
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+        }
+        .button.warning {
+            background: #f59e0b;
+            color: #171003;
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.2);
+        }
+        .button.warning:hover {
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
+        }
+
+        .footer-note { margin-top: 52px; color: #647384; font-size: 0.73rem; text-align: center; }
+
+        @media (max-width: 1060px) {
+            .nav-links { display: none; }
+            .fleet-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .hero-grid, .two-column, .form-layout, .admin-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 720px) {
+            .animation-section { min-height: 1900px; }
+            .animation-viewport { min-height: 520px; }
+            .intro-header { align-items: flex-start; }
+            .intro-meta { display: none; }
+            .intro-copy { bottom: 82px; }
+            .intro-copy h1 { font-size: clamp(3rem, 16vw, 5.5rem); }
+            .intro-progress { left: 22px; right: auto; }
+            .nav-inner, .app-main { width: min(100% - 28px, 1380px); }
+            .nav-inner { min-height: 68px; }
+            .nav-right .demo-pill { display: none; }
+            .app-main { padding-top: 38px; }
+            .view-header { display: block; }
+            .view-header .button { margin-top: 18px; }
+            .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .fleet-grid { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-field.full { grid-column: auto; }
+            .quick-actions { grid-template-columns: 1fr 1fr; }
+            .hero-panel, .hero-vehicle { min-height: 340px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+
+        /* FITRIDE visual pass: high-contrast product UI with motion kept purposeful. */
+        :root {
+            --bg: #070a0f;
+            --bg-soft: #0c1118;
+            --panel: #111923;
+            --panel-strong: #182431;
+            --line: rgba(202, 223, 237, 0.16);
+            --text: #f5f8f7;
+            --muted: #aebdca;
+            --cyan: #91f4ff;
+            --cyan-soft: rgba(145, 244, 255, 0.12);
+            --green: #c8f36d;
+            --amber: #ffd166;
+            --red: #ff8d82;
+            --shadow: 0 26px 90px rgba(0, 0, 0, 0.42);
+            --radius: 24px;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at 12% -10%, rgba(145, 244, 255, 0.08), transparent 28rem),
+                var(--bg);
+            letter-spacing: -0.01em;
+        }
+
+        .animation-viewport {
+            background: #020609;
+        }
+
+        .animation-viewport::before {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            content: "";
+            background:
+                radial-gradient(circle at 76% 48%, rgba(145, 244, 255, 0.13), transparent 24%),
+                radial-gradient(circle at 10% 78%, rgba(200, 243, 109, 0.08), transparent 25%),
+                linear-gradient(115deg, rgba(2, 6, 9, 0.76), transparent 42%);
+            mix-blend-mode: screen;
+        }
+
+        .animation-viewport::after {
+            background:
+                linear-gradient(180deg, rgba(2, 6, 9, 0.72), transparent 23%, transparent 62%, rgba(2, 6, 9, 0.86)),
+                linear-gradient(90deg, rgba(2, 6, 9, 0.64), transparent 48%, rgba(2, 6, 9, 0.14));
+        }
+
+        #animation-canvas {
+            filter: saturate(1.06) contrast(1.05);
+            transform: scale(1.012);
+        }
+
+        .intro-header {
+            padding: 10px 12px 10px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            border-radius: 18px;
+            background: rgba(8, 13, 18, 0.48);
+            box-shadow: 0 16px 45px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(18px);
+        }
+
+        .brand-lockup { letter-spacing: 0.24em; }
+
+        .brand-mark {
+            border: 1px solid rgba(200, 243, 109, 0.72);
+            color: #0b1110;
+            background: var(--green);
+            box-shadow: 0 0 0 5px rgba(200, 243, 109, 0.1), 0 0 30px rgba(200, 243, 109, 0.25);
+            font-weight: 900;
+        }
+
+        .intro-meta { color: rgba(245, 248, 251, 0.8); }
+
+        .intro-copy {
+            top: clamp(190px, 24vh, 390px);
+            bottom: auto;
+            max-width: 560px;
+            padding-left: 20px;
+            border-left: 1px solid rgba(200, 243, 109, 0.7);
+        }
+
+        .intro-copy::before {
+            position: absolute;
+            z-index: -1;
+            top: -34px;
+            bottom: -34px;
+            left: -54px;
+            width: calc(100% + 108px);
+            border-radius: 40%;
+            background: radial-gradient(ellipse at 18% 50%, rgba(2, 6, 9, 0.7), rgba(2, 6, 9, 0.18) 54%, transparent 78%);
+            content: "";
+            filter: blur(5px);
+            pointer-events: none;
+        }
+
+        .eyebrow { color: var(--green); }
+
+        .intro-copy h1,
+        .hero-copy h2,
+        .view-header h2 {
+            text-shadow: 0 12px 42px rgba(0, 0, 0, 0.35);
+        }
+
+        .intro-copy h1 {
+            max-width: 540px;
+            letter-spacing: -0.055em;
+            font-size: clamp(3rem, 5.4vw, 6.8rem);
+            line-height: 0.9;
+        }
+
+        .intro-copy h1 span,
+        .hero-copy h2 span {
+            color: var(--green);
+            background: linear-gradient(105deg, var(--green), var(--cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .intro-copy p {
+            max-width: 430px;
+            margin-top: 18px;
+            color: rgba(245, 248, 251, 0.84);
+        }
+
+        .intro-progress {
+            padding: 9px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            border-radius: 999px;
+            background: rgba(8, 13, 18, 0.48);
+            backdrop-filter: blur(14px);
+        }
+
+        .progress-track {
+            width: 150px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .progress-bar { background: linear-gradient(90deg, var(--green), var(--cyan)); }
+
+        .button {
+            min-height: 48px;
+            border-radius: 14px;
+            color: #07100d;
+            background: var(--green);
+            box-shadow: 0 8px 24px rgba(200, 243, 109, 0.12);
+        }
+
+        .button:hover {
+            box-shadow: 0 14px 34px rgba(200, 243, 109, 0.22);
+        }
+
+        .button.secondary {
+            border-color: rgba(255, 255, 255, 0.22);
+            background: rgba(11, 18, 24, 0.68);
+        }
+
+        .button.secondary:hover {
+            border-color: rgba(145, 244, 255, 0.58);
+            background: rgba(145, 244, 255, 0.13);
+        }
+
+        .button.ghost {
+            border-color: rgba(202, 223, 237, 0.2);
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.045);
+        }
+
+        .button.ghost:hover {
+            color: var(--green);
+            border-color: rgba(200, 243, 109, 0.45);
+            background: rgba(200, 243, 109, 0.08);
+        }
+
+        .site-nav {
+            border-bottom-color: rgba(202, 223, 237, 0.12);
+            background: rgba(7, 10, 15, 0.82);
+        }
+
+        .site-nav .brand-mark { width: 32px; height: 32px; }
+
+        .nav-link { color: #aebdca; }
+
+        .nav-link:hover,
+        .nav-link.is-active {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-link.is-active { box-shadow: inset 0 -2px 0 var(--green); }
+
+        .demo-pill {
+            border-color: rgba(200, 243, 109, 0.3);
+            color: var(--green);
+            background: rgba(200, 243, 109, 0.09);
+        }
+
+        .demo-pill::before { box-shadow: 0 0 0 4px rgba(200, 243, 109, 0.12); }
+
+        .app-shell {
+            background:
+                radial-gradient(circle at 96% 8%, rgba(145, 244, 255, 0.11), transparent 28rem),
+                radial-gradient(circle at 4% 42%, rgba(200, 243, 109, 0.045), transparent 24rem),
+                var(--bg);
+        }
+
+        .hero-panel,
+        .hero-card,
+        .panel,
+        .metric-card,
+        .vehicle-card,
+        .booking-card {
+            border-color: rgba(202, 223, 237, 0.16);
+            background: linear-gradient(145deg, rgba(22, 34, 46, 0.93), rgba(10, 15, 21, 0.98));
+        }
+
+        .hero-panel {
+            position: relative;
+            isolation: isolate;
+            background:
+                radial-gradient(circle at 90% 18%, rgba(145, 244, 255, 0.2), transparent 30%),
+                radial-gradient(circle at 8% 90%, rgba(200, 243, 109, 0.11), transparent 28%),
+                linear-gradient(135deg, rgba(145, 244, 255, 0.08), transparent 43%),
+                linear-gradient(145deg, #172633, #0a1016 74%);
+        }
+
+        .hero-panel::after {
+            position: absolute;
+            right: -15%;
+            bottom: -68%;
+            width: 80%;
+            height: 100%;
+            border: 1px solid rgba(200, 243, 109, 0.16);
+            border-radius: 50%;
+            content: "";
+            transform: rotate(-18deg);
+            animation: orbit-drift 12s ease-in-out infinite alternate;
+        }
+
+        @keyframes orbit-drift {
+            from { opacity: 0.35; transform: translate3d(-2%, 0, 0) rotate(-18deg); }
+            to { opacity: 0.8; transform: translate3d(4%, -4%, 0) rotate(-11deg); }
+        }
+
+        .hero-copy { z-index: 1; }
+
+        .hero-vehicle {
+            border: 1px solid rgba(145, 244, 255, 0.22);
+            box-shadow: 0 28px 80px rgba(0, 0, 0, 0.38);
+        }
+
+        .hero-vehicle img {
+            opacity: 0.74;
+            filter: saturate(0.92) contrast(1.1);
+            transition: transform 700ms cubic-bezier(.2,.8,.2,1), filter 300ms ease;
+        }
+
+        .hero-vehicle:hover img {
+            filter: saturate(1.06) contrast(1.12);
+            transform: scale(1.04);
+        }
+
+        .hero-vehicle::after {
+            background: linear-gradient(180deg, rgba(4, 7, 9, 0.04) 22%, rgba(4, 7, 9, 0.95));
+        }
+
+        .hero-vehicle-label strong { letter-spacing: -0.03em; }
+
+        .metrics-grid { gap: 12px; }
+
+        .metric-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 18px;
+            box-shadow: none;
+        }
+
+        .metric-card::before {
+            position: absolute;
+            top: 0;
+            right: 18px;
+            left: 18px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+            content: "";
+            opacity: 0.75;
+        }
+
+        .metric-value { color: var(--text); }
+        .metric-note { color: var(--green); }
+
+        .panel { border-radius: 20px; }
+
+        .booking-row,
+        .admin-item {
+            border-color: rgba(202, 223, 237, 0.13);
+            background: rgba(255, 255, 255, 0.035);
+            transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+        }
+
+        .booking-row:hover,
+        .admin-item:hover {
+            border-color: rgba(145, 244, 255, 0.3);
+            background: rgba(145, 244, 255, 0.055);
+            transform: translateY(-2px);
+        }
+
+        .quick-action {
+            border-color: rgba(202, 223, 237, 0.16);
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        .quick-action:hover {
+            border-color: rgba(200, 243, 109, 0.5);
+            background: rgba(200, 243, 109, 0.09);
+        }
+
+        .quick-action .icon { color: var(--green); }
+
+        .field,
+        .select {
+            border-color: rgba(202, 223, 237, 0.18);
+            color: var(--text);
+            background: #0a1118;
+        }
+
+        .field:focus,
+        .select:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 4px rgba(145, 244, 255, 0.13), 0 8px 20px rgba(0, 0, 0, 0.16);
+        }
+
+        .field::placeholder { color: #8092a3; }
+
+        .vehicle-card {
+            border-radius: 20px;
+            transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+        }
+
+        .vehicle-card:hover {
+            border-color: rgba(145, 244, 255, 0.36);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .vehicle-art {
+            background:
+                radial-gradient(circle at 50% 25%, rgba(145, 244, 255, 0.26), transparent 38%),
+                linear-gradient(145deg, #1b2d3b, #080e14);
+        }
+
+        .vehicle-art::before {
+            background: linear-gradient(180deg, rgba(145, 244, 255, 0.74), rgba(145, 244, 255, 0.08));
+            box-shadow: 0 26px 0 -12px rgba(200, 243, 109, 0.42), 0 34px 34px rgba(0, 0, 0, 0.55);
+        }
+
+        .match-summary {
+            border-color: rgba(200, 243, 109, 0.4);
+            background: linear-gradient(135deg, rgba(200, 243, 109, 0.09), rgba(145, 244, 255, 0.06));
+        }
+
+        .match-summary .match-vehicle { color: var(--green); }
+
+        .toast {
+            border-color: rgba(200, 243, 109, 0.42);
+            background: #111b22;
+        }
+
+        .footer-note { color: #8091a0; }
+
+        @media (max-width: 720px) {
+            .intro-header { padding: 8px; }
+            .intro-copy {
+                top: 150px;
+                right: 22px;
+                max-width: 440px;
+                padding-left: 14px;
+            }
+            .intro-copy h1 { font-size: clamp(2.7rem, 13vw, 4.6rem); }
+            .intro-progress { padding: 8px 10px; }
+            .progress-track { width: 92px; }
+        }
+
+        /* Cinematic overlay pass: keep the vehicle visible and let the copy move with the story. */
+        .intro-copy {
+            --copy-progress: 0;
+            left: clamp(18px, 4vw, 56px);
+            top: auto;
+            bottom: clamp(72px, 10vh, 116px);
+            max-width: min(430px, calc(100% - 44px));
+            padding: 15px 18px 17px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-left: 1px solid rgba(200, 243, 109, 0.78);
+            border-radius: 26px;
+            background: linear-gradient(135deg, rgba(7, 15, 21, 0.58), rgba(7, 15, 21, 0.16));
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px) saturate(1.28);
+            opacity: calc(1 - (var(--copy-progress) * 0.84));
+            transform: translate3d(calc(var(--copy-progress) * -48px), calc(var(--copy-progress) * -22px), 0) scale(calc(1 - (var(--copy-progress) * 0.08)));
+            transform-origin: left center;
+            will-change: opacity, transform;
+        }
+
+        .intro-copy::before {
+            top: -16px;
+            bottom: -16px;
+            left: -16px;
+            width: calc(100% + 32px);
+            border-radius: 30px;
+            background: radial-gradient(ellipse at 20% 46%, rgba(2, 6, 9, 0.34), transparent 70%);
+            filter: blur(16px);
+        }
+
+        .intro-copy::after {
+            position: absolute;
+            inset: 1px;
+            z-index: -1;
+            border-radius: 25px;
+            background: linear-gradient(115deg, transparent 18%, rgba(255, 255, 255, 0.13) 45%, transparent 66%);
+            background-size: 220% 100%;
+            content: "";
+            opacity: 0.36;
+            animation: glass-sheen 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes glass-sheen {
+            0%, 42% { background-position: 160% 0; }
+            70%, 100% { background-position: -40% 0; }
+        }
+
+        .intro-copy h1 {
+            max-width: 415px;
+            font-size: clamp(2.55rem, 3.8vw, 4.6rem);
+            line-height: 0.88;
+        }
+
+        .intro-copy p {
+            max-width: 340px;
+            margin-top: 12px;
+            font-size: 0.86rem;
+        }
+
+        .intro-actions { gap: 7px; margin-top: 15px; }
+        .intro-actions .button { min-height: 40px; padding: 0 13px; font-size: 0.76rem; }
+
+        .hero-vehicle { isolation: isolate; }
+
+        .hero-vehicle::before {
+            position: absolute;
+            inset: -20% -70%;
+            z-index: 1;
+            background: linear-gradient(105deg, transparent 42%, rgba(200, 243, 109, 0.16) 50%, transparent 58%);
+            content: "";
+            transform: translateX(-34%) rotate(8deg);
+            animation: vehicle-light-sweep 9s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes vehicle-light-sweep {
+            0%, 36% { transform: translateX(-34%) rotate(8deg); opacity: 0; }
+            48% { opacity: 1; }
+            68%, 100% { transform: translateX(34%) rotate(8deg); opacity: 0; }
+        }
+
+        .hero-vehicle img { animation: vehicle-kenburns 14s ease-in-out infinite alternate; }
+
+        @keyframes vehicle-kenburns {
+            from { transform: scale(1.01) translate3d(-0.4%, 0, 0); }
+            to { transform: scale(1.08) translate3d(1.2%, -1.2%, 0); }
+        }
+
+        .hero-vehicle-label {
+            z-index: 2;
+            right: 18px;
+            bottom: 18px;
+            left: 18px;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 17px;
+            background: rgba(7, 13, 18, 0.54);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(14px) saturate(1.25);
+            animation: caption-rise 700ms 160ms both ease-out;
+        }
+
+        @keyframes caption-rise {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-vehicle-kicker {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--green);
+            letter-spacing: 0.16em;
+            font-size: 0.62rem;
+            font-weight: 800;
+        }
+
+        .hero-vehicle-label strong { font-size: 1.15rem; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .intro-copy { opacity: 1; transform: none; }
+            .hero-vehicle img { animation: none; }
+        }
+
+        @media (max-width: 720px) {
+            .intro-copy {
+                top: auto;
+                bottom: 72px;
+                max-width: calc(100% - 44px);
+            }
+        }
+
+        /* iOS-inspired liquid tab rail for the primary navigation. */
+        .nav-links {
+            position: relative;
+            isolation: isolate;
+            padding: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 18px;
+            background: rgba(9, 16, 22, 0.62);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 12px 34px rgba(0, 0, 0, 0.16);
+            backdrop-filter: blur(22px) saturate(1.35);
+        }
+
+        .nav-links::before {
+            position: absolute;
+            top: 4px;
+            left: var(--active-left, 4px);
+            width: var(--active-width, 58px);
+            height: calc(100% - 8px);
+            z-index: -1;
+            border: 1px solid rgba(200, 243, 109, 0.5);
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(200, 243, 109, 0.3), rgba(145, 244, 255, 0.14));
+            box-shadow: 0 6px 20px rgba(200, 243, 109, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+            content: "";
+            transition: left 560ms cubic-bezier(.2, 1.35, .3, 1), width 560ms cubic-bezier(.2, 1.35, .3, 1), border-radius 560ms cubic-bezier(.2, 1.35, .3, 1);
+        }
+
+        .nav-links::after {
+            position: absolute;
+            top: 7px;
+            left: calc(var(--active-left, 4px) + var(--active-width, 58px) - 22px);
+            width: 28px;
+            height: 26px;
+            z-index: -1;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(200, 243, 109, 0.6), rgba(145, 244, 255, 0.16) 58%, transparent 72%);
+            content: "";
+            opacity: 0.72;
+            filter: blur(3px);
+            transition: left 560ms cubic-bezier(.2, 1.35, .3, 1), opacity 220ms ease;
+        }
+
+        .nav-links.is-sliding::after {
+            animation: nav-liquid-wobble 620ms cubic-bezier(.2, 1.25, .3, 1);
+        }
+
+        @keyframes nav-liquid-wobble {
+            0% { transform: scaleX(0.72) scaleY(0.85); opacity: 0.3; }
+            38% { transform: scaleX(1.55) scaleY(1.08); opacity: 0.94; }
+            68% { transform: scaleX(0.84) scaleY(0.95); opacity: 0.66; }
+            100% { transform: scale(1); opacity: 0.72; }
+        }
+
+        .nav-link {
+            position: relative;
+            z-index: 1;
+            border-radius: 13px;
+            transition: color 180ms ease, transform 420ms cubic-bezier(.2, 1.25, .3, 1);
+        }
+
+        .nav-link:hover { transform: translateY(-1px); }
+        .nav-link.is-active { background: transparent; box-shadow: none; }
+
+        @media (max-width: 1060px) {
+            .nav-links {
+                padding: 0;
+                border: 0;
+                background: transparent;
+                box-shadow: none;
+                backdrop-filter: none;
+            }
+        }
+
+        /* Final hero treatment: no glass panel, only expressive type and car-inspired color. */
+        .intro-copy {
+            padding: 0 0 0 18px;
+            border: 0;
+            border-left: 1px solid rgba(200, 243, 109, 0.86);
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            backdrop-filter: none;
+        }
+
+        .intro-copy::before,
+        .intro-copy::after { display: none; }
+
+        .intro-copy h1 {
+            max-width: 430px;
+            letter-spacing: -0.065em;
+            font-size: clamp(2.8rem, 4.2vw, 5.1rem);
+            line-height: 0.86;
+            text-shadow: 0 5px 22px rgba(0, 0, 0, 0.72), 0 0 30px rgba(145, 244, 255, 0.08);
+        }
+
+        .intro-copy h1 span {
+            display: inline-block;
+            color: transparent;
+            background: linear-gradient(110deg, #c8f36d 10%, #efd28a 43%, #91f4ff 72%, #c8f36d 96%);
+            background-size: 220% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: title-spectrum 7s ease-in-out infinite;
+        }
+
+        @keyframes title-spectrum {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .intro-copy p {
+            color: rgba(250, 252, 249, 0.94);
+            text-shadow: 0 3px 16px rgba(0, 0, 0, 0.86);
+        }
+
+        .intro-actions { margin-top: 22px; }
+
+        .intro-actions .button {
+            min-height: 60px;
+            padding: 0 27px;
+            border: 1px solid rgba(255, 255, 255, 0.56);
+            border-radius: 18px;
+            color: #07100d;
+            background: linear-gradient(115deg, #c8f36d 0%, #efd28a 30%, #91f4ff 68%, #c8f36d 100%);
+            background-size: 220% 100%;
+            box-shadow: 0 12px 34px rgba(200, 243, 109, 0.25), 0 0 0 5px rgba(145, 244, 255, 0.08);
+            font-size: 0.98rem;
+            animation: car-color-flow 6s ease-in-out infinite;
+        }
+
+        @keyframes car-color-flow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .intro-actions .button:hover {
+            box-shadow: 0 18px 42px rgba(145, 244, 255, 0.3), 0 0 0 7px rgba(200, 243, 109, 0.1);
+            transform: translateY(-4px) scale(1.03);
+        }
+
+        .journey-cta {
+            min-width: 258px;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .journey-cta-copy {
+            white-space: nowrap;
+        }
+
+        .journey-visual {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: auto;
+            opacity: 0.82;
+        }
+
+        .journey-node {
+            width: 7px;
+            height: 7px;
+            flex: 0 0 auto;
+            border: 1px solid rgba(7, 16, 13, 0.56);
+            border-radius: 50%;
+            background: rgba(7, 16, 13, 0.7);
+        }
+
+        .journey-node:last-child {
+            background: #91f4ff;
+            box-shadow: 0 0 0 3px rgba(145, 244, 255, 0.18);
+        }
+
+        .journey-line {
+            position: relative;
+            width: 27px;
+            height: 2px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(7, 16, 13, 0.34);
+        }
+
+        .journey-line::after {
+            position: absolute;
+            top: 0;
+            left: -12px;
+            width: 12px;
+            height: 100%;
+            border-radius: inherit;
+            background: #07100d;
+            content: "";
+            animation: journey-signal 2.2s ease-in-out infinite;
+        }
+
+        .journey-arrow {
+            font-size: 1.22rem;
+            line-height: 1;
+            transition: transform 260ms ease;
+        }
+
+        .intro-actions .button:hover .journey-arrow { transform: translateX(4px) translateY(-2px); }
+
+        @keyframes journey-signal {
+            0% { transform: translateX(0); opacity: 0.15; }
+            45% { opacity: 0.95; }
+            100% { transform: translateX(39px); opacity: 0.15; }
+        }
+
+        /* FITRIDE monogram: a small orbiting road signal, not a static letter. */
+        .brand-mark {
+            position: relative;
+            isolation: isolate;
+            overflow: visible;
+            border-color: rgba(255, 255, 255, 0.72);
+            background:
+                radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.7), transparent 18%),
+                linear-gradient(145deg, #e8ff9a 0%, #c8f36d 46%, #91f4ff 100%);
+            box-shadow:
+                0 0 0 5px rgba(200, 243, 109, 0.1),
+                0 0 28px rgba(200, 243, 109, 0.28),
+                inset 0 1px 0 rgba(255, 255, 255, 0.76);
+            transition: transform 420ms cubic-bezier(.2,.8,.2,1), box-shadow 420ms ease;
+            animation: mark-breathe 4.8s ease-in-out infinite;
+        }
+
+        .brand-mark::before {
+            position: absolute;
+            z-index: -1;
+            inset: -6px;
+            border: 1px solid transparent;
+            border-radius: inherit;
+            background: conic-gradient(from 0deg, rgba(145, 244, 255, 0), rgba(145, 244, 255, 0.9), rgba(200, 243, 109, 0.2), rgba(145, 244, 255, 0)) border-box;
+            -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            content: "";
+            animation: mark-orbit 5.5s linear infinite;
+        }
+
+        .brand-mark::after {
+            position: absolute;
+            top: 3px;
+            right: 1px;
+            width: 6px;
+            height: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.78);
+            border-radius: 50%;
+            background: #91f4ff;
+            box-shadow: 0 0 0 3px rgba(145, 244, 255, 0.12), 0 0 14px rgba(145, 244, 255, 0.9);
+            content: "";
+            animation: mark-signal 2.6s ease-in-out infinite;
+        }
+
+        .brand-glyph-route {
+            stroke: #0d2730;
+            stroke-dasharray: 22;
+            stroke-dashoffset: 22;
+            animation: route-draw 3.8s cubic-bezier(.65, 0, .35, 1) infinite;
+        }
+
+        .brand-glyph-f {
+            filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.18));
+        }
+
+        .brand-lockup:hover .brand-mark,
+        .brand-lockup:focus-visible .brand-mark {
+            transform: translateY(-2px) rotate(-8deg) scale(1.08);
+            box-shadow:
+                0 0 0 6px rgba(200, 243, 109, 0.13),
+                0 0 42px rgba(145, 244, 255, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.86);
+        }
+
+        @keyframes mark-breathe {
+            0%, 100% { filter: saturate(1); }
+            50% { filter: saturate(1.22) brightness(1.06); }
+        }
+
+        @keyframes mark-orbit {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes mark-signal {
+            0%, 100% { opacity: 0.5; transform: translate(0, 0) scale(0.8); }
+            48% { opacity: 1; transform: translate(2px, -1px) scale(1.12); }
+        }
+
+        @keyframes route-draw {
+            0%, 12% { stroke-dashoffset: 22; opacity: 0.25; }
+            42%, 72% { stroke-dashoffset: 0; opacity: 1; }
+            92%, 100% { stroke-dashoffset: -22; opacity: 0.25; }
+        }
+
+        @media (max-width: 720px) {
+            .intro-copy { padding-left: 14px; }
+            .intro-actions .button { min-height: 54px; padding: 0 18px; }
+            .journey-cta { min-width: 236px; gap: 10px; }
+            .journey-line { width: 20px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .intro-copy h1 span,
+            .intro-actions .button,
+            .brand-mark,
+            .brand-mark::before,
+            .brand-mark::after,
+            .brand-glyph-route,
+            .journey-line::after { animation: none; }
+        }
+    </style>
+</head>
+<body>
+    <a class="skip-link" href="#app">Skip to FITRIDE app</a>
+
+    <section class="animation-section" id="animation-intro" aria-label="FITRIDE vehicle animation">
+        <div class="animation-viewport">
+            <canvas id="animation-canvas" aria-label="Scroll-controlled FITRIDE vehicle animation"></canvas>
+
+            <div class="intro-header">
+                <a class="brand-lockup" href="#app" data-scroll-app aria-label="FITRIDE home">
+                    <span class="brand-mark" aria-hidden="true">
+                        <svg class="brand-glyph" viewBox="0 0 42 42" role="presentation">
+                            <path class="brand-glyph-f" d="M11 33V9h22v6H18v5h13v6H18v7z" />
+                            <path class="brand-glyph-route" d="M8 35c4-8 10-11 18-11 4 0 7-2 9-6m-5-1 5 7-7 2" />
+                        </svg>
+                    </span>
+                    <span>FITRIDE</span>
+                </a>
+            </div>
+
+            <div class="intro-copy">
+                <span class="eyebrow">Every journey, considered</span>
+                <h1>THE RIGHT<br><span>VEHICLE.</span></h1>
+                <p>One intelligent place to discover, request, and manage every shared journey.</p>
+                <div class="intro-actions">
+                    <button class="button journey-cta" type="button" data-scroll-app>
+                        <span class="journey-cta-copy">Enter FITRIDE</span>
+                        <span class="journey-visual" aria-hidden="true">
+                            <span class="journey-node"></span>
+                            <span class="journey-line"></span>
+                            <span class="journey-node"></span>
+                        </span>
+                        <span class="journey-arrow" aria-hidden="true">↗</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="intro-progress" aria-hidden="true">
+                <span>Scroll to explore</span>
+                <span class="progress-track"><span class="progress-bar" id="progress-bar"></span></span>
+            </div>
+        </div>
+    </section>
+
+    <div class="app-shell" id="app">
+        <nav class="site-nav" aria-label="FITRIDE navigation">
+            <div class="nav-inner">
+                <a class="brand-lockup" href="#app" data-view-target="home" aria-label="FITRIDE dashboard">
+                    <span class="brand-mark" aria-hidden="true">
+                        <svg class="brand-glyph" viewBox="0 0 42 42" role="presentation">
+                            <path class="brand-glyph-f" d="M11 33V9h22v6H18v5h13v6H18v7z" />
+                            <path class="brand-glyph-route" d="M8 35c4-8 10-11 18-11 4 0 7-2 9-6m-5-1 5 7-7 2" />
+                        </svg>
+                    </span>
+                    <span>FITRIDE</span>
+                </a>
+
+                <div class="nav-links">
+                    <button class="nav-link is-active" type="button" data-view-target="home">Home</button>
+                    <button class="nav-link" type="button" data-view-target="fleet">Our fleet</button>
+                    <button class="nav-link" type="button" data-view-target="book">Book a vehicle</button>
+                    <button class="nav-link" type="button" data-view-target="bookings">My bookings</button>
+                    <button class="nav-link" type="button" data-view-target="admin">Admin</button>
+                </div>
+
+                <div class="nav-right">
+                    <label class="role-selector-wrap" title="Switch active persona">
+                        <span class="sr-only">Switch user persona</span>
+                        <select class="role-select" id="user-persona-select" aria-label="Select persona">
+                            <option value="emp1">👤 emp1 · Ananya Roy (Employee)</option>
+                            <option value="emp2">👤 emp2 · Vikram Das (Employee)</option>
+                            <option value="driver1">🚗 driver1 · Rajesh Kumar (Driver)</option>
+                            <option value="driver2">🚗 driver2 · Suresh Patil (Driver)</option>
+                            <option value="manager1">🛡️ manager1 · Priya Sharma (Manager)</option>
+                            <option value="manager2">🛡️ manager2 · Kavana (Manager)</option>
+                        </select>
+                    </label>
+                    <span class="demo-pill" data-backend-status>Connecting...</span>
+                    <div class="portal-links">
+                        <a href="/employee" class="portal-nav-btn" target="_blank" title="Open Dedicated Employee Portal">Employee ↗</a>
+                        <a href="/driver" class="portal-nav-btn" target="_blank" title="Open Driver Mobile PWA">Driver ↗</a>
+                        <a href="/manager" class="portal-nav-btn" target="_blank" title="Open Manager Operations Console">Manager ↗</a>
+                    </div>
+                    <button class="button ghost" type="button" data-view-target="book">Request a ride</button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="app-main">
+            <section class="view is-active" id="view-home" data-view="home" aria-labelledby="home-title">
+                <div class="hero-grid">
+                    <div class="hero-panel">
+                        <div class="hero-copy">
+                            <span class="eyebrow">Smart shared mobility</span>
+                            <h2 id="home-title">Move people<br><span>with purpose.</span></h2>
+                            <p>FITRIDE matches every request to the right vehicle, prevents scheduling conflicts, and gives your team a clear view of the fleet.</p>
+                            <div class="hero-links">
+                                <button class="button" type="button" data-view-target="book">Book a vehicle <span aria-hidden="true">→</span></button>
+                                <button class="button secondary" type="button" data-view-target="fleet">View our fleet</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-vehicle">
+                        <img src="./0001.jpg" alt="FITRIDE sedan outside a storefront" loading="lazy">
+                        <div class="hero-vehicle-label">
+                            <span class="hero-vehicle-kicker">FITRIDE / FLEET STORY</span>
+                            <strong>Designed around the journey.</strong>
+                            <span>From first request to final return.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metrics-grid" id="home-metrics"></div>
+
+                <div class="two-column">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>Upcoming journeys</h3>
+                            <button class="button ghost" type="button" data-view-target="bookings">View all</button>
+                        </div>
+                        <div class="booking-list" id="home-bookings"></div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>Start somewhere</h3>
+                            <span>Quick actions</span>
+                        </div>
+                        <div class="quick-actions">
+                            <button class="quick-action" type="button" data-view-target="book"><span class="icon">＋</span><strong>New booking</strong></button>
+                            <button class="quick-action" type="button" data-view-target="fleet"><span class="icon">⌁</span><strong>Explore fleet</strong></button>
+                            <button class="quick-action" type="button" data-view-target="bookings"><span class="icon">◷</span><strong>Track requests</strong></button>
+                            <button class="quick-action" type="button" data-view-target="admin"><span class="icon">⌘</span><strong>Manage fleet</strong></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="view" id="view-fleet" data-view="fleet" aria-labelledby="fleet-title">
+                <div class="view-header">
+                    <div>
+                        <span class="eyebrow">Ready when you are</span>
+                        <h2 id="fleet-title">Our fleet.</h2>
+                        <p>Browse capacity-aware vehicles that can be requested for your next trip.</p>
+                    </div>
+                    <button class="button" type="button" data-view-target="book">Book a vehicle <span aria-hidden="true">→</span></button>
+                </div>
+                <div class="filter-row">
+                    <span class="demo-pill" data-backend-status>Local demo mode</span>
+                    <label>
+                        <span class="sr-only">Filter fleet by type</span>
+                        <select class="select" id="fleet-filter" style="width: 190px">
+                            <option value="all">All vehicle types</option>
+                            <option value="sedan">Sedan / Car</option>
+                            <option value="mpv">MPV / Van</option>
+                            <option value="minibus">Minibus / Tempo</option>
+                            <option value="suv">SUV</option>
+                            <option value="cargo">Cargo van</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="fleet-grid" id="fleet-grid"></div>
+            </section>
+
+            <section class="view" id="view-book" data-view="book" aria-labelledby="book-title">
+                <div class="view-header">
+                    <div>
+                        <span class="eyebrow">Make the request</span>
+                        <h2 id="book-title">Book a vehicle.</h2>
+                        <p>Tell us what the journey needs. FITRIDE will match capacity and availability before reserving a vehicle.</p>
+                    </div>
+                </div>
+                <div class="form-layout">
+                    <form class="panel" id="booking-form">
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label for="employee-name">Employee name</label>
+                                <input class="field" id="employee-name" name="employeeName" type="text" value="Demo Employee" required>
+                            </div>
+                            <div class="form-field">
+                                <label for="employee-email">Work email</label>
+                                <input class="field" id="employee-email" name="employeeEmail" type="email" value="employee@fitride.local" required>
+                            </div>
+                            <div class="form-field">
+                                <label for="booking-start">Pickup date &amp; time</label>
+                                <input class="field" id="booking-start" name="start" type="datetime-local" required>
+                            </div>
+                            <div class="form-field">
+                                <label for="booking-end">Return date &amp; time</label>
+                                <input class="field" id="booking-end" name="end" type="datetime-local" required>
+                            </div>
+                            <div class="form-field">
+                                <label for="booking-passengers">Passengers</label>
+                                <input class="field" id="booking-passengers" name="passengers" type="number" min="1" max="12" value="2" required>
+                            </div>
+                            <div class="form-field">
+                                <label for="booking-type">Vehicle category <span style="font-weight:400">(preview)</span></label>
+                                <select class="select" id="booking-type" name="type">
+                                    <option value="any">Any suitable vehicle</option>
+                                    <option value="sedan">Sedan / Car</option>
+                                    <option value="mpv">MPV / Van</option>
+                                    <option value="minibus">Minibus / Tempo</option>
+                                    <option value="suv">SUV</option>
+                                    <option value="cargo">Cargo van</option>
+                                </select>
+                            </div>
+                            <div class="form-field full">
+                                <label for="booking-vehicle">Vehicle preference <span style="font-weight:400">(live preview)</span></label>
+                                <select class="select" id="booking-vehicle" name="vehicle"></select>
+                            </div>
+                            <div class="form-field full">
+                                <label for="booking-priority">Booking priority &amp; dispatch rule</label>
+                                <select class="select" id="booking-priority" name="priority">
+                                    <option value="normal">Normal (Scheduled approval &amp; deterministic match)</option>
+                                    <option value="emergency">Emergency (Priority bump, skips manager queue &amp; instant dispatch)</option>
+                                </select>
+                            </div>
+                            <div class="form-field full">
+                                <label for="booking-destination">Destination</label>
+                                <input class="field" id="booking-destination" name="destination" type="text" placeholder="e.g. Bengaluru International Convention Centre" required>
+                            </div>
+                            <div class="form-field full">
+                                <label for="booking-purpose">Journey purpose</label>
+                                <input class="field" id="booking-purpose" name="purpose" type="text" placeholder="e.g. Client visit, equipment transfer, team offsite" required>
+                            </div>
+                            <div class="form-field full">
+                                <label for="booking-notes">Notes <span style="font-weight:400">(optional)</span></label>
+                                <textarea class="field" id="booking-notes" name="notes" placeholder="Anything the fleet team should know?"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="button" type="submit">Find and request vehicle <span aria-hidden="true">→</span></button>
+                            <button class="button secondary" type="reset">Clear form</button>
+                        </div>
+                    </form>
+                    <aside class="panel">
+                        <div class="panel-header">
+                            <h3>Smart match</h3>
+                            <span>Live availability</span>
+                        </div>
+                        <div class="match-summary" id="match-summary">
+                            <strong>Start with the basics.</strong>
+                            Choose a time range and passenger count to see the best available match.
+                        </div>
+                        <div style="height:18px"></div>
+                        <div class="panel-header">
+                            <h3>How it works</h3>
+                        </div>
+                        <div class="booking-list">
+                            <div class="booking-row"><div><strong>01 · Match</strong><small>Capacity, type, and availability are checked.</small></div><span class="status approved">live</span></div>
+                            <div class="booking-row"><div><strong>02 · Reserve</strong><small>Overlapping requests are automatically blocked.</small></div><span class="status pending">safe</span></div>
+                            <div class="booking-row"><div><strong>03 · Approve</strong><small>An admin can approve or reject the request.</small></div><span class="status available">clear</span></div>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="view" id="view-bookings" data-view="bookings" aria-labelledby="bookings-title">
+                <div class="view-header">
+                    <div>
+                        <span class="eyebrow">Your movement, in view</span>
+                        <h2 id="bookings-title">My bookings.</h2>
+                        <p>Every request is persisted in the FITRIDE operations database and can be reviewed by the admin workspace.</p>
+                    </div>
+                    <button class="button" type="button" data-view-target="book">New booking <span aria-hidden="true">＋</span></button>
+                </div>
+                <div class="panel">
+                    <div class="booking-list" id="bookings-list"></div>
+                </div>
+            </section>
+
+            <section class="view" id="view-admin" data-view="admin" aria-labelledby="admin-title">
+                <div class="view-header">
+                    <div>
+                        <span class="eyebrow">Operations cockpit</span>
+                        <h2 id="admin-title">Fleet control.</h2>
+                        <p>Approve requests, keep vehicle statuses current, and maintain a reliable shared fleet.</p>
+                    </div>
+                    <button class="button danger" type="button" id="reset-demo">Reset demo data</button>
+                </div>
+                <div class="metrics-grid" id="admin-metrics"></div>
+                <div class="admin-grid">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>Requests awaiting approval</h3>
+                            <span id="pending-count">0 pending</span>
+                        </div>
+                        <div class="admin-list" id="admin-requests"></div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>Fleet status</h3>
+                            <span>Toggle availability</span>
+                        </div>
+                        <div id="admin-fleet"></div>
+                    </div>
+                </div>
+                <div class="panel" style="margin-top: 22px;" id="driver-cockpit-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.05rem;">Driver Operations &amp; Dispatched Trips</h3>
+                            <small style="color: var(--muted); font-size: 0.74rem;">Live dispatch queue: accept assignments, log odometer, and start/end trips</small>
+                        </div>
+                        <span id="driver-trips-count" class="status pending">0 active</span>
+                    </div>
+                    <div class="admin-list" id="driver-requests-list" style="margin-top: 14px;"></div>
+                </div>
+            </section>
+
+            <p class="footer-note">FITRIDE interactive frontend · Scroll the story, explore the fleet, and simulate a shared journey.</p>
+        </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        const FRAME_COUNT = 234;
+        const animationSection = document.getElementById("animation-intro");
+        const canvas = document.getElementById("animation-canvas");
+        const context = canvas.getContext("2d", { alpha: false });
+        const progressBar = document.getElementById("progress-bar");
+        const introCopy = document.querySelector(".intro-copy");
+        const navLinks = document.querySelector(".nav-links");
+        const frameImages = [];
+        let frameIndex = 0;
+        let scrollTicking = false;
+        let toastTimer;
+        let preferredVehicleId = "";
+        let backendOnline = true;
+
+        // Always open at the cinematic intro instead of restoring a previous deep scroll position.
+        if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+        window.scrollTo(0, 0);
+
+        // Backend API base resolution: port 3100 connects to Flask on port 5001, port 5001 is same origin
+        const API_BASE = (window.location.port === "3100" || window.location.port === "3000")
+            ? "http://127.0.0.1:5001"
+            : "";
+
+        // Standard Seed Personas for FIT-RIDE
+        const PERSONAS = {
+            emp1: { id: "emp1", name: "Ananya Roy", email: "emp1@fleetride.local", role: "employee" },
+            emp2: { id: "emp2", name: "Vikram Das", email: "emp2@fleetride.local", role: "employee" },
+            driver1: { id: "driver1", name: "Rajesh Kumar", email: "driver1@fleetride.local", role: "driver" },
+            driver2: { id: "driver2", name: "Suresh Patil", email: "driver2@fleetride.local", role: "driver" },
+            manager1: { id: "manager1", name: "Priya Sharma", email: "manager1@fleetride.local", role: "manager" },
+            manager2: { id: "manager2", name: "Kavana", email: "manager2@fleetride.local", role: "manager" }
+        };
+
+        let currentPersonaKey = localStorage.getItem("fitride_active_persona") || "emp1";
+        let currentAuth = {
+            token: localStorage.getItem("fitride_jwt_token") || "",
+            user: PERSONAS[currentPersonaKey] || PERSONAS.emp1,
+            role: (PERSONAS[currentPersonaKey] || PERSONAS.emp1).role
+        };
+        let managerToken = localStorage.getItem("fitride_manager_token") || "";
+        const driverTokens = {};
+
+        async function ensureDriverToken(driverId) {
+            const key = driverId || (currentAuth.role === "driver" ? (currentAuth.user.id || currentPersonaKey) : "driver1");
+            if (driverTokens[key]) return driverTokens[key];
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: key, password: "123" })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const tok = data.access_token || data.token;
+                    driverTokens[key] = tok;
+                    return tok;
+                }
+            } catch (e) {
+                console.warn("Could not authenticate driver:", e);
+            }
+            if (currentAuth.role === "driver" && currentAuth.token) return currentAuth.token;
+            return null;
+        }
+
+        async function apiCall(endpoint, options = {}, asManager = false, driverId = null) {
+            const url = endpoint.startsWith("http") ? endpoint : `${API_BASE}${endpoint}`;
+            const headers = {
+                "Content-Type": "application/json",
+                ...(options.headers || {})
+            };
+            let tokenToUse = currentAuth.token;
+            if (asManager && managerToken) {
+                tokenToUse = managerToken;
+            } else if (driverId) {
+                const dTok = await ensureDriverToken(driverId);
+                if (dTok) tokenToUse = dTok;
+            }
+            if (tokenToUse) {
+                headers["Authorization"] = `Bearer ${tokenToUse}`;
+            }
+            const res = await fetch(url, { ...options, headers });
+            let data = null;
+            const cType = res.headers.get("content-type") || "";
+            if (cType.includes("application/json")) {
+                try { data = await res.json(); } catch { data = null; }
+            } else {
+                try { data = await res.text(); } catch { data = null; }
+            }
+            if (!res.ok) {
+                const msg = data?.error?.message || data?.message || `HTTP ${res.status}`;
+                const err = new Error(msg);
+                err.status = res.status;
+                err.data = data;
+                throw err;
+            }
+            return data;
+        }
+
+        async function loginPersona(personaKey, silent = false) {
+            const persona = PERSONAS[personaKey] || PERSONAS.emp1;
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: persona.id, password: "123" })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    currentPersonaKey = personaKey;
+                    currentAuth.token = data.access_token || data.token;
+                    currentAuth.user = data.user || data.profile || persona;
+                    currentAuth.role = data.role || persona.role;
+                    localStorage.setItem("fitride_active_persona", personaKey);
+                    localStorage.setItem("fitride_jwt_token", currentAuth.token);
+                    if (currentAuth.role === "manager") {
+                        managerToken = currentAuth.token;
+                        localStorage.setItem("fitride_manager_token", managerToken);
+                    }
+                    updatePersonaUI();
+                    if (!silent) showToast(`Signed in as ${currentAuth.user.name} (${currentAuth.role.toUpperCase()})`);
+                    await refreshFromServer();
+                    return true;
+                }
+            } catch (err) {
+                console.warn("Login failed, using offline persona profile", err);
+            }
+            currentPersonaKey = personaKey;
+            currentAuth.user = persona;
+            currentAuth.role = persona.role;
+            updatePersonaUI();
+            return false;
+        }
+
+        async function ensureManagerSession() {
+            if (managerToken) return managerToken;
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: "manager1", password: "123" })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    managerToken = data.access_token || data.token;
+                    localStorage.setItem("fitride_manager_token", managerToken);
+                    return managerToken;
+                }
+            } catch { /* offline fallback */ }
+            return null;
+        }
+
+        const vehicleSeed = [
+            { id: "00000000-0000-0000-0001-000000000001", name: "Swift Dzire", type: "sedan", capacity: 4, status: "available", location: "KA01AB1234 · North Garage", plateNumber: "KA01AB1234", accent: "cyan" },
+            { id: "00000000-0000-0000-0001-000000000002", name: "Toyota Innova", type: "mpv", capacity: 7, status: "available", location: "KA01CD5678 · Central Garage", plateNumber: "KA01CD5678", accent: "green" },
+            { id: "00000000-0000-0000-0001-000000000003", name: "Force Traveller", type: "minibus", capacity: 12, status: "available", location: "KA01EF9012 · South Garage", plateNumber: "KA01EF9012", accent: "amber" },
+            { id: "00000000-0000-0000-0001-000000000004", name: "Mahindra Bolero", type: "suv", capacity: 7, status: "available", location: "KA01GH3456 · Central Garage", plateNumber: "KA01GH3456", accent: "cyan" },
+            { id: "00000000-0000-0000-0001-000000000005", name: "Tata Winger", type: "van", capacity: 9, status: "available", location: "KA01IJ7890 · Service Bay", plateNumber: "KA01IJ7890", accent: "violet" }
+        ];
+
+        function freshState() {
+            return {
+                fleet: vehicleSeed.map(v => ({ ...v })),
+                bookings: [],
+                managerQueue: [],
+                driverRequests: []
+            };
+        }
+
+        function loadState() {
+            try {
+                const saved = JSON.parse(localStorage.getItem("fitride_demo_state") || "null");
+                if (saved && Array.isArray(saved.fleet) && Array.isArray(saved.bookings)) return saved;
+            } catch { /* clean state */ }
+            return freshState();
+        }
+
+        let state = loadState();
+
+        function persistState() {
+            try { localStorage.setItem("fitride_demo_state", JSON.stringify(state)); } catch { /* optional */ }
+        }
+
+        function updateBackendStatus() {
+            document.querySelectorAll("[data-backend-status]").forEach(element => {
+                if (backendOnline) {
+                    element.textContent = "● Live Backend";
+                    element.style.color = "var(--green)";
+                    element.style.borderColor = "rgba(50, 213, 131, 0.4)";
+                } else {
+                    element.textContent = "○ Offline Demo";
+                    element.style.color = "var(--amber)";
+                    element.style.borderColor = "rgba(245, 185, 66, 0.4)";
+                }
+            });
+        }
+
+        function updatePersonaUI() {
+            const select = document.getElementById("user-persona-select");
+            if (select && select.value !== currentPersonaKey) {
+                select.value = currentPersonaKey;
+            }
+            const empNameField = document.getElementById("employee-name");
+            const empEmailField = document.getElementById("employee-email");
+            if (empNameField) empNameField.value = currentAuth.user.name || "Ananya Roy";
+            if (empEmailField) empEmailField.value = currentAuth.user.email || "emp1@fleetride.local";
+        }
+
+        async function refreshFromServer() {
+            let online = false;
+            try {
+                const healthRes = await fetch(`${API_BASE}/api/health`);
+                if (healthRes.ok) online = true;
+            } catch { online = false; }
+            backendOnline = online;
+            updateBackendStatus();
+
+            if (!online) {
+                renderAll();
+                return false;
+            }
+
+            // Ensure authentication tokens are active
+            if (!currentAuth.token) {
+                await loginPersona(currentPersonaKey, true);
+            }
+            await ensureManagerSession();
+
+            // 1. Fetch live fleet
+            try {
+                let fleetData = null;
+                try {
+                    const fRes = await apiCall("/api/fleet");
+                    fleetData = fRes.fleet || fRes.vehicles;
+                } catch {
+                    if (managerToken) {
+                        const vRes = await apiCall("/api/vehicles", {}, true);
+                        fleetData = vRes.vehicles;
+                    }
+                }
+                if (Array.isArray(fleetData) && fleetData.length > 0) {
+                    state.fleet = fleetData.map(v => ({
+                        id: v.id,
+                        name: v.name,
+                        type: (v.type || "sedan").toLowerCase(),
+                        capacity: Number(v.capacity || 4),
+                        status: v.status || "available",
+                        location: v.plate_number ? `${v.plate_number} · ${v.location || "North Garage"}` : (v.location || "North Garage"),
+                        plateNumber: v.plate_number || "",
+                        accent: v.status === "available" ? "green" : (v.status === "maintenance" ? "red" : "amber")
+                    }));
+                }
+            } catch (e) {
+                console.warn("Could not load fleet:", e);
+            }
+
+            // 2. Fetch user's bookings
+            try {
+                const bRes = await apiCall("/api/bookings/mine");
+                if (bRes && Array.isArray(bRes.bookings)) {
+                    state.bookings = bRes.bookings.map(b => ({
+                        id: b.id,
+                        employeeName: b.employee_name || currentAuth.user.name || "Employee",
+                        employeeEmail: b.employee_email || currentAuth.user.email || "",
+                        destination: b.destination || "Destination pending",
+                        purpose: b.reason || b.purpose || "Business journey",
+                        passengers: Number(b.passengers || 1),
+                        type: b.type || "scheduled",
+                        priority: b.priority || "normal",
+                        vehicleId: b.vehicle_id || "",
+                        vehicleName: b.vehicle_name || (vehicleById(b.vehicle_id)?.name || "Vehicle assigned"),
+                        driverName: b.driver_name || "",
+                        start: b.start_time,
+                        end: b.end_time,
+                        status: (b.status || "pending").toLowerCase(),
+                        createdAt: b.created_at || new Date().toISOString()
+                    }));
+                }
+            } catch (e) {
+                console.warn("Could not load bookings/mine:", e);
+            }
+
+            // 3. Fetch manager approval queue
+            try {
+                const qRes = await apiCall("/api/manager/queue", {}, true);
+                if (qRes && (Array.isArray(qRes.queue) || Array.isArray(qRes.pending))) {
+                    const combined = qRes.queue || qRes.pending || [];
+                    state.managerQueue = combined.map(b => ({
+                        id: b.id,
+                        employeeName: b.employee_name || "Employee",
+                        employeeEmail: b.employee_email || "",
+                        destination: b.destination || "Destination pending",
+                        purpose: b.reason || b.purpose || "Business journey",
+                        passengers: Number(b.passengers || 1),
+                        type: b.type || "scheduled",
+                        priority: b.priority || "normal",
+                        vehicleId: b.vehicle_id || "",
+                        vehicleName: b.vehicle_name || (vehicleById(b.vehicle_id)?.name || "Auto-assigned vehicle"),
+                        driverId: b.driver_id || "",
+                        driverProfileId: b.driver_profile_id || "",
+                        driverName: b.driver_name || "",
+                        start: b.start_time,
+                        end: b.end_time,
+                        status: (b.status || "pending").toLowerCase(),
+                        createdAt: b.created_at || new Date().toISOString()
+                    }));
+                }
+            } catch (e) {
+                console.warn("Could not load manager queue:", e);
+            }
+
+            // 4. Fetch driver requests
+            try {
+                let drvData = [];
+                if (currentAuth.role === "driver") {
+                    const dRes = await apiCall("/api/driver/requests");
+                    drvData = dRes.requests || dRes.bookings || [];
+                } else if (state.managerQueue.length > 0) {
+                    drvData = state.managerQueue.filter(b => ["driver_pending", "confirmed", "in_progress"].includes(b.status.toLowerCase()));
+                }
+                state.driverRequests = drvData;
+            } catch (e) {
+                console.warn("Could not load driver requests:", e);
+            }
+
+            persistState();
+            renderAll();
+            return true;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "").replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]));
+        }
+
+        function vehicleById(id) {
+            return state.fleet.find(vehicle => vehicle.id === id);
+        }
+
+        function typeLabel(type) {
+            return ({ sedan: "Sedan", suv: "SUV", mpv: "MPV", cargo: "Cargo van", car: "Car", van: "Van", minibus: "Minibus" }[type] || type);
+        }
+
+        function vehicleIcon(type) {
+            return ({ sedan: "🚘", suv: "🚙", mpv: "🚐", cargo: "▰", car: "🚘", van: "🚐", minibus: "🚌" }[type] || "⌁");
+        }
+
+        function formatDateTime(value) {
+            if (!value) return "—";
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return "—";
+            return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
+        }
+
+        function formatDateRange(start, end) {
+            return `${formatDateTime(start)} → ${formatDateTime(end)}`;
+        }
+
+        function activeBookings() {
+            return (state.managerQueue.length > 0 ? state.managerQueue : state.bookings)
+                .filter(booking => !["rejected", "cancelled", "completed"].includes(booking.status.toLowerCase()));
+        }
+
+        function hasConflict(vehicleId, start, end, ignoredBookingId = "") {
+            const startTime = new Date(start).getTime();
+            const endTime = new Date(end).getTime();
+            return activeBookings().some(booking => {
+                if (booking.id === ignoredBookingId || booking.vehicleId !== vehicleId) return false;
+                const bookingStart = new Date(booking.start).getTime();
+                const bookingEnd = new Date(booking.end).getTime();
+                return startTime < bookingEnd && endTime > bookingStart;
+            });
+        }
+
+        function findMatches({ start, end, passengers, type = "any", vehicleId = "" } = {}) {
+            const passengerCount = Number(passengers || 0);
+            return state.fleet
+                .filter(vehicle => vehicle.status === "available")
+                .filter(vehicle => !vehicleId || vehicle.id === vehicleId)
+                .filter(vehicle => type === "any" || vehicle.type === type)
+                .filter(vehicle => vehicle.capacity >= passengerCount)
+                .filter(vehicle => !start || !end || !hasConflict(vehicle.id, start, end))
+                .sort((a, b) => (a.capacity - passengerCount) - (b.capacity - passengerCount));
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById("toast");
+            toast.textContent = message;
+            toast.classList.toggle("error", isError);
+            toast.classList.add("is-visible");
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove("is-visible"), 4200);
+        }
+
+        function syncNavIndicator(animate = false) {
+            if (!navLinks) return;
+            const activeLink = navLinks.querySelector(".nav-link.is-active");
+            if (!activeLink) return;
+            navLinks.style.setProperty("--active-left", `${activeLink.offsetLeft}px`);
+            navLinks.style.setProperty("--active-width", `${activeLink.offsetWidth}px`);
+            if (animate) {
+                navLinks.classList.remove("is-sliding");
+                void navLinks.offsetWidth;
+                navLinks.classList.add("is-sliding");
+            }
+        }
+
+        function setView(viewName, shouldScroll = true) {
+            document.querySelectorAll(".view").forEach(view => view.classList.toggle("is-active", view.dataset.view === viewName));
+            document.querySelectorAll("[data-view-target]").forEach(button => button.classList.toggle("is-active", button.dataset.viewTarget === viewName));
+            syncNavIndicator(true);
+            if (shouldScroll) document.getElementById("app").scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        function metricMarkup(label, value, note) {
+            return `<div class="metric-card"><div class="metric-label">${escapeHtml(label)}</div><div class="metric-value">${escapeHtml(value)}</div><div class="metric-note">${escapeHtml(note)}</div></div>`;
+        }
+
+        function bookingRowMarkup(booking, includeActions = false) {
+            const vehicle = vehicleById(booking.vehicleId);
+            const statusLower = (booking.status || "pending").toLowerCase();
+            const canCancel = includeActions && ["pending", "approved", "driver_pending", "confirmed"].includes(statusLower);
+            const actions = canCancel
+                ? `<button class="button ghost" type="button" data-cancel-booking="${escapeHtml(booking.id)}" style="min-height:32px;padding:0 12px;font-size:0.74rem">Cancel</button>`
+                : "";
+            return `<div class="booking-row">
+                <div>
+                    <strong>${escapeHtml(booking.purpose)}</strong>
+                    <small>${escapeHtml(booking.destination || "Destination pending")} · ${escapeHtml(booking.vehicleName || vehicle?.name || "Vehicle assigned")} · ${booking.passengers} passenger${booking.passengers === 1 ? "" : "s"} · ${escapeHtml(formatDateRange(booking.start, booking.end))}</small>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+                    <span class="status ${escapeHtml(statusLower)}">${escapeHtml(booking.status.toUpperCase())}</span>
+                    ${actions}
+                </div>
+            </div>`;
+        }
+
+        function renderHome() {
+            const available = state.fleet.filter(vehicle => vehicle.status === "available").length;
+            const pendingList = state.managerQueue.filter(booking => (booking.status || "").toLowerCase() === "pending");
+            const pendingCount = pendingList.length > 0 ? pendingList.length : state.bookings.filter(b => b.status === "pending").length;
+            const approvedCount = state.bookings.filter(b => ["approved", "confirmed", "in_progress", "completed"].includes(b.status.toLowerCase())).length;
+            const protectedCount = state.bookings.length;
+
+            document.getElementById("home-metrics").innerHTML = [
+                metricMarkup("Available now", `${available}/${state.fleet.length}`, "fleet visibility"),
+                metricMarkup("Pending requests", pendingCount, pendingCount ? "awaiting manager" : "all clear"),
+                metricMarkup("Active journeys", approvedCount, "live & confirmed"),
+                metricMarkup("Requests protected", protectedCount, "conflicts checked")
+            ].join("");
+
+            const upcoming = [...state.bookings]
+                .filter(booking => !["cancelled", "rejected"].includes(booking.status.toLowerCase()))
+                .sort((a, b) => new Date(a.start) - new Date(b.start))
+                .slice(0, 4);
+
+            document.getElementById("home-bookings").innerHTML = upcoming.length
+                ? upcoming.map(booking => bookingRowMarkup(booking)).join("")
+                : `<div class="empty-state"><strong>No active journeys.</strong>Make a booking request and FITRIDE will find the optimal match.</div>`;
+        }
+
+        function vehicleCardMarkup(vehicle) {
+            return `<article class="vehicle-card">
+                <div class="vehicle-art"><span class="vehicle-icon" aria-hidden="true">${vehicleIcon(vehicle.type)}</span></div>
+                <div class="vehicle-card-body">
+                    <div class="vehicle-topline">
+                        <h3>${escapeHtml(vehicle.name)}</h3>
+                        <span class="status ${escapeHtml(vehicle.status)}">${escapeHtml(vehicle.status.toUpperCase())}</span>
+                    </div>
+                    <div class="vehicle-meta">
+                        <span>${escapeHtml(typeLabel(vehicle.type))}</span>
+                        <span>Up to ${vehicle.capacity}</span>
+                        <span>${escapeHtml(vehicle.location)}</span>
+                    </div>
+                    <div class="vehicle-actions">
+                        <span style="color:var(--muted);font-size:.74rem">${escapeHtml(vehicle.plateNumber || vehicle.id.slice(0, 8))}</span>
+                        <button class="button ghost" type="button" data-book-vehicle="${escapeHtml(vehicle.id)}">Request this</button>
+                    </div>
+                </div>
+            </article>`;
+        }
+
+        function matchesFleetFilter(vehicleType, filter) {
+            if (!filter || filter === "all") return true;
+            const vt = (vehicleType || "").toLowerCase();
+            const f = filter.toLowerCase();
+            if (vt === f) return true;
+            if ((f === "sedan" || f === "car") && (vt === "sedan" || vt === "car")) return true;
+            if ((f === "mpv" || f === "van") && (vt === "mpv" || vt === "van")) return true;
+            if (f === "suv" && (vt === "suv" || vt === "van" || vt === "car")) return true;
+            if (f === "minibus" && (vt === "minibus" || vt === "bus")) return true;
+            if (f === "cargo" && (vt === "cargo" || vt === "van")) return true;
+            return false;
+        }
+
+        function renderFleet() {
+            const filter = document.getElementById("fleet-filter")?.value || "all";
+            const vehicles = state.fleet.filter(vehicle => matchesFleetFilter(vehicle.type, filter));
+            document.getElementById("fleet-grid").innerHTML = vehicles.length
+                ? vehicles.map(vehicleCardMarkup).join("")
+                : `<div class="empty-state" style="grid-column:1/-1"><strong>No vehicles found for category '${escapeHtml(filter)}'.</strong>Try selecting another filter.</div>`;
+        }
+
+        function renderVehicleOptions() {
+            const select = document.getElementById("booking-vehicle");
+            if (!select) return;
+            const selected = preferredVehicleId || select.value;
+            select.innerHTML = `<option value="">Auto-match the best available vehicle (Deterministic Engine)</option>` +
+                state.fleet.map(vehicle => `<option value="${escapeHtml(vehicle.id)}">${escapeHtml(vehicle.name)} · ${vehicle.capacity} seats · ${escapeHtml(vehicle.status.toUpperCase())} (${escapeHtml(vehicle.location)})</option>`).join("");
+            if ([...select.options].some(option => option.value === selected)) select.value = selected;
+            preferredVehicleId = "";
+        }
+
+        function renderBookings() {
+            const bookings = [...state.bookings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            document.getElementById("bookings-list").innerHTML = bookings.length
+                ? bookings.map(booking => bookingRowMarkup(booking, true)).join("")
+                : `<div class="empty-state"><strong>Your booking list is empty.</strong>Submit a request using the booking form to see it here.</div>`;
+        }
+
+        function renderAdmin() {
+            const pending = state.managerQueue.filter(b => b.status.toLowerCase() === "pending");
+            const approved = state.managerQueue.filter(b => ["approved", "driver_pending", "confirmed", "in_progress"].includes(b.status.toLowerCase()));
+            const available = state.fleet.filter(v => v.status === "available").length;
+
+            document.getElementById("admin-metrics").innerHTML = [
+                metricMarkup("Awaiting approval", pending.length, "needs manager action"),
+                metricMarkup("Dispatched trips", approved.length, "active in fleet"),
+                metricMarkup("Available fleet", available, "ready for allocation"),
+                metricMarkup("Maintenance bay", state.fleet.length - available, "out of service")
+            ].join("");
+
+            document.getElementById("pending-count").textContent = `${pending.length} pending`;
+
+            // Requests awaiting approval list
+            document.getElementById("admin-requests").innerHTML = pending.length
+                ? pending.map(booking => {
+                    const vehicle = vehicleById(booking.vehicleId);
+                    return `<div class="admin-item">
+                        <div class="admin-item-top">
+                            <div>
+                                <strong>${escapeHtml(booking.purpose)}</strong>
+                                <small>${escapeHtml(booking.destination || "Destination pending")} · ${escapeHtml(booking.vehicleName || vehicle?.name || "Vehicle pending")} · ${escapeHtml(formatDateRange(booking.start, booking.end))}</small>
+                                <small>${escapeHtml(booking.employeeName || "Employee")} · ${booking.passengers} passenger${booking.passengers === 1 ? "" : "s"} · Request ID: ${escapeHtml(booking.id.slice(0, 8))}</small>
+                            </div>
+                            <span class="status pending">PENDING</span>
+                        </div>
+                        <div class="admin-actions">
+                            <button class="button success" type="button" data-approve-booking="${escapeHtml(booking.id)}">Approve &amp; Dispatch</button>
+                            <button class="button danger" type="button" data-reject-booking="${escapeHtml(booking.id)}">Reject Request</button>
+                        </div>
+                    </div>`;
+                }).join("")
+                : `<div class="empty-state"><strong>No requests awaiting approval.</strong>New pending employee bookings will appear here.</div>`;
+
+            // Fleet availability toggles
+            document.getElementById("admin-fleet").innerHTML = state.fleet.map(vehicle => `
+                <div class="fleet-admin-row">
+                    <div>
+                        <strong>${escapeHtml(vehicle.name)}</strong>
+                        <small>${escapeHtml(typeLabel(vehicle.type))} · ${vehicle.capacity} seats · ${escapeHtml(vehicle.location)}</small>
+                    </div>
+                    <button class="button ghost" type="button" data-toggle-fleet="${escapeHtml(vehicle.id)}">
+                        ${vehicle.status === "available" ? "Set maintenance" : "Mark available"}
+                    </button>
+                </div>
+            `).join("");
+
+            // Driver operations and dispatched trips panel
+            const driverListEl = document.getElementById("driver-requests-list");
+            const driverCountEl = document.getElementById("driver-trips-count");
+            const activeTrips = state.managerQueue.filter(b => ["driver_pending", "confirmed", "in_progress"].includes(b.status.toLowerCase()));
+
+            if (driverCountEl) driverCountEl.textContent = `${activeTrips.length} active`;
+            if (driverListEl) {
+                driverListEl.innerHTML = activeTrips.length
+                    ? activeTrips.map(b => {
+                        let actionButtons = "";
+                        const st = b.status.toLowerCase();
+                        if (st === "driver_pending") {
+                            actionButtons = `
+                                <button class="button success" type="button" data-driver-accept="${escapeHtml(b.id)}">Accept Assignment</button>
+                                <button class="button danger" type="button" data-driver-reject="${escapeHtml(b.id)}">Decline (Tired)</button>
+                            `;
+                        } else if (st === "confirmed") {
+                            actionButtons = `
+                                <button class="button" type="button" data-trip-start="${escapeHtml(b.id)}">Start Trip (1-Touch)</button>
+                            `;
+                        } else if (st === "in_progress") {
+                            actionButtons = `
+                                <button class="button success" type="button" data-trip-end="${escapeHtml(b.id)}">End Trip &amp; Complete</button>
+                            `;
+                        }
+                        return `<div class="admin-item" style="border-left: 3px solid var(--cyan);">
+                            <div class="admin-item-top">
+                                <div>
+                                    <strong>${escapeHtml(b.purpose)}</strong>
+                                    <small>${escapeHtml(b.destination)} · ${escapeHtml(b.vehicleName)} · ${escapeHtml(formatDateRange(b.start, b.end))}</small>
+                                    <small>Passenger: ${escapeHtml(b.employeeName)} (${b.passengers} pax) · Driver: ${escapeHtml(b.driverName || "Rajesh Kumar")}</small>
+                                </div>
+                                <span class="status ${escapeHtml(st)}">${escapeHtml(b.status.toUpperCase())}</span>
+                            </div>
+                            <div class="admin-actions">${actionButtons}</div>
+                        </div>`;
+                    }).join("")
+                    : `<div class="empty-state"><strong>No active driver dispatches.</strong>When a request is approved, it appears here for driver acceptance and trip execution.</div>`;
+            }
+        }
+
+        function updateMatchSummary() {
+            const form = document.getElementById("booking-form");
+            const start = form.elements.start.value;
+            const end = form.elements.end.value;
+            const passengers = Number(form.elements.passengers.value);
+            const type = form.elements.type.value;
+            const vehicleId = form.elements.vehicle.value;
+            const summary = document.getElementById("match-summary");
+            if (!start || !end || !passengers) {
+                summary.innerHTML = "<strong>Start with the basics.</strong>Choose a time range and passenger count to see the best available match.";
+                return;
+            }
+            if (new Date(end) <= new Date(start)) {
+                summary.innerHTML = "<strong>Check the time range.</strong>The return time must be after pickup.";
+                return;
+            }
+            const matches = findMatches({ start, end, passengers, type, vehicleId });
+            if (!matches.length) {
+                summary.innerHTML = "<strong>No clean match for this window.</strong>Try a larger vehicle, a different type, or another time range.";
+                return;
+            }
+            const match = matches[0];
+            summary.innerHTML = `<strong>Best available match</strong><span class="match-vehicle">${escapeHtml(match.name)}</span> · ${match.capacity} seats · ${escapeHtml(typeLabel(match.type))}<br><span style="font-size:.78rem">Capacity checked · No scheduling overlap detected.</span>`;
+        }
+
+        function renderAll() {
+            renderHome();
+            renderFleet();
+            renderVehicleOptions();
+            renderBookings();
+            renderAdmin();
+            updateMatchSummary();
+            updatePersonaUI();
+        }
+
+        function toLocalInputValue(date) {
+            const offset = date.getTimezoneOffset();
+            return new Date(date.getTime() - (offset * 60000)).toISOString().slice(0, 16);
+        }
+
+        function setBookingDefaults() {
+            const now = new Date();
+            const start = new Date(now);
+            start.setMinutes(0, 0, 0);
+            start.setHours(start.getHours() + 1);
+            const end = new Date(start);
+            end.setHours(end.getHours() + 2);
+            updatePersonaUI();
+            document.getElementById("booking-start").value = toLocalInputValue(start);
+            document.getElementById("booking-end").value = toLocalInputValue(end);
+        }
+
+        // Global Event Delegation for Interactive Controls
+        document.addEventListener("click", async event => {
+            const viewTrigger = event.target.closest("[data-view-target]");
+            if (viewTrigger) {
+                event.preventDefault();
+                setView(viewTrigger.dataset.viewTarget);
+                return;
+            }
+            const scrollApp = event.target.closest("[data-scroll-app]");
+            if (scrollApp) {
+                event.preventDefault();
+                document.getElementById("app").scrollIntoView({ behavior: "smooth", block: "start" });
+                return;
+            }
+            const bookVehicle = event.target.closest("[data-book-vehicle]");
+            if (bookVehicle) {
+                preferredVehicleId = bookVehicle.dataset.bookVehicle;
+                setView("book");
+                return;
+            }
+            const cancelBooking = event.target.closest("[data-cancel-booking]");
+            if (cancelBooking) {
+                const bId = cancelBooking.dataset.cancelBooking;
+                try {
+                    await apiCall(`/api/bookings/${bId}/cancel`, {
+                        method: "POST",
+                        body: JSON.stringify({ reason: "Cancelled by employee" })
+                    });
+                    showToast(`Booking ${bId.slice(0, 8)} cancelled successfully.`);
+                    await refreshFromServer();
+                } catch (err) {
+                    showToast(`Cancel failed: ${err.message}`, true);
+                }
+                return;
+            }
+            const approveBooking = event.target.closest("[data-approve-booking]");
+            if (approveBooking) {
+                const bId = approveBooking.dataset.approveBooking;
+                try {
+                    await apiCall(`/api/manager/bookings/${bId}/approve`, { method: "POST" }, true);
+                    showToast(`Booking ${bId.slice(0, 8)} approved and dispatched to driver.`);
+                    await refreshFromServer();
+                } catch (err) {
+                    showToast(`Approval failed: ${err.message}`, true);
+                }
+                return;
+            }
+            const rejectBooking = event.target.closest("[data-reject-booking]");
+            if (rejectBooking) {
+                const bId = rejectBooking.dataset.rejectBooking;
+                const reason = prompt("Enter rejection reason for employee:", "Fleet capacity constraint") || "Rejected by manager";
+                try {
+                    await apiCall(`/api/manager/bookings/${bId}/reject`, {
+                        method: "POST",
+                        body: JSON.stringify({ reason })
+                    }, true);
+                    showToast(`Booking ${bId.slice(0, 8)} was rejected.`);
+                    await refreshFromServer();
+                } catch (err) {
+                    showToast(`Rejection failed: ${err.message}`, true);
+                }
+                return;
+            }
+            const toggleFleet = event.target.closest("[data-toggle-fleet]");
+            if (toggleFleet) {
+                const vId = toggleFleet.dataset.toggleFleet;
+                const vehicle = vehicleById(vId);
+                if (vehicle) {
+                    const nextStatus = vehicle.status === "available" ? "maintenance" : "available";
+                    try {
+                        await apiCall(`/api/vehicles/${vId}`, {
+                            method: "PATCH",
+                            body: JSON.stringify({ status: nextStatus })
+                        }, true);
+                        showToast(`${vehicle.name} is now ${nextStatus.toUpperCase()}.`);
+                        await refreshFromServer();
+                    } catch (err) {
+                        showToast(`Status update failed: ${err.message}`, true);
+                    }
+                }
+                return;
+            }
+            const driverAccept = event.target.closest("[data-driver-accept]");
+            if (driverAccept) {
+                const bId = driverAccept.dataset.driverAccept;
+                const b = state.managerQueue.find(item => item.id === bId) || state.driverRequests.find(item => item.id === bId);
+                const drvId = b ? (b.driverId || b.driverProfileId) : "";
+                try {
+                    await apiCall(`/api/driver/bookings/${bId}/accept`, { method: "POST" }, false, drvId);
+                    showToast(`Trip ${bId.slice(0, 8)} accepted! Status is now CONFIRMED.`);
+                    await refreshFromServer();
+                } catch (err) {
+                    showToast(`Driver accept failed: ${err.message}`, true);
+                }
+                return;
+            }
+            const driverReject = event.target.closest("[data-driver-reject]");
+            if (driverReject) {
+                const bId = driverReject.dataset.driverReject;
+                const b = state.managerQueue.find(item => item.id === bId) || state.driverRequests.find(item => item.id === bId);
+                const drvId = b ? (b.driverId || b.driverProfileId) : "";
+                try {
+                    await apiCall(`/api/driver/bookings/${bId}/reject`, {
+                        method: "POST",
+                        body: JSON.stringify({ reason: "tired" })
+                    }, false, drvId);
+                    showToast(`Trip ${bId.slice(0, 8)} declined. Reassigned automatically by fatigue engine.`);
+                    await refreshFromServer();
+                } catch (err) {
+                    showToast(`Driver decline failed: ${err.message}`, true);
+                }
+                return;
+            }
+            const tripStart = event.target.closest("[data-trip-start]");
+            if (tripStart) {
+                const bId = tripStart.dataset.tripStart;
+                const b = state.managerQueue.find(item => item.id === bId) || state.driverRequests.find(item => item.id === bId);
+                const drvId = b ? (b.driverId || b.driverProfileId) : "";
+                try {
+                    await apiCall(`/api/trips/${bId}/start`, {
+                        method: "POST",
+                        body: JSON.stringify({ start_odometer_km: 12450, checklist_completed: true })
+                    }, false, drvId);
+                    showToast(`Trip started! Vehicle odometer logged. Status is now IN_PROGRESS.`);
+                    await refreshFromServer();
+                } catch (err) {
+                    showToast(`Start trip failed: ${err.message}`, true);
+                }
+                return;
+            }
+            const tripEnd = event.target.closest("[data-trip-end]");
+            if (tripEnd) {
+                const bId = tripEnd.dataset.tripEnd;
+                const b = state.managerQueue.find(item => item.id === bId) || state.driverRequests.find(item => item.id === bId);
+                const drvId = b ? (b.driverId || b.driverProfileId) : "";
+                try {
+                    await apiCall(`/api/trips/${bId}/end`, {
+                        method: "POST",
+                        body: JSON.stringify({ end_odometer_km: 12495, fuel_level: "full" })
+                    }, false, drvId);
+                    showToast(`Trip ended and completed! Vehicle returned to fleet.`);
+                    await refreshFromServer();
+                } catch (err) {
+                    showToast(`End trip failed: ${err.message}`, true);
+                }
+                return;
+            }
+        });
+
+        // Persona Switcher Change Event
+        const personaSelectEl = document.getElementById("user-persona-select");
+        if (personaSelectEl) {
+            personaSelectEl.addEventListener("change", async event => {
+                await loginPersona(event.target.value);
+            });
+        }
+
+        document.getElementById("fleet-filter").addEventListener("change", renderFleet);
+        document.getElementById("booking-form").addEventListener("input", updateMatchSummary);
+        document.getElementById("booking-form").addEventListener("change", updateMatchSummary);
+        document.getElementById("booking-form").addEventListener("reset", () => setTimeout(() => { preferredVehicleId = ""; setBookingDefaults(); renderVehicleOptions(); updateMatchSummary(); }, 0));
+
+        // Submit Booking Request to Backend
+        document.getElementById("booking-form").addEventListener("submit", async event => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const startVal = form.elements.start.value;
+            const endVal = form.elements.end.value;
+            const passengers = Number(form.elements.passengers.value);
+            const destination = form.elements.destination.value.trim();
+            const purpose = form.elements.purpose.value.trim();
+            const priorityVal = form.elements.priority ? form.elements.priority.value : "normal";
+            const vehicleId = form.elements.vehicle.value;
+            const isEmergency = priorityVal === "emergency";
+
+            const startDate = new Date(startVal);
+            const endDate = new Date(endVal);
+
+            if (endDate <= startDate) {
+                showToast("Return time must be strictly after pickup time.", true);
+                return;
+            }
+
+            const payload = {
+                start_time: startDate.toISOString(),
+                end_time: endDate.toISOString(),
+                passengers: passengers,
+                destination: destination,
+                reason: purpose || "Business journey",
+                type: isEmergency ? "emergency" : "scheduled",
+                priority: isEmergency ? "emergency" : "normal"
+            };
+            if (vehicleId) payload.vehicle_id = vehicleId;
+
+            try {
+                const res = await apiCall("/api/bookings", {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+
+                const bkg = res.booking;
+                const noteMsg = res.auto_approved
+                    ? `Booking ${bkg.id.slice(0, 8)} auto-approved by policy rule!`
+                    : `Booking ${bkg.id.slice(0, 8)} submitted & queued for manager approval.`;
+                showToast(noteMsg);
+                form.reset();
+                setBookingDefaults();
+                await refreshFromServer();
+                setView("bookings");
+            } catch (err) {
+                const alternatives = err.data?.error?.alternatives || err.data?.alternatives || [];
+                let altInfo = "";
+                if (alternatives.length > 0) {
+                    altInfo = ` Alternatives available: ${alternatives.map(a => a.name || a.vehicle_name || a.id.slice(0, 8)).join(", ")}`;
+                }
+                showToast(`Booking error: ${err.message}.${altInfo}`, true);
+            }
+        });
+
+        // Reset Demo Database
+        document.getElementById("reset-demo").addEventListener("click", async () => {
+            try {
+                await apiCall("/api/admin/reset-demo-bookings", { method: "POST" });
+                showToast("Demo bookings wiped and fleet restored to clean initial seed state.");
+                await refreshFromServer();
+            } catch {
+                try {
+                    await apiCall("/api/admin/reset", { method: "POST" }, true);
+                    showToast("Simulation wiped back to initial state.");
+                    await refreshFromServer();
+                } catch (e) {
+                    state = freshState();
+                    persistState();
+                    renderAll();
+                    showToast("Demo data reset in local session.");
+                }
+            }
+        });
+
+        // Periodic Background Poller (every 7 seconds)
+        setInterval(() => {
+            if (backendOnline) {
+                refreshFromServer();
+            }
+        }, 7000);
+
+        function resizeCanvas() {
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = Math.floor(window.innerWidth * dpr);
+            canvas.height = Math.floor(window.innerHeight * dpr);
+            canvas.style.width = `${window.innerWidth}px`;
+            canvas.style.height = `${window.innerHeight}px`;
+            renderFrame();
+        }
+
+        function renderFrame() {
+            const image = frameImages[frameIndex];
+            if (!image || !image.complete || !image.naturalWidth) return;
+            const scale = Math.max(canvas.width / image.naturalWidth, canvas.height / image.naturalHeight);
+            const width = image.naturalWidth * scale;
+            const height = image.naturalHeight * scale;
+            context.fillStyle = "#020304";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(image, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+        }
+
+        function updateAnimationFromScroll() {
+            const sectionTop = animationSection.offsetTop;
+            const scrollRange = Math.max(1, animationSection.offsetHeight - window.innerHeight);
+            const fraction = Math.min(1, Math.max(0, (window.scrollY - sectionTop) / scrollRange));
+            const nextFrame = Math.min(FRAME_COUNT - 1, Math.max(0, Math.floor(fraction * (FRAME_COUNT - 1))));
+            if (nextFrame !== frameIndex) {
+                frameIndex = nextFrame;
+                renderFrame();
+            }
+            progressBar.style.width = `${fraction * 100}%`;
+            introCopy.style.setProperty("--copy-progress", fraction.toFixed(3));
+        }
+
+        window.addEventListener("scroll", () => {
+            if (!scrollTicking) {
+                window.requestAnimationFrame(() => {
+                    updateAnimationFromScroll();
+                    scrollTicking = false;
+                });
+                scrollTicking = true;
+            }
+        }, { passive: true });
+        window.addEventListener("resize", resizeCanvas);
+        window.addEventListener("resize", () => syncNavIndicator(false));
+
+        for (let index = 1; index <= FRAME_COUNT; index += 1) {
+            const image = new Image();
+            image.decoding = "async";
+            image.src = `./${String(index).padStart(4, "0")}.jpg`;
+            image.addEventListener("load", () => {
+                if (index === 1) {
+                    resizeCanvas();
+                    renderFrame();
+                }
+            });
+            frameImages.push(image);
+        }
+
+        setBookingDefaults();
+        updateBackendStatus();
+        renderAll();
+        resizeCanvas();
+        updateAnimationFromScroll();
+        syncNavIndicator(false);
+        refreshFromServer();
+    </script>
+</body>
+</html>

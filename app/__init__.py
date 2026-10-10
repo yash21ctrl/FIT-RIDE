@@ -244,6 +244,53 @@ def create_app():
     def frontend_static(filename):
         return send_from_directory(frontend_dir, filename)
 
+    # F2 Showcase and Landing routes (Animated 234-frame story)
+    f2_dir = os.path.join(base_dir, "F2")
+
+    @app.route("/landing", methods=["GET"])
+    @app.route("/landing/", methods=["GET"])
+    @app.route("/f2", methods=["GET"])
+    @app.route("/f2/", methods=["GET"])
+    def f2_index():
+        return send_from_directory(f2_dir, "index.html")
+
+    @app.route("/landing/<path:filename>", methods=["GET"])
+    def landing_static(filename):
+        max_age = 86400 if filename.endswith(".jpg") else None
+        return send_from_directory(f2_dir, filename, max_age=max_age)
+
+    @app.route("/f2/<path:filename>", methods=["GET"])
+    def f2_static(filename):
+        max_age = 86400 if filename.endswith(".jpg") else None
+        return send_from_directory(f2_dir, filename, max_age=max_age)
+
+    @app.route("/<string:filename>", methods=["GET"])
+    def f2_frame_static(filename):
+        if filename.endswith(".jpg") and os.path.isfile(os.path.join(f2_dir, filename)):
+            return send_from_directory(f2_dir, filename, max_age=86400)
+        from werkzeug.exceptions import NotFound
+        raise NotFound()
+
+    @app.route("/api/fleet", methods=["GET"])
+    def public_fleet_api():
+        from app.db import get_all_vehicles
+        vehicles = get_all_vehicles()
+        type_filter = request.args.get("type", "").lower()
+        if type_filter and type_filter != "all":
+            TYPE_SYNONYMS = {
+                "sedan": {"sedan", "car"},
+                "car": {"sedan", "car"},
+                "mpv": {"mpv", "van"},
+                "van": {"mpv", "van"},
+                "suv": {"suv", "van", "car"},
+                "minibus": {"minibus", "bus"},
+                "bus": {"minibus", "bus"},
+                "cargo": {"cargo", "van"},
+            }
+            allowed_types = TYPE_SYNONYMS.get(type_filter, {type_filter})
+            vehicles = [v for v in vehicles if v.get("type", "").lower() in allowed_types]
+        return jsonify({"fleet": vehicles, "vehicles": vehicles}), 200
+
     # Initialize background timeout monitor daemon safely (guarded against test/debug duplications)
     from app.services.timeouts import init_timeout_scheduler
     init_timeout_scheduler(app)

@@ -446,8 +446,18 @@ def create_booking_request():
 @require_role("employee", "manager", "driver")
 def list_my_bookings():
     """List bookings belonging to authenticated user."""
-    user_id = g.current_user["id"]
-    bookings = query_bookings(active_only=False, employee_id=user_id)
+    user = g.current_user
+    user_id = user["id"]
+    if user.get("role") == "driver":
+        drv_id = user.get("driver_id")
+        if not drv_id:
+            from app.db import get_driver_by_profile_id
+            drv = get_driver_by_profile_id(user_id)
+            if drv:
+                drv_id = drv.get("id")
+        bookings = query_bookings(active_only=False, driver_id=drv_id) if drv_id else []
+    else:
+        bookings = query_bookings(active_only=False, employee_id=user_id)
     return jsonify({
         "bookings": [serialize_booking(b) for b in bookings]
     }), 200

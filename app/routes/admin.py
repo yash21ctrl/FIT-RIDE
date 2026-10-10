@@ -58,6 +58,17 @@ def reset_system_data():
     }), 200
 
 
+@admin_bp.route("/reset-demo-bookings", methods=["POST"])
+def reset_demo_bookings():
+    """Public demo reset endpoint for frontend showcase and test harnesses."""
+    from app.db import reset_seed_data
+    reset_seed_data()
+    return jsonify({
+        "ok": True,
+        "message": "Demo bookings wiped and initial fleet state restored.",
+    }), 200
+
+
 @admin_bp.route("/trip-merge-check", methods=["POST"])
 @require_role("manager", "employee")
 def trip_merge_check():
