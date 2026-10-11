@@ -38,6 +38,7 @@ htmlcov/
 .idea/
 *.swp
 *.swo
-Thumbs.db
-Desktop.ini
 .DS_Store
+
+# Local Jury Q&A Docs (Local Only, Never Pushed)
+HACKATHON_JURY_QA.md
