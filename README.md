@@ -1,119 +1,198 @@
-# Shared Vehicle Booking App (FIT-RIDE)
-### Team KNIGHT | PS 40 | Software & Web Development
+# FIT-RIDE — Enterprise Fleet Transit & Shared Vehicle Operating System
+### PS 40 | Team KNIGHT
 
-Deterministic fleet operations system for shared organizational vehicles. Guarantees **zero double-bookings** via PostgreSQL GiST exclusion constraints (`blocked_until`), soft-hold slot locking, plain-English decision reasoning, driver fatigue safety rules, and role-based web portals.
-
----
-
-## 🌟 Key Architecture & Highlights
-
-1. **Deterministic Allocation Engine**:
-   - Zero AI/ML in the core. Pure, explainable rules-based selection.
-   - Best-fit capacity matching, fairness trip balancing, driver fatigue guardrails.
-   - 9-hour daily driving cap (`Asia/Kolkata` midnight-spanning), 45-min mandatory rest gap, 4-hour continuous driving limit.
-
-2. **Absolute Zero Double-Bookings**:
-   - Instant soft-hold locking on creation (`PENDING` state locks vehicle and driver).
-   - PostgreSQL GiST exclusion constraints on `[start_time, blocked_until)`.
-   - 15-minute buffer built into every reservation window.
-   - Race conditions safely captured and formatted as friendly `VEHICLE_TAKEN` recommendations.
-
-3. **Three Role-Based Portals**:
-   - **Employee Portal** (`/employee`): Trip booking, plain-English algorithm explanations, failure ladder, waitlist join, cancel.
-   - **Driver PWA** (`/driver`): Installable PWA, incoming trip cards with real-time countdown, mandatory rejection reasons, odometer & fuel logging, live GPS breadcrumbs.
-   - **Manager Console** (`/manager`): Real-time approval queue, pure CSS Grid 24-hour Gantt chart, fleet and driver rosters, operational alerts, analytics, and 1-click Chaos Simulator.
-
-4. **Edge Case Guardrails**:
-   - **Emergency Bump Engine**: Emergency requests automatically bump low-priority bookings (`was_bumped=True`). Emergent trips dispatch directly with 2-minute response window. Bumped bookings can never be bumped again.
-   - **Vehicle Maintenance Reallocation**: Flagging a vehicle for maintenance instantly reallocates all future slot-holding bookings to alternative vehicles or moves them to `WAITLISTED`.
-   - **Waitlist Auto-Promotion**: Any slot-freeing event (`CANCELLED`, `COMPLETED`, `maintenance cleared`) auto-promotes waitlisted bookings strictly in priority order (`emergency > high > normal > low`).
+![FIT-RIDE Platform](https://img.shields.io/badge/Status-Production%20Ready-00d9f5?style=for-the-badge)
+![Tests](https://img.shields.io/badge/PyTest-133%20Passed-32d583?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Backend-Flask%20REST%20API-000000?style=for-the-badge&logo=flask&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL%20GiST-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 
 ---
 
-## 🚀 Quick Start & Local Execution
+## 📌 Project Description
 
-### 1. Requirements
-- Python 3.10+ (tested on Python 3.14)
-- Pip dependencies installed:
-  ```bash
-  pip install -r requirements.txt
-  ```
+**FIT-RIDE** is an enterprise-grade transit operating system designed for corporate shared vehicle fleets. It automates end-to-end organizational vehicle booking, capacity allocation, driver dispatch, and route management without manual coordination bottlenecks or double-booking conflicts.
 
-### 2. Run the Application
+### Key Value Propositions
+- **Zero Double-Bookings Guarantee**: Enforces mathematical non-overlap via PostgreSQL GiST exclusion constraints (`btree_gist`) using half-open time intervals `[start_time, blocked_until)` with mandatory 15-minute operational buffers.
+- **Explainable Deterministic Engine**: 100% transparent algorithmic dispatch based on vehicle capacity matching, driver trip fairness, and fatigue safety standards. Zero non-deterministic AI hallucinations.
+- **Strict Approval & Dispatch State Machine**: Routine requests require managerial sign-off before dispatches reach drivers. Drivers receive a real-time 5-minute countdown clock with synthesized audio alerts.
+- **Unified Single-Page Landing Experience**: Consolidates Employee Booking, Driver Cockpit, Operations Command Console, and Photorealistic Fleet Exploration into a single high-performance web interface.
+- **Audio Chime Alerts**: Built-in Web Audio API synthesizer generates pleasant and urgent notification tones directly in the browser with zero external audio assets or network dependencies.
+
+---
+
+## 🛠️ Technology Stack
+
+### Backend Architecture
+- **Language & Runtime**: Python 3.10+ (tested through Python 3.14)
+- **Web Framework**: Flask Application Factory with modular Blueprints (`/api/auth`, `/api/bookings`, `/api/drivers`, `/api/vehicles`, `/api/manager`, `/api/trips`, `/api/analytics`, `/api/notifications`)
+- **Database & Concurrency**: PostgreSQL with Supabase / psycopg2
+  - GiST exclusion constraints on `tstzrange(start_time, blocked_until, '[)')`
+  - In-memory thread-safe SQLite & mock fallbacks for zero-setup local testing
+- **Authentication & Security**: Supabase JWT with SHA-256 / HS-256 tokens, server-enforced role verification from database profiles, defensive input bounds checking.
+- **Timezone Awareness**: Localized strict handling for `Asia/Kolkata` (midnight-spanning daily hours, rest periods, operating hours).
+
+### Deterministic Allocation Engine
+- **Capacity Matching**: Evaluates vehicle seating against passenger counts, penalizing excess capacity to optimize utilization.
+- **Fairness Scoring**: Balances driver workloads by favoring drivers with fewer completed trips today.
+- **Driver Fatigue Standards**:
+  - Maximum 9 hours driving per calendar day
+  - Mandatory 45-minute rest gap between consecutive trips
+  - Continuous driving capped at 4 hours
+- **Conflict Handling**: Returns diagnosed failure reasons (`NO_VEHICLE_BIG_ENOUGH`, `ALL_VEHICLES_BUSY`, `NO_ELIGIBLE_DRIVER`) alongside automatic alternative time slots and priority waitlist queuing.
+
+### Frontend Architecture
+- **Unified Portal (`F2/index.html`)**: Single-page architecture with tab routing and deep linking (`?view=employee`, `?view=driver`, `?view=manager`, `?view=fleet`).
+- **Styling & Design System**: Premium dark theme (`#080a0d`, `#121820`, `#00d9f5` cyan accent, `--radius: 22px`, `--shadow: 0 24px 80px rgba(0,0,0,0.34)`).
+- **Audio Synthesis**: Pure Web Audio API oscillators producing dual-tone chime alerts ($D_5 \rightarrow A_5$) and urgent dispatch tones ($A_5 \rightarrow E_6$).
+- **Visual Performance**: 235-frame hardware-accelerated canvas animation scrub and photorealistic vehicle assets for Toyota Innova Crysta, Force Tempo Traveller, Mahindra Scorpio, and Maruti Swift.
+
+---
+
+## 🚀 Setup & Run Instructions
+
+### 1. Prerequisites
+- **Python**: Version 3.10 or higher
+- **Git**: Installed and available in PATH
+- **Node.js** *(Optional)*: Version 18+ if running the static frame server separately
+
+---
+
+### 2. Clone the Repository
+```bash
+git clone https://github.com/yash21ctrl/FIT-RIDE.git
+cd FIT-RIDE
+```
+
+---
+
+### 3. Create and Activate Virtual Environment
+
+**Windows (PowerShell):**
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+
+**macOS / Linux:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+---
+
+### 4. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+### 5. Configure Environment Variables *(Optional)*
+The system includes built-in fallback configuration for local development. If connecting to a live Supabase instance, create a `.env` file in the root directory:
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your-anon-or-service-key
+SUPABASE_JWT_SECRET=your-jwt-secret
+PORT=5000
+```
+
+---
+
+### 6. Run the Application Server
+
+Start the Flask backend:
 ```bash
 python run.py
 ```
-Server starts on `http://127.0.0.1:5000`.
+The server will start on **`http://127.0.0.1:5000`**.
 
-### 3. Run the Automated Test Suite
+Visit the application in your browser:
+- **Unified Landing Page & Portals**: `http://127.0.0.1:5000/landing`
+- **Employee Portal Direct**: `http://127.0.0.1:5000/landing?view=employee`
+- **Driver Cockpit Direct**: `http://127.0.0.1:5000/landing?view=driver`
+- **Operations Console Direct**: `http://127.0.0.1:5000/landing?view=manager`
+- **Fleet Showcase Direct**: `http://127.0.0.1:5000/landing?view=fleet`
+
+*(Optional) If running the standalone frontend Node.js server:*
+```bash
+node F2/server.js
+```
+Accessible at **`http://127.0.0.1:3100`**.
+
+---
+
+### 7. Run Automated Tests
+Execute the comprehensive PyTest suite:
 ```bash
 python -m pytest -v
 ```
-**116 passed unit and integration tests** verifying all business rules, concurrency constraints, state machine transitions, and edge cases.
+**Test Results**: **133 passed**, 1 skipped, 0 failures across 12 test suites covering:
+- Concurrency & exclusion locks (`test_conflicts.py`)
+- Allocation engine rules & rest buffers (`test_engine.py`)
+- State machine lifecycle transitions (`test_transitions.py`)
+- Role authorization & security headers (`test_auth_roles.py`)
+- Frontend rendering & API contracts (`test_f2_frontend.py`)
+- Defensive input validation & boundaries (`test_defensive_enhancements.py`)
 
-### 4. Reset Demo State
-To restore the fleet, drivers, and bookings to pristine initial seed condition at any time:
-```bash
-python -m scripts.reset_demo
+---
+
+## 🔑 Enterprise Test Accounts
+
+All pre-seeded test accounts use the password: **`123`**
+
+| Role | User ID | Name | Department / Assignment |
+| :--- | :--- | :--- | :--- |
+| **Employee** | `emp1` | Ananya Roy | Engineering · Koramangala |
+| **Employee** | `emp2` | Vikram Das | Sales Operations · Whitefield |
+| **Employee** | `emp3` | Neha Nair | Product · Manyata Tech Park |
+| **Employee** | `emp4` | Rahul Mehra | Finance · Electronic City |
+| **Employee** | `emp5` | Sneha Patel | Operations · Indiranagar |
+| **Driver** | `driver1` | Rajesh Kumar | Toyota Innova Crysta (KA-01-EA-1001) · ★ 4.9 |
+| **Driver** | `driver2` | Suresh Patil | Maruti Swift Dzire (KA-01-EA-1004) · ★ 4.8 |
+| **Driver** | `driver3` | Amit Singh | Force Tempo Traveller (KA-01-EA-1002) · ★ 4.7 |
+| **Driver** | `driver4` | Priya Sharma | Mahindra Scorpio (KA-01-EA-1003) · ★ 4.6 |
+| **Operations Manager** | `manager1` | Priya Sharma | Lead Operations Controller |
+| **Operations Manager** | `manager2` | Kavana | Fleet Resource Manager |
+
+---
+
+## 🔄 End-to-End Operational Workflow
+
+```
+[Employee Portal]
+       │
+       ▼ (Submit Booking with Destination, Time, Passengers)
+[Deterministic Allocation Engine]
+       │ (Calculates Best-Fit Vehicle & Available Rested Driver)
+       ▼
+ [Status: PENDING] ──► Sits in Manager Approval Queue
+                             │
+                             ▼ (Manager Clicks "Approve Allocation")
+                      [Status: DRIVER_PENDING]
+                             │ (Audio Chime Sounds + 5-Min Timer Starts)
+                             ▼
+                     [Driver Cockpit]
+                             │
+            ┌────────────────┴────────────────┐
+            ▼                                 ▼
+   Driver Accepts                     Driver Rejects/Times Out
+            │                                 │
+   [Status: CONFIRMED]                Re-runs Allocation Engine
+            │                         Excluding that Driver
+            ▼
+   Driver Starts Trip
+   [Status: IN_PROGRESS]
+            │
+            ▼
+   Driver Completes Trip
+   [Status: COMPLETED] ──► Vehicle & Driver Released to AVAILABLE
 ```
 
 ---
 
-## 🔑 Demo Accounts & Seed Credentials
+## 🛡️ License & Acknowledgements
 
-All accounts use the standard password: `Password@123`
-
-| Role | Email | Name | Key Feature / Test Persona |
-| :--- | :--- | :--- | :--- |
-| **Manager** | `manager1@fleetride.local` | Yashwanth M | Lead Operations Manager (Full Queue, Gantt, Chaos Simulator) |
-| **Manager** | `manager2@fleetride.local` | Kavana | Fleet Controller (Fleet CRUD & Maintenance Toggles) |
-| **Employee** | `emp1@fleetride.local` | Ananya Roy | Standard Employee (Scheduled Bookings) |
-| **Employee** | `emp2@fleetride.local` | Vikram Das | Standard Employee (15-Pax Failure Test & Waitlist) |
-| **Employee** | `emp3@fleetride.local` | Sneha Patel | Emergency Requester (Bump Engine) |
-| **Driver** | `driver1@fleetride.local` | Ravi Kumar | Driver 1 (Recent Trip - Rest Gap Demo) |
-| **Driver** | `driver2@fleetride.local` | Suresh Patil | Driver 2 (High Trips Today - Fairness Preference Demo) |
-| **Driver** | `driver3@fleetride.local` | Amit Singh | Driver 3 (Available) |
-| **Driver** | `driver4@fleetride.local` | Priya Sharma | Driver 4 (Available) |
-| **Driver** | `driver5@fleetride.local` | Rajesh Verma | Driver 5 (Available) |
-
----
-
-## 🎬 8-Step Demo Walkthrough (Section 16 Script)
-
-1. **Manager Overview & CSS Grid Gantt (`/manager`)**:
-   - Log in as `manager1@fleetride.local`.
-   - Open **📊 Gantt Timeline** to view the full 24-hour visual schedule across all 6 fleet vehicles and 5 drivers.
-   
-2. **Standard Booking & Plain-English Reason (`/employee`)**:
-   - Log in as `emp1@fleetride.local`.
-   - Submit a request for 3 passengers to "Client Headquarters".
-   - Notice the engine output explaining: *"Maruti Swift + Suresh Patil: seats 4 for 3 passengers (best fit), 0 trips today (fairness)..."*.
-   - Manager approves -> Driver PWA receives alert with live countdown chime -> Driver accepts -> Employee notified.
-
-3. **Overlapping Booking Handling**:
-   - Submit a second request for the exact same time window.
-   - The engine recognizes Maruti Swift is held and automatically allocates the next best available vehicle (Honda City).
-
-4. **15-Passenger Failure Ladder**:
-   - Submit a booking for 15 passengers.
-   - The engine diagnoses `NO_VEHICLE_BIG_ENOUGH` (fleet max is 12 seats on Force Tempo Traveller).
-   - Alternatives presented: Group split recommendation (2 vehicles) or tap **"Notify Me (Join Waitlist)"**.
-
-5. **Concurrent Reservation Guard**:
-   - Two concurrent threads attempt booking the same slot simultaneously.
-   - Exactly one succeeds; the second catches exclusion constraint `23P01` and displays friendly recommendations (`VEHICLE_TAKEN`).
-
-6. **Emergency Priority Bump**:
-   - Toggle "Emergency Request" for 3 passengers when Swift is reserved by a low-priority booking.
-   - System bumps the low-priority trip (`was_bumped=True`), dispatches emergency directly to driver with a 2-minute timer, and alerts the manager.
-
-7. **Driver Fatigue & Auto-Reassignment**:
-   - Driver opens incoming assignment on PWA and taps **Reject** with reason `"Tired / Fatigue"`.
-   - Engine records rejection and immediately reassigns the trip to the next eligible rested driver.
-
-8. **Vehicle Maintenance Reallocation**:
-   - In Manager Console, flag **Mahindra Bolero** as `maintenance`.
-   - System automatically reallocates future slot-holding trips on Bolero to alternative vehicles or transitions them to `WAITLISTED`.
-   - Toggling Bolero back to `available` instantly auto-promotes waitlisted trips.
-
-⚡ **Bonus - 1-Click Simulation**: Tap the **"⚡ Simulate Chaos"** button in the Manager Console header to run all 5 demonstration scenarios in real time!
+Developed by **Team KNIGHT** for Problem Statement **PS 40**. Built for enterprise corporate transit operations with clean architecture, strict database-level concurrency, and human-first interface design.
