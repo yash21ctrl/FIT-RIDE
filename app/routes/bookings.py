@@ -415,6 +415,8 @@ def create_booking_request():
         and priority in ("low", "normal")
         and duration_hours <= auto_approve_max_h
         and within_working_hours
+        and not data.get("requires_manager_approval")
+        and not data.get("force_manager_review")
     ):
         # Automatically transition PENDING -> APPROVED -> DRIVER_PENDING
         system_actor = {"id": "system", "role": "system"}

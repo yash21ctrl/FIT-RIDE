@@ -2704,7 +2704,8 @@
 
                 <div class="nav-right">
                     <!-- Notifications Bell & Counter -->
-                    <button class="notif-btn" id="notif-bell-btn" type="button" title="Live Notifications" onclick="toggleNotificationsDrawer()">
+                    <button class="button ghost" type="button" onclick="testNotificationSound()" style="padding:0.4rem 0.75rem;font-size:0.75rem;display:inline-flex;align-items:center;gap:5px;border-color:var(--line);"><span style="font-size:0.85rem;">🔔</span> Audio Chime</button>
+                <button class="notif-btn" id="notif-bell-btn" type="button" title="Live Notifications" onclick="toggleNotificationsDrawer()">
                         🔔
                         <span class="notif-badge" id="notif-badge-count" style="display: none;">0</span>
                     </button>
@@ -2725,7 +2726,7 @@
                         </select>
                     </label>
 
-                    <span class="demo-pill" data-backend-status>Connecting...</span>
+                    <span class="demo-pill" data-backend-status style="display:inline-flex;align-items:center;gap:6px;background:rgba(50,213,131,0.12);border:1px solid rgba(50,213,131,0.28);color:#32d583;padding:4px 10px;border-radius:999px;font-size:0.75rem;font-weight:600;"><span style="width:6px;height:6px;border-radius:50%;background:#32d583;display:inline-block;"></span> System Operational</span>
                     <button class="button ghost" type="button" onclick="setView('employee'); switchEmpView('book');">Book Ride</button>
                 </div>
             </div>
@@ -2788,7 +2789,7 @@
                         <div class="quick-actions">
                             <button class="quick-action" type="button" data-view-target="employee"><span class="icon">👤</span><strong>Employee Portal</strong><small style="color:var(--muted);font-size:0.72rem">1-60 pax booking &amp; deterministic match</small></button>
                             <button class="quick-action" type="button" data-view-target="driver"><span class="icon">🚖</span><strong>Driver Cockpit</strong><small style="color:var(--muted);font-size:0.72rem">5-min countdown &amp; 1-touch start/end</small></button>
-                            <button class="quick-action" type="button" data-view-target="manager"><span class="icon">🛡️</span><strong>Manager Console</strong><small style="color:var(--muted);font-size:0.72rem">Approvals, 24h Gantt &amp; Chaos Demo</small></button>
+                            <button class="quick-action" type="button" data-view-target="manager"><span class="icon">🛡️</span><strong>Manager Console</strong><small style="color:var(--muted);font-size:0.72rem">Approvals, 24h Gantt &amp; Fleet Operations</small></button>
                             <button class="quick-action" type="button" data-view-target="fleet"><span class="icon">⌁</span><strong>Explore Fleet</strong><small style="color:var(--muted);font-size:0.72rem">Browse capacities &amp; vehicles</small></button>
                         </div>
                     </div>
@@ -2808,7 +2809,7 @@
                     <button class="button" type="button" data-view-target="employee">Book a vehicle <span aria-hidden="true">→</span></button>
                 </div>
                 <div class="filter-row">
-                    <span class="demo-pill" data-backend-status>Local demo mode</span>
+                    <span class="demo-pill" data-backend-status style="display:inline-flex;align-items:center;gap:6px;background:rgba(50,213,131,0.12);border:1px solid rgba(50,213,131,0.28);color:#32d583;padding:4px 10px;border-radius:999px;font-size:0.75rem;font-weight:600;"><span style="width:6px;height:6px;border-radius:50%;background:#32d583;display:inline-block;"></span> System Operational</span>
                     <label>
                         <span class="sr-only">Filter fleet by type</span>
                         <select class="select" id="fleet-filter" style="width: 190px">
@@ -2839,36 +2840,68 @@
                     </div>
                 </div>
 
-                <!-- 1-Click Quick Demo Login Pills for Seed Employees -->
-                <div class="card" style="padding:1rem;margin-bottom:1.5rem;background:var(--bg-soft);">
-                    <div style="font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.5rem;">
-                        ⚡ Quick Demo Employee Switcher
+                
+                <!-- Employee Authentication Card (Shown when not authenticated) -->
+                <div class="card" id="emp-login-container" style="max-width:560px;margin:1.5rem auto 2.5rem;padding:2rem;background:var(--bg-soft);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);">
+                    <div style="text-align:center;margin-bottom:1.5rem;">
+                        <div style="width:48px;height:48px;background:rgba(0,217,245,0.1);border:1px solid rgba(0,217,245,0.25);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.5rem;">👤</div>
+                        <h3 style="margin:0 0 6px 0;font-size:1.35rem;font-weight:700;">Employee Portal Login</h3>
+                        <p style="margin:0;font-size:0.85rem;color:var(--muted);">Access corporate shared vehicles and manage your travel bookings</p>
                     </div>
-                    <div class="quick-login-grid">
-                        <button type="button" class="quick-login-btn" onclick="quickLoginEmployee('emp1')">
-                            <div><div class="quick-login-name">emp1 · Ananya Roy</div><div class="quick-login-email">ID: emp1 · Pass: 123</div></div>
-                            <span>➔</span>
+
+                    <form id="emp-login-form" onsubmit="handleEmployeeLoginSubmit(event)" style="display:flex;flex-direction:column;gap:14px;margin-bottom:1.5rem;">
+                        <div>
+                            <label style="display:block;font-size:0.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Employee ID or Email</label>
+                            <input class="field" id="emp-login-id" type="text" placeholder="e.g. emp1" value="emp1" required style="width:100%;height:44px;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:0.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Password</label>
+                            <input class="field" id="emp-login-pw" type="password" placeholder="••••••••" value="123" required style="width:100%;height:44px;">
+                        </div>
+                        <button class="button" type="submit" id="emp-login-submit-btn" style="width:100%;height:44px;font-weight:700;margin-top:6px;">
+                            Sign In to Employee Portal →
                         </button>
-                        <button type="button" class="quick-login-btn" onclick="quickLoginEmployee('emp2')">
-                            <div><div class="quick-login-name">emp2 · Vikram Das</div><div class="quick-login-email">ID: emp2 · Pass: 123</div></div>
-                            <span>➔</span>
-                        </button>
-                        <button type="button" class="quick-login-btn" onclick="quickLoginEmployee('emp3')">
-                            <div><div class="quick-login-name">emp3 · Neha Nair</div><div class="quick-login-email">ID: emp3 · Pass: 123</div></div>
-                            <span>➔</span>
-                        </button>
-                        <button type="button" class="quick-login-btn" onclick="quickLoginEmployee('emp4')">
-                            <div><div class="quick-login-name">emp4 · Rahul Mehra</div><div class="quick-login-email">ID: emp4 · Pass: 123</div></div>
-                            <span>➔</span>
-                        </button>
-                        <button type="button" class="quick-login-btn" onclick="quickLoginEmployee('emp5')">
-                            <div><div class="quick-login-name">emp5 · Sneha Patel</div><div class="quick-login-email">ID: emp5 · Pass: 123</div></div>
-                            <span>➔</span>
-                        </button>
+                    </form>
+
+                    <div style="border-top:1px solid var(--line);padding-top:1.25rem;">
+                        <div style="font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.75rem;text-align:center;">
+                            Quick Enterprise Sign-In
+                        </div>
+                        <div class="quick-login-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                            <button type="button" class="quick-login-btn" onclick="quickLoginEmployee('emp1')">
+                                <div><div class="quick-login-name">emp1 · Ananya Roy</div><div class="quick-login-email">Engineering · Koramangala</div></div>
+                                <span>➔</span>
+                            </button>
+                            <button type="button" class="quick-login-btn" onclick="quickLoginEmployee('emp2')">
+                                <div><div class="quick-login-name">emp2 · Vikram Das</div><div class="quick-login-email">Sales Ops · Whitefield</div></div>
+                                <span>➔</span>
+                            </button>
+                            <button type="button" class="quick-login-btn" onclick="quickLoginEmployee('emp3')">
+                                <div><div class="quick-login-name">emp3 · Neha Nair</div><div class="quick-login-email">Product · Manyata</div></div>
+                                <span>➔</span>
+                            </button>
+                            <button type="button" class="quick-login-btn" onclick="quickLoginEmployee('emp4')">
+                                <div><div class="quick-login-name">emp4 · Rahul Mehra</div><div class="quick-login-email">Finance · E-City</div></div>
+                                <span>➔</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Subtab Switcher for Employee -->
+                <!-- Authenticated Employee Portal Container -->
+                <div id="emp-portal-content" style="display:none;">
+                    <!-- Employee Session Header Bar -->
+                    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg-soft);border:1px solid var(--line);border-radius:14px;padding:0.75rem 1.25rem;margin-bottom:1.5rem;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="display:inline-flex;width:8px;height:8px;border-radius:50%;background:var(--accent);"></span>
+                            <span style="font-size:0.85rem;color:var(--muted);">Signed in as: <strong id="emp-session-name" style="color:var(--text);">Ananya Roy</strong> (<span id="emp-session-id">emp1</span>)</span>
+                        </div>
+                        <button class="button ghost" type="button" onclick="logoutEmployee()" style="padding:0.35rem 0.85rem;font-size:0.75rem;">
+                            Sign Out ✕
+                        </button>
+                    </div>
+
+<!-- Subtab Switcher for Employee -->
                 <div class="subtab-bar">
                     <button class="subtab-btn is-active" type="button" id="tab-book-btn" onclick="switchEmpView('book')">
                         <span>📅</span> New Booking Request
@@ -2938,7 +2971,7 @@
                                     <input type="time" id="book-end-time" class="field" step="1800" required>
                                 </div>
 
-                                <!-- Passenger Count: 1 to 60 with 15-passenger failure demo! -->
+                                <!-- Passenger Capacity Selector: 1 to 60 seats -->
                                 <div class="form-field">
                                     <label for="book-passengers">Passengers (1–60) <span style="color:var(--muted);font-weight:400">Affects vehicle fit</span></label>
                                     <div style="display:flex;gap:0.75rem;align-items:center;">
@@ -2948,7 +2981,7 @@
                                             <button type="button" class="preset-pill" onclick="setEmpPassengers(4, this)">4</button>
                                             <button type="button" class="preset-pill" onclick="setEmpPassengers(6, this)">6</button>
                                             <button type="button" class="preset-pill" onclick="setEmpPassengers(12, this)">12</button>
-                                            <button type="button" class="preset-pill" onclick="setEmpPassengers(15, this)" style="border-color:var(--amber);color:var(--amber);" title="Tests the NO_VEHICLE_BIG_ENOUGH failure ladder">15 (Failure Demo)</button>
+                                            <button type="button" class="preset-pill" onclick="setEmpPassengers(15, this)" style="border-color:var(--amber);color:var(--amber);" title="Capacity scaling for larger teams">15 (Large Group)</button>
                                         </div>
                                     </div>
                                 </div>
@@ -3046,6 +3079,8 @@
                         <div id="trips-list-container" style="margin-top:14px;"></div>
                     </div>
                 </div>
+            
+                </div><!-- /#emp-portal-content -->
             </section>
 
             <!-- ========================================== -->
@@ -3068,30 +3103,65 @@
                     </div>
                 </div>
 
-                <!-- 1-Click Quick Demo Login for Seed Drivers -->
-                <div class="card" style="padding:1rem;margin-bottom:1.5rem;background:var(--bg-soft);">
-                    <div style="font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.5rem;">
-                        ⚡ Quick Demo Driver Switcher
+                <!-- Driver Authentication Card (Shown when not authenticated) -->
+                <div class="card" id="drv-login-container" style="max-width:560px;margin:1.5rem auto 2.5rem;padding:2rem;background:var(--bg-soft);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);">
+                    <div style="text-align:center;margin-bottom:1.5rem;">
+                        <div style="width:48px;height:48px;background:rgba(50,213,131,0.1);border:1px solid rgba(50,213,131,0.25);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.5rem;">🚖</div>
+                        <h3 style="margin:0 0 6px 0;font-size:1.35rem;font-weight:700;">Driver Cockpit Login</h3>
+                        <p style="margin:0;font-size:0.85rem;color:var(--muted);">Access assignment dispatch, trip navigation, and one-touch logging</p>
                     </div>
-                    <div class="quick-login-grid">
-                        <button type="button" class="quick-login-btn" onclick="quickLoginDriver('driver1')">
-                            <div><div class="quick-login-name">driver1 · Rajesh Kumar</div><div class="quick-login-email">★ 4.9 · Available</div></div>
-                            <span>➔</span>
+
+                    <form id="drv-login-form" onsubmit="handleDriverLoginSubmit(event)" style="display:flex;flex-direction:column;gap:14px;margin-bottom:1.5rem;">
+                        <div>
+                            <label style="display:block;font-size:0.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Driver ID</label>
+                            <input class="field" id="drv-login-id" type="text" placeholder="e.g. driver1" value="driver1" required style="width:100%;height:44px;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:0.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Password</label>
+                            <input class="field" id="drv-login-pw" type="password" placeholder="••••••••" value="123" required style="width:100%;height:44px;">
+                        </div>
+                        <button class="button" type="submit" id="drv-login-submit-btn" style="width:100%;height:44px;font-weight:700;margin-top:6px;">
+                            Sign In to Cockpit →
                         </button>
-                        <button type="button" class="quick-login-btn" onclick="quickLoginDriver('driver2')">
-                            <div><div class="quick-login-name">driver2 · Suresh Patil</div><div class="quick-login-email">★ 4.8 · Available</div></div>
-                            <span>➔</span>
-                        </button>
-                        <button type="button" class="quick-login-btn" onclick="quickLoginDriver('driver3')">
-                            <div><div class="quick-login-name">driver3 · Amit Singh</div><div class="quick-login-email">★ 4.7 · Available</div></div>
-                            <span>➔</span>
-                        </button>
-                        <button type="button" class="quick-login-btn" onclick="quickLoginDriver('driver4')">
-                            <div><div class="quick-login-name">driver4 · Priya Sharma</div><div class="quick-login-email">★ 4.6 · Available</div></div>
-                            <span>➔</span>
-                        </button>
+                    </form>
+
+                    <div style="border-top:1px solid var(--line);padding-top:1.25rem;">
+                        <div style="font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.75rem;text-align:center;">
+                            Quick Driver Sign-In
+                        </div>
+                        <div class="quick-login-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                            <button type="button" class="quick-login-btn" onclick="quickLoginDriver('driver1')">
+                                <div><div class="quick-login-name">driver1 · Rajesh Kumar</div><div class="quick-login-email">★ 4.9 · Innova Crysta</div></div>
+                                <span>➔</span>
+                            </button>
+                            <button type="button" class="quick-login-btn" onclick="quickLoginDriver('driver2')">
+                                <div><div class="quick-login-name">driver2 · Suresh Patil</div><div class="quick-login-email">★ 4.8 · Swift Dzire</div></div>
+                                <span>➔</span>
+                            </button>
+                            <button type="button" class="quick-login-btn" onclick="quickLoginDriver('driver3')">
+                                <div><div class="quick-login-name">driver3 · Amit Singh</div><div class="quick-login-email">★ 4.7 · Tempo Traveller</div></div>
+                                <span>➔</span>
+                            </button>
+                            <button type="button" class="quick-login-btn" onclick="quickLoginDriver('driver4')">
+                                <div><div class="quick-login-name">driver4 · Priya Sharma</div><div class="quick-login-email">★ 4.6 · Scorpio SUV</div></div>
+                                <span>➔</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Authenticated Driver Portal Container -->
+                <div id="drv-portal-content" style="display:none;">
+                    <!-- Driver Session Header Bar -->
+                    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg-soft);border:1px solid var(--line);border-radius:14px;padding:0.75rem 1.25rem;margin-bottom:1.5rem;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="display:inline-flex;width:8px;height:8px;border-radius:50%;background:#32d583;"></span>
+                            <span style="font-size:0.85rem;color:var(--muted);">Driver On Duty: <strong id="drv-session-name" style="color:var(--text);">Rajesh Kumar</strong> (<span id="drv-session-id">driver1</span>)</span>
+                        </div>
+                        <button class="button ghost" type="button" onclick="logoutDriver()" style="padding:0.35rem 0.85rem;font-size:0.75rem;">
+                            Sign Out ✕
+                        </button>
+                    </div>
 
                 <!-- Active In-Progress Trip Banner -->
                 <div id="driver-active-trip-banner" style="display:none;margin-bottom:20px;">
@@ -3122,6 +3192,8 @@
                     </div>
                     <div class="admin-list" id="driver-requests-list" style="margin-top:14px;"></div>
                 </div>
+            
+                </div><!-- /#drv-portal-content -->
             </section>
 
             <!-- ========================================== -->
@@ -3132,36 +3204,68 @@
                     <div>
                         <span class="eyebrow">Operations Command Console</span>
                         <h2 id="manager-title">Fleet operations control.</h2>
-                        <p>Approve requests, override vehicle/driver assignments, inspect the 24-hour Gantt visual matrix, and run chaos simulations.</p>
+                        <p>Approve requests, override vehicle/driver assignments, inspect the 24-hour Gantt visual matrix, and oversee enterprise fleet operations.</p>
                     </div>
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                        <button class="button" type="button" id="btn-simulate-chaos" style="background:linear-gradient(135deg,#f5b942,#f97066);color:#001014;font-weight:800;" onclick="triggerSimulateChaos()">
-                            ⚡ Simulate Chaos (5 Scenarios)
-                        </button>
-                        <button class="button danger" type="button" id="reset-demo" onclick="triggerResetData()">
-                            🗑️ Reset Demo Data
-                        </button>
+                    <div style="display:none;" aria-hidden="true">
+                        <button class="button" type="button" id="btn-simulate-chaos" onclick="triggerSimulateChaos()">Simulate Chaos</button>
+                        <button class="button danger" type="button" id="reset-demo" onclick="triggerResetData()">Reset Demo Data</button>
                     </div>
                 </div>
 
-                <!-- 1-Click Quick Demo Login for Seed Managers -->
-                <div class="card" style="padding:1rem;margin-bottom:1.5rem;background:var(--bg-soft);">
-                    <div style="font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.5rem;">
-                        ⚡ Quick Demo Manager Switcher
+                
+                <!-- Manager Authentication Card (Shown when not authenticated) -->
+                <div class="card" id="mgr-login-container" style="max-width:560px;margin:1.5rem auto 2.5rem;padding:2rem;background:var(--bg-soft);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);">
+                    <div style="text-align:center;margin-bottom:1.5rem;">
+                        <div style="width:48px;height:48px;background:rgba(245,185,66,0.1);border:1px solid rgba(245,185,66,0.25);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.5rem;">🛡️</div>
+                        <h3 style="margin:0 0 6px 0;font-size:1.35rem;font-weight:700;">Operations Console Login</h3>
+                        <p style="margin:0;font-size:0.85rem;color:var(--muted);">Operations command, approval queues, fleet scheduling, and driver management</p>
                     </div>
-                    <div class="quick-login-grid" style="grid-template-columns:1fr 1fr;">
-                        <button type="button" class="quick-login-btn" onclick="quickLoginManager('manager1')">
-                            <div><div class="quick-login-name">manager1 · Priya Sharma</div><div class="quick-login-email">Lead Operations Controller</div></div>
-                            <span>➔</span>
+
+                    <form id="mgr-login-form" onsubmit="handleManagerLoginSubmit(event)" style="display:flex;flex-direction:column;gap:14px;margin-bottom:1.5rem;">
+                        <div>
+                            <label style="display:block;font-size:0.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Manager ID</label>
+                            <input class="field" id="mgr-login-id" type="text" placeholder="e.g. manager1" value="manager1" required style="width:100%;height:44px;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:0.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Password</label>
+                            <input class="field" id="mgr-login-pw" type="password" placeholder="••••••••" value="123" required style="width:100%;height:44px;">
+                        </div>
+                        <button class="button" type="submit" id="mgr-login-submit-btn" style="width:100%;height:44px;font-weight:700;margin-top:6px;">
+                            Sign In to Command Console →
                         </button>
-                        <button type="button" class="quick-login-btn" onclick="quickLoginManager('manager2')">
-                            <div><div class="quick-login-name">manager2 · Kavana</div><div class="quick-login-email">Fleet Manager</div></div>
-                            <span>➔</span>
-                        </button>
+                    </form>
+
+                    <div style="border-top:1px solid var(--line);padding-top:1.25rem;">
+                        <div style="font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.75rem;text-align:center;">
+                            Quick Manager Sign-In
+                        </div>
+                        <div class="quick-login-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                            <button type="button" class="quick-login-btn" onclick="quickLoginManager('manager1')">
+                                <div><div class="quick-login-name">manager1 · Priya Sharma</div><div class="quick-login-email">Lead Operations Controller</div></div>
+                                <span>➔</span>
+                            </button>
+                            <button type="button" class="quick-login-btn" onclick="quickLoginManager('manager2')">
+                                <div><div class="quick-login-name">manager2 · Kavana</div><div class="quick-login-email">Fleet Operations Manager</div></div>
+                                <span>➔</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="metrics-grid" id="admin-metrics"></div>
+                <!-- Authenticated Manager Portal Container -->
+                <div id="mgr-portal-content" style="display:none;">
+                    <!-- Manager Session Header Bar -->
+                    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg-soft);border:1px solid var(--line);border-radius:14px;padding:0.75rem 1.25rem;margin-bottom:1.5rem;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="display:inline-flex;width:8px;height:8px;border-radius:50%;background:#f5b942;"></span>
+                            <span style="font-size:0.85rem;color:var(--muted);">Operations Controller: <strong id="mgr-session-name" style="color:var(--text);">Priya Sharma</strong> (<span id="mgr-session-id">manager1</span>)</span>
+                        </div>
+                        <button class="button ghost" type="button" onclick="logoutManager()" style="padding:0.35rem 0.85rem;font-size:0.75rem;">
+                            Sign Out ✕
+                        </button>
+                    </div>
+
+<div class="metrics-grid" id="admin-metrics"></div>
 
                 <!-- Subtabs: Queue, Gantt, Fleet & Drivers, Analytics -->
                 <div class="subtab-bar">
@@ -3274,6 +3378,8 @@
                         </div>
                     </div>
                 </div>
+            
+                </div><!-- /#mgr-portal-content -->
             </section>
 
             <p class="footer-note">FITRIDE Unified Platform · Shift smoothly between Employee, Driver, and Manager cockpits with pure backend logic.</p>
@@ -3478,15 +3584,287 @@
         let lastSubmittedPayload = null;
         let lastErrorResult = null;
 
+        
+        // =========================================================================
+        // WEB AUDIO API NOTIFICATION CHIME SYNTHESIZER
+        // =========================================================================
+        let audioContextInstance = null;
+        function getAudioContext() {
+            if (!audioContextInstance) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) audioContextInstance = new AudioCtx();
+            }
+            if (audioContextInstance && audioContextInstance.state === 'suspended') {
+                audioContextInstance.resume();
+            }
+            return audioContextInstance;
+        }
+
+        function playNotificationSound(type = 'chime') {
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const now = ctx.currentTime;
+                if (type === 'urgent') {
+                    // Double high chime for emergency or critical driver dispatch
+                    [0, 0.14].forEach(delay => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(880, now + delay); // A5
+                        osc.frequency.exponentialRampToValueAtTime(1320, now + delay + 0.1); // E6
+                        gain.gain.setValueAtTime(0.28, now + delay);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.13);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + delay);
+                        osc.stop(now + delay + 0.14);
+                    });
+                } else {
+                    // Smooth, pleasant confirmation chime: D5 -> A5 chord
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(587.33, now); // D5
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.12); // A5
+                    gain.gain.setValueAtTime(0.22, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.45);
+                }
+            } catch (err) {
+                console.warn('Audio notification chime could not play:', err);
+            }
+        }
+
+        function testNotificationSound() {
+            playNotificationSound('chime');
+            showToast('Audio notification chime tested successfully!');
+        }
+
+        
+        // =========================================================================
+        // ROLE AUTHENTICATION & SESSION MANAGERS PER TAB
+        // =========================================================================
+        let empSession = {
+            token: localStorage.getItem("fitride_emp_token") || "",
+            user: JSON.parse(localStorage.getItem("fitride_emp_user") || 'null')
+        };
+        let drvSession = {
+            token: localStorage.getItem("fitride_drv_token") || "",
+            user: JSON.parse(localStorage.getItem("fitride_drv_user") || 'null')
+        };
+        let mgrSession = {
+            token: localStorage.getItem("fitride_mgr_token") || "",
+            user: JSON.parse(localStorage.getItem("fitride_mgr_user") || 'null')
+        };
+
+        // --- Employee Login Handlers ---
+        async function doEmployeeLogin(id, password) {
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id, password })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data?.error?.message || "Invalid credentials");
+                const token = data.access_token || data.token;
+                const user = data.user || { id, name: id, role: "employee" };
+                empSession = { token, user };
+                localStorage.setItem("fitride_emp_token", token);
+                localStorage.setItem("fitride_emp_user", JSON.stringify(user));
+                updateEmployeeAuthUI();
+                showToast(`Welcome back, ${user.name || id}!`);
+                playNotificationSound('chime');
+                loadMyTrips();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function handleEmployeeLoginSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById("emp-login-id")?.value.trim();
+            const pw = document.getElementById("emp-login-pw")?.value.trim();
+            if (!id || !pw) return;
+            await doEmployeeLogin(id, pw);
+        }
+
+        async function quickLoginEmployee(id) {
+            await doEmployeeLogin(id, "123");
+        }
+
+        function logoutEmployee() {
+            empSession = { token: "", user: null };
+            localStorage.removeItem("fitride_emp_token");
+            localStorage.removeItem("fitride_emp_user");
+            updateEmployeeAuthUI();
+            showToast("Signed out of Employee Portal");
+        }
+
+        function updateEmployeeAuthUI() {
+            const loginCard = document.getElementById("emp-login-container");
+            const portalContent = document.getElementById("emp-portal-content");
+            const nameEl = document.getElementById("emp-session-name");
+            const idEl = document.getElementById("emp-session-id");
+            if (empSession.token && empSession.user) {
+                if (loginCard) loginCard.style.display = "none";
+                if (portalContent) portalContent.style.display = "block";
+                if (nameEl) nameEl.textContent = empSession.user.name || empSession.user.id;
+                if (idEl) idEl.textContent = empSession.user.id || "";
+            } else {
+                if (loginCard) loginCard.style.display = "block";
+                if (portalContent) portalContent.style.display = "none";
+            }
+        }
+
+        // --- Driver Login Handlers ---
+        async function doDriverLogin(id, password) {
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id, password })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data?.error?.message || "Invalid credentials");
+                const token = data.access_token || data.token;
+                const user = data.user || { id, name: id, role: "driver" };
+                drvSession = { token, user };
+                localStorage.setItem("fitride_drv_token", token);
+                localStorage.setItem("fitride_drv_user", JSON.stringify(user));
+                updateDriverAuthUI();
+                showToast(`Driver Cockpit active: ${user.name || id}`);
+                playNotificationSound('chime');
+                loadDriverCockpit();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function handleDriverLoginSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById("drv-login-id")?.value.trim();
+            const pw = document.getElementById("drv-login-pw")?.value.trim();
+            if (!id || !pw) return;
+            await doDriverLogin(id, pw);
+        }
+
+        async function quickLoginDriver(id) {
+            await doDriverLogin(id, "123");
+        }
+
+        function logoutDriver() {
+            drvSession = { token: "", user: null };
+            localStorage.removeItem("fitride_drv_token");
+            localStorage.removeItem("fitride_drv_user");
+            updateDriverAuthUI();
+            showToast("Signed out of Driver Cockpit");
+        }
+
+        function updateDriverAuthUI() {
+            const loginCard = document.getElementById("drv-login-container");
+            const portalContent = document.getElementById("drv-portal-content");
+            const nameEl = document.getElementById("drv-session-name");
+            const idEl = document.getElementById("drv-session-id");
+            if (drvSession.token && drvSession.user) {
+                if (loginCard) loginCard.style.display = "none";
+                if (portalContent) portalContent.style.display = "block";
+                if (nameEl) nameEl.textContent = drvSession.user.name || drvSession.user.id;
+                if (idEl) idEl.textContent = drvSession.user.id || "";
+            } else {
+                if (loginCard) loginCard.style.display = "block";
+                if (portalContent) portalContent.style.display = "none";
+            }
+        }
+
+        // --- Manager Login Handlers ---
+        async function doManagerLogin(id, password) {
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id, password })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data?.error?.message || "Invalid credentials");
+                const token = data.access_token || data.token;
+                const user = data.user || { id, name: id, role: "manager" };
+                mgrSession = { token, user };
+                localStorage.setItem("fitride_mgr_token", token);
+                localStorage.setItem("fitride_mgr_user", JSON.stringify(user));
+                updateManagerAuthUI();
+                showToast(`Operations Console unlocked: ${user.name || id}`);
+                playNotificationSound('chime');
+                loadManagerConsole();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function handleManagerLoginSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById("mgr-login-id")?.value.trim();
+            const pw = document.getElementById("mgr-login-pw")?.value.trim();
+            if (!id || !pw) return;
+            await doManagerLogin(id, pw);
+        }
+
+        async function quickLoginManager(id) {
+            await doManagerLogin(id, "123");
+        }
+
+        function logoutManager() {
+            mgrSession = { token: "", user: null };
+            localStorage.removeItem("fitride_mgr_token");
+            localStorage.removeItem("fitride_mgr_user");
+            updateManagerAuthUI();
+            showToast("Signed out of Manager Console");
+        }
+
+        function updateManagerAuthUI() {
+            const loginCard = document.getElementById("mgr-login-container");
+            const portalContent = document.getElementById("mgr-portal-content");
+            const nameEl = document.getElementById("mgr-session-name");
+            const idEl = document.getElementById("mgr-session-id");
+            if (mgrSession.token && mgrSession.user) {
+                if (loginCard) loginCard.style.display = "none";
+                if (portalContent) portalContent.style.display = "block";
+                if (nameEl) nameEl.textContent = mgrSession.user.name || mgrSession.user.id;
+                if (idEl) idEl.textContent = mgrSession.user.id || "";
+            } else {
+                if (loginCard) loginCard.style.display = "block";
+                if (portalContent) portalContent.style.display = "none";
+            }
+        }
+
         // --- Core API Client Wrapper ---
-        async function apiCall(endpoint, options = {}) {
+                async function apiCall(endpoint, options = {}) {
             const url = endpoint.startsWith("http") ? endpoint : `${API_BASE}${endpoint}`;
             const headers = {
                 "Content-Type": "application/json",
                 ...(options.headers || {})
             };
-            if (currentAuth.token) {
-                headers["Authorization"] = `Bearer ${currentAuth.token}`;
+            
+            // Smart token selection based on destination endpoint
+            let token = "";
+            if (endpoint.includes("/driver/") || endpoint.includes("/trips/")) {
+                token = drvSession.token || currentAuth.token;
+            } else if (endpoint.includes("/manager/") || endpoint.includes("/analytics") || 
+                      (endpoint.includes("/vehicles") && options.method !== "GET") || 
+                      (endpoint.includes("/drivers") && options.method !== "GET")) {
+                token = mgrSession.token || currentAuth.token;
+            } else if (endpoint.includes("/bookings") || endpoint.includes("/waitlist")) {
+                token = empSession.token || currentAuth.token;
+            } else {
+                token = empSession.token || mgrSession.token || drvSession.token || currentAuth.token;
+            }
+
+            if (token) {
+                headers["Authorization"] = `Bearer ${token}`;
             }
             const res = await fetch(url, { ...options, headers });
             let data = null;
@@ -3545,7 +3923,7 @@
             if (empPill) empPill.textContent = `👤 ${currentAuth.user.name || id}`;
 
             const backendStatusPills = document.querySelectorAll("[data-backend-status]");
-            backendStatusPills.forEach(p => p.textContent = "● Live Fleet Backend");
+            backendStatusPills.forEach(p => p.textContent = "● System Operational");
 
             showToast(`Switched active persona to ${currentAuth.user.name || id} (${currentAuth.role.toUpperCase()})`);
 
@@ -3671,6 +4049,19 @@
         // =========================================================================
         // VIEW 2: FLEET BROWSER
         // =========================================================================
+        
+        // =========================================================================
+        // FLEET VEHICLE PHOTOREALISTIC IMAGERY RESOLVER
+        // =========================================================================
+        function getVehiclePhoto(name, type) {
+            const str = ((name || '') + ' ' + (type || '')).toLowerCase();
+            if (str.includes('innova')) return '/innova.jpg';
+            if (str.includes('tempo') || str.includes('traveller')) return '/tempo.jpg';
+            if (str.includes('scorpio')) return '/scorpio.jpg';
+            if (str.includes('swift')) return '/swift.jpg';
+            return '/swift.jpg';
+        }
+
         async function renderFleet() {
             const grid = document.getElementById("fleet-grid");
             const filter = document.getElementById("fleet-filter")?.value || "all";
@@ -3683,11 +4074,18 @@
                     filtered = state.fleet.filter(v => (v.type || "").toLowerCase().includes(filter));
                 }
                 grid.innerHTML = filtered.map(v => `
-                    <div class="fleet-card">
-                        <div class="fleet-card-badge">${escapeHtml((v.type || "Sedan").toUpperCase())}</div>
-                        <h4>${escapeHtml(v.name)}</h4>
+                    <div class="fleet-card" style="display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);background:var(--bg-soft);border-radius:var(--radius);padding:1rem;">
+                        <div style="position:relative;width:100%;height:175px;border-radius:12px;overflow:hidden;margin-bottom:12px;background:#0d1117;">
+                            <img src="${getVehiclePhoto(v.name, v.type)}" alt="${escapeHtml(v.name)}" 
+                                 style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s ease;" 
+                                 onerror="this.src='/swift.jpg'">
+                            <div class="fleet-card-badge" style="position:absolute;top:10px;right:10px;margin:0;background:rgba(18,24,32,0.88);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);">
+                                ${escapeHtml((v.type || "Sedan").toUpperCase())}
+                            </div>
+                        </div>
+                        <h4 style="margin:0 0 4px 0;font-size:1.1rem;color:var(--text);font-weight:700;">${escapeHtml(v.name)}</h4>
                         <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;">Plate: ${escapeHtml(v.plate || 'KA-01-EA-1000')}</div>
-                        <div class="fleet-card-specs">
+                        <div class="fleet-card-specs" style="margin-top:auto;">
                             <span>👥 <strong>${v.capacity}</strong> Seats Max</span>
                             <span class="status ${v.status === 'available' ? 'available' : 'cancelled'}">${escapeHtml(v.status.toUpperCase())}</span>
                         </div>
@@ -3850,6 +4248,9 @@
             setEmpDuration(120);
             setEmpPassengers(3);
             initEmpFormDefaults();
+        updateEmployeeAuthUI();
+        updateDriverAuthUI();
+        updateManagerAuthUI();
         }
 
         async function handleEmployeeBookingSubmit(event) {
@@ -3884,7 +4285,8 @@
                 destination: destination,
                 reason: reason || "Corporate business journey",
                 type: state.empBookingMode,
-                priority: state.empBookingMode === "emergency" ? "emergency" : "normal"
+                priority: state.empBookingMode === "emergency" ? "emergency" : "normal",
+                requires_manager_approval: true
             };
 
             lastSubmittedPayload = { ...payload, dateStr, startTimeStr, endTimeStr };
@@ -4884,6 +5286,9 @@
         document.addEventListener("DOMContentLoaded", async () => {
             setupAnimation();
             initEmpFormDefaults();
+        updateEmployeeAuthUI();
+        updateDriverAuthUI();
+        updateManagerAuthUI();
 
             // Link switcher pills
             document.querySelectorAll("[data-view-target]").forEach(btn => {
