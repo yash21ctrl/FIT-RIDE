@@ -4688,7 +4688,12 @@
                 const countPill = document.getElementById("driver-trips-count");
                 if (countPill) countPill.textContent = `${requests.length + (confirmed ? 1 : 0)} active`;
 
-                if (!requests.length && !confirmed) {
+                const otherPending = reqsRes.other_pending || [];
+                if (otherPending.length > 0) {
+                    playNotificationSound('urgent');
+                }
+
+                if (!requests.length && !confirmed && otherPending.length === 0) {
                     listEl.innerHTML = `<div style="padding:28px;text-align:center;color:var(--muted);">No pending requests assigned to your cockpit right now.</div>`;
                     return;
                 }
@@ -4713,6 +4718,42 @@
                     `;
                 }
 
+                if (otherPending.length > 0 && !requests.length) {
+                    html += otherPending.map(req => {
+                        const respondBy = req.respond_by ? new Date(req.respond_by).getTime() : Date.now() + 300000;
+                        const remainingSec = Math.max(0, Math.floor((respondBy - Date.now()) / 1000));
+                        const min = Math.floor(remainingSec / 60);
+                        const sec = remainingSec % 60;
+                        return `
+                            <div class="card" style="padding:1.25rem;margin-bottom:0.85rem;background:#0d1218;border-left:4px solid var(--amber);">
+                                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+                                    <div>
+                                        <div style="display:flex;align-items:center;gap:8px;">
+                                            <span class="status pending">INCOMING DISPATCH · ${escapeHtml(req.driver ? req.driver.name.toUpperCase() : 'DRIVER ASSIGNMENT')}</span>
+                                            <span class="countdown-timer-wrap" id="timer-box-${req.id}">
+                                                ⏱️ Respond: <strong id="clock-${req.id}">${min}:${String(sec).padStart(2, '0')}</strong>
+                                            </span>
+                                        </div>
+                                        <h4 style="margin:8px 0 4px;font-size:1.15rem;color:var(--text);">${escapeHtml(req.destination)}</h4>
+                                        <div style="font-size:0.82rem;color:var(--muted);">
+                                            <span>📅 ${formatDateTimeLocal(req.start_time)} ➔ ${formatDateTimeLocal(req.end_time)}</span>
+                                            <span style="margin-left:10px;">👥 ${req.passengers} passengers</span>
+                                            <span style="margin-left:10px;">🚗 ${escapeHtml(req.vehicle ? req.vehicle.name : 'Fleet Vehicle')}</span>
+                                        </div>
+                                        <div style="margin-top:6px;font-size:0.78rem;color:var(--cyan);">
+                                            Assigned Driver: <strong>${escapeHtml(req.driver ? req.driver.name : 'Eligible Driver')}</strong>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex;gap:8px;">
+                                        <button class="button" type="button" onclick="claimAndAcceptAsDriver('${req.id}', '${req.driver_id}')" style="min-height:40px;padding:0 22px;font-size:0.85rem;background:var(--green);color:#001014;font-weight:800;">
+                                            ✓ Accept Trip ➔
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join("");
+                }
                 html += requests.map(req => {
                     const respondBy = req.respond_by ? new Date(req.respond_by).getTime() : Date.now() + 300000;
                     const remainingSec = Math.max(0, Math.floor((respondBy - Date.now()) / 1000));
@@ -4761,7 +4802,7 @@
             if (driverCountdownInterval) clearInterval(driverCountdownInterval);
             driverCountdownInterval = setInterval(() => {
                 let hasActive = false;
-                requests.forEach(req => {
+                [...requests, ...(reqsRes?.other_pending || [])].forEach(req => {
                     const clockEl = document.getElementById(`clock-${req.id}`);
                     if (!clockEl) return;
                     const respondBy = req.respond_by ? new Date(req.respond_by).getTime() : Date.now() + 300000;
@@ -4776,6 +4817,24 @@
                 });
                 if (!hasActive) clearInterval(driverCountdownInterval);
             }, 1000);
+        }
+
+        
+        async function claimAndAcceptAsDriver(bookingId, assignedDriverId) {
+            // Find which seed driver persona matches assignedDriverId
+            let targetPersona = Object.values(PERSONAS).find(p => p.driver_id === assignedDriverId);
+            if (!targetPersona) {
+                // Map based on ID patterns
+                if (String(assignedDriverId).includes('0002') || String(assignedDriverId).includes('driver2')) targetPersona = PERSONAS.driver2;
+                else if (String(assignedDriverId).includes('0001') || String(assignedDriverId).includes('driver1')) targetPersona = PERSONAS.driver1;
+                else if (String(assignedDriverId).includes('0003') || String(assignedDriverId).includes('driver3')) targetPersona = PERSONAS.driver3;
+                else if (String(assignedDriverId).includes('0004') || String(assignedDriverId).includes('driver4')) targetPersona = PERSONAS.driver4;
+                else targetPersona = PERSONAS.driver2;
+            }
+            if (targetPersona) {
+                await doDriverLogin(targetPersona.id, "123");
+            }
+            await acceptDriverRequest(bookingId);
         }
 
         async function acceptDriverRequest(id) {

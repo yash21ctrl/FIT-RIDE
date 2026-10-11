@@ -271,8 +271,14 @@ def handle_driver_requests():
         }), 403
 
     reqs = query_bookings(active_only=False, driver_id=drv_id, status="DRIVER_PENDING")
+    all_pending = query_bookings(active_only=False, status="DRIVER_PENDING")
+    other_pending = [serialize_booking(b) for b in all_pending if str(b.get("driver_id")) != drv_id]
     serialized = [serialize_booking(b) for b in reqs]
-    return jsonify({"requests": serialized, "count": len(serialized)}), 200
+    return jsonify({
+        "requests": serialized,
+        "count": len(serialized),
+        "other_pending": other_pending
+    }), 200
 
 
 def handle_driver_accept(booking_id: str):
