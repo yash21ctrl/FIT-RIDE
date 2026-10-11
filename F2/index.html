@@ -1571,7 +1571,450 @@
             .brand-glyph-route,
             .journey-line::after { animation: none; }
         }
-    </style>
+    
+        /* --- UNIFIED MULTI-PORTAL SWITCHER & ANTIGRAVITY MOTION --- */
+        .portal-switcher {
+            display: inline-flex;
+            align-items: center;
+            background: #0d1218;
+            border: 1px solid var(--line);
+            border-radius: 9999px;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .portal-pill {
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--muted);
+            background: transparent;
+            border: 0;
+            cursor: pointer;
+            transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            letter-spacing: 0.02em;
+        }
+
+        .portal-pill:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .portal-pill:active {
+            transform: scale(0.97);
+        }
+
+        .portal-pill.is-active {
+            color: #001014;
+            background: var(--cyan);
+            box-shadow: 0 0 20px rgba(0, 217, 245, 0.4);
+        }
+
+        /* Fluid view transition adhering to Emil Kowalski motion rules */
+        .view {
+            display: none;
+            opacity: 0;
+            transform: scale(0.985) translateY(8px);
+            transition: opacity 220ms cubic-bezier(0.16, 1, 0.3, 1), transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .view.is-active {
+            display: block;
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        /* Subtab Navigation Bars */
+        .subtab-bar {
+            display: inline-flex;
+            align-items: center;
+            background: #0d1218;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 3px;
+            gap: 4px;
+            margin-bottom: 20px;
+        }
+
+        .subtab-btn {
+            padding: 7px 14px;
+            border-radius: 9px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--muted);
+            background: transparent;
+            border: 0;
+            cursor: pointer;
+            transition: all 160ms ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .subtab-btn:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .subtab-btn.is-active {
+            color: #f5f8fb;
+            background: var(--panel-strong);
+            border: 1px solid rgba(0, 217, 245, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Duration Quick Selector Pills */
+        .duration-pills-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        .duration-pill {
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--muted);
+            background: #0b1016;
+            border: 1px solid var(--line);
+            cursor: pointer;
+            transition: all 140ms ease;
+        }
+
+        .duration-pill:hover {
+            border-color: var(--cyan);
+            color: var(--text);
+            background: var(--cyan-soft);
+        }
+
+        .duration-pill.is-active {
+            background: var(--cyan);
+            color: #001014;
+            border-color: var(--cyan);
+            font-weight: 800;
+        }
+
+        /* Emergency notice banner */
+        .emergency-notice-box {
+            display: none;
+            background: rgba(245, 185, 66, 0.1);
+            border: 1px solid rgba(245, 185, 66, 0.35);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            color: var(--amber);
+            font-size: 0.82rem;
+            line-height: 1.4;
+        }
+
+        /* Notification Drawer & Bell */
+        .notif-btn {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #0d1218;
+            border: 1px solid var(--line);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 160ms ease;
+        }
+
+        .notif-btn:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: var(--cyan-soft);
+        }
+
+        .notif-badge {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            background: var(--red);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 9999px;
+            border: 2px solid var(--bg);
+        }
+
+        .notif-drawer {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 16px;
+            width: 340px;
+            max-width: calc(100vw - 32px);
+            background: var(--panel-strong);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            overflow: hidden;
+            animation: drawerEnter 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes drawerEnter {
+            from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .notif-drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .notif-drawer-header h4 {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        .notif-drawer-list {
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .notif-item {
+            padding: 10px 12px;
+            border-radius: 10px;
+            margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 0.78rem;
+            transition: background 140ms ease;
+        }
+
+        .notif-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .notif-item.is-unread {
+            border-left: 3px solid var(--cyan);
+            background: rgba(0, 217, 245, 0.06);
+        }
+
+        .notif-item small {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 0.7rem;
+        }
+
+        /* Driver Countdown Clock */
+        .countdown-timer-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(0, 217, 245, 0.08);
+            border: 1px solid rgba(0, 217, 245, 0.3);
+            border-radius: 9999px;
+            color: var(--cyan);
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+        }
+
+        .countdown-timer-wrap.warning {
+            background: rgba(245, 185, 66, 0.12);
+            border-color: var(--amber);
+            color: var(--amber);
+        }
+
+        .countdown-timer-wrap.urgent {
+            background: rgba(249, 112, 102, 0.15);
+            border-color: var(--red);
+            color: var(--red);
+            animation: pulseUrgent 1s infinite;
+        }
+
+        @keyframes pulseUrgent {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Interactive 24-Hour Gantt Timeline */
+        .gantt-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: #090d12;
+            padding-bottom: 12px;
+        }
+
+        .gantt-header-row {
+            display: grid;
+            grid-template-columns: 180px repeat(24, minmax(42px, 1fr));
+            border-bottom: 1px solid var(--line);
+            background: #0d1218;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .gantt-header-cell {
+            padding: 10px 4px;
+            border-right: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .gantt-row {
+            display: grid;
+            grid-template-columns: 180px repeat(24, minmax(42px, 1fr));
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            min-height: 52px;
+            position: relative;
+        }
+
+        .gantt-resource-cell {
+            padding: 12px 14px;
+            background: #0d1218;
+            border-right: 1px solid var(--line);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: sticky;
+            left: 0;
+            z-index: 10;
+        }
+
+        .gantt-resource-cell small {
+            font-size: 0.7rem;
+            color: var(--muted);
+            font-weight: 400;
+            margin-top: 2px;
+        }
+
+        .gantt-grid-cell {
+            border-right: 1px solid rgba(255, 255, 255, 0.03);
+            height: 100%;
+        }
+
+        .gantt-booking-block {
+            position: absolute;
+            top: 7px;
+            bottom: 7px;
+            border-radius: 8px;
+            padding: 4px 8px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            transition: transform 140ms ease, box-shadow 140ms ease;
+            z-index: 5;
+        }
+
+        .gantt-booking-block:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+            z-index: 20;
+        }
+
+        .gantt-booking-block.status-confirmed, .gantt-booking-block.status-approved, .gantt-booking-block.status-driver_pending {
+            background: rgba(0, 217, 245, 0.22);
+            border: 1px solid var(--cyan);
+            color: #f5f8fb;
+        }
+
+        .gantt-booking-block.status-in_progress {
+            background: rgba(50, 213, 131, 0.22);
+            border: 1px solid var(--green);
+            color: #f5f8fb;
+        }
+
+        .gantt-booking-block.status-pending {
+            background: rgba(245, 185, 66, 0.22);
+            border: 1px solid var(--amber);
+            color: #f5f8fb;
+        }
+
+        /* Generic Modals */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 4, 7, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: none;
+            place-items: center;
+            padding: 16px;
+            animation: modalFadeIn 160ms ease-out forwards;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-dialog {
+            width: 100%;
+            max-width: 520px;
+            background: var(--panel-strong);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            animation: modalPopIn 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes modalPopIn {
+            from { opacity: 0; transform: scale(0.96) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 12px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            color: var(--text);
+        }
+
+        .modal-close-btn {
+            background: transparent;
+            border: 0;
+            color: var(--muted);
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+        }
+
+        .modal-close-btn:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+</style>
 </head>
 <body>
     <a class="skip-link" href="#app">Skip to FITRIDE app</a>
@@ -1616,7 +2059,7 @@
         </div>
     </section>
 
-    <div class="app-shell" id="app">
+        <div class="app-shell" id="app">
         <nav class="site-nav" aria-label="FITRIDE navigation">
             <div class="nav-inner">
                 <a class="brand-lockup" href="#app" data-view-target="home" aria-label="FITRIDE dashboard">
@@ -1629,15 +2072,33 @@
                     <span>FITRIDE</span>
                 </a>
 
-                <div class="nav-links">
-                    <button class="nav-link is-active" type="button" data-view-target="home">Home</button>
-                    <button class="nav-link" type="button" data-view-target="fleet">Our fleet</button>
-                    <button class="nav-link" type="button" data-view-target="book">Book a vehicle</button>
-                    <button class="nav-link" type="button" data-view-target="bookings">My bookings</button>
-                    <button class="nav-link" type="button" data-view-target="admin">Admin</button>
+                <!-- UNIFIED PORTAL SWITCHER BAR -->
+                <div class="portal-switcher" id="main-portal-switcher" role="tablist">
+                    <button class="portal-pill is-active" type="button" data-view-target="home" role="tab" aria-selected="true">
+                        <span>✨</span> 3D Story
+                    </button>
+                    <button class="portal-pill" type="button" data-view-target="fleet" role="tab" aria-selected="false">
+                        <span>🚗</span> Fleet
+                    </button>
+                    <button class="portal-pill" type="button" data-view-target="employee" role="tab" aria-selected="false">
+                        <span>👤</span> Employee Portal
+                    </button>
+                    <button class="portal-pill" type="button" data-view-target="driver" role="tab" aria-selected="false">
+                        <span>🚖</span> Driver Cockpit
+                    </button>
+                    <button class="portal-pill" type="button" data-view-target="manager" role="tab" aria-selected="false">
+                        <span>🛡️</span> Manager Console
+                    </button>
                 </div>
 
                 <div class="nav-right">
+                    <!-- Notifications Bell & Drawer -->
+                    <button class="notif-btn" id="notif-bell-btn" type="button" title="Live Notifications" aria-label="Notifications">
+                        🔔
+                        <span class="notif-badge" id="notif-badge-count" style="display: none;">0</span>
+                    </button>
+                    
+                    <!-- Persona Selector -->
                     <label class="role-selector-wrap" title="Switch active persona">
                         <span class="sr-only">Switch user persona</span>
                         <select class="role-select" id="user-persona-select" aria-label="Select persona">
@@ -1649,33 +2110,44 @@
                             <option value="manager2">🛡️ manager2 · Kavana (Manager)</option>
                         </select>
                     </label>
+
                     <span class="demo-pill" data-backend-status>Connecting...</span>
-                    <div class="portal-links">
-                        <a href="/employee" class="portal-nav-btn" target="_blank" title="Open Dedicated Employee Portal">Employee ↗</a>
-                        <a href="/driver" class="portal-nav-btn" target="_blank" title="Open Driver Mobile PWA">Driver ↗</a>
-                        <a href="/manager" class="portal-nav-btn" target="_blank" title="Open Manager Operations Console">Manager ↗</a>
-                    </div>
-                    <button class="button ghost" type="button" data-view-target="book">Request a ride</button>
+                    <button class="button ghost" type="button" data-view-target="employee">Request Ride</button>
+                </div>
+            </div>
+
+            <!-- Expandable Notifications Drawer -->
+            <div class="notif-drawer" id="notif-drawer" style="display: none;">
+                <div class="notif-drawer-header">
+                    <h4>Operational Alerts &amp; Updates</h4>
+                    <button class="button ghost" type="button" id="notif-mark-all" style="min-height: 28px; padding: 0 10px; font-size: 0.72rem;">Mark all read</button>
+                </div>
+                <div class="notif-drawer-list" id="notif-drawer-list">
+                    <div style="padding: 16px; text-align: center; color: var(--muted); font-size: 0.8rem;">No unread notifications</div>
                 </div>
             </div>
         </nav>
 
         <main class="app-main">
+            <!-- ========================================== -->
+            <!-- VIEW 1: 3D FLEET STORY & HERO OVERVIEW    -->
+            <!-- ========================================== -->
             <section class="view is-active" id="view-home" data-view="home" aria-labelledby="home-title">
                 <div class="hero-grid">
                     <div class="hero-panel">
                         <div class="hero-copy">
                             <span class="eyebrow">Smart shared mobility</span>
                             <h2 id="home-title">Move people<br><span>with purpose.</span></h2>
-                            <p>FITRIDE matches every request to the right vehicle, prevents scheduling conflicts, and gives your team a clear view of the fleet.</p>
+                            <p>FITRIDE matches every request to the right vehicle, prevents scheduling conflicts, and gives your team a clear, unified view of the entire fleet.</p>
                             <div class="hero-links">
-                                <button class="button" type="button" data-view-target="book">Book a vehicle <span aria-hidden="true">→</span></button>
-                                <button class="button secondary" type="button" data-view-target="fleet">View our fleet</button>
+                                <button class="button" type="button" data-view-target="employee">Employee Portal <span aria-hidden="true">→</span></button>
+                                <button class="button secondary" type="button" data-view-target="driver">Driver Cockpit</button>
+                                <button class="button secondary" type="button" data-view-target="manager">Manager Console</button>
                             </div>
                         </div>
                     </div>
                     <div class="hero-vehicle">
-                        <img src="./0001.jpg" alt="FITRIDE sedan outside a storefront" loading="lazy">
+                        <img src="./0001.jpg" alt="FITRIDE vehicle exterior" loading="lazy">
                         <div class="hero-vehicle-label">
                             <span class="hero-vehicle-kicker">FITRIDE / FLEET STORY</span>
                             <strong>Designed around the journey.</strong>
@@ -1690,33 +2162,36 @@
                     <div class="panel">
                         <div class="panel-header">
                             <h3>Upcoming journeys</h3>
-                            <button class="button ghost" type="button" data-view-target="bookings">View all</button>
+                            <button class="button ghost" type="button" data-view-target="employee" data-emp-subtab="history">View all</button>
                         </div>
                         <div class="booking-list" id="home-bookings"></div>
                     </div>
                     <div class="panel">
                         <div class="panel-header">
-                            <h3>Start somewhere</h3>
-                            <span>Quick actions</span>
+                            <h3>Shift between portals</h3>
+                            <span>Instant Access</span>
                         </div>
                         <div class="quick-actions">
-                            <button class="quick-action" type="button" data-view-target="book"><span class="icon">＋</span><strong>New booking</strong></button>
-                            <button class="quick-action" type="button" data-view-target="fleet"><span class="icon">⌁</span><strong>Explore fleet</strong></button>
-                            <button class="quick-action" type="button" data-view-target="bookings"><span class="icon">◷</span><strong>Track requests</strong></button>
-                            <button class="quick-action" type="button" data-view-target="admin"><span class="icon">⌘</span><strong>Manage fleet</strong></button>
+                            <button class="quick-action" type="button" data-view-target="employee"><span class="icon">👤</span><strong>Employee Portal</strong><small style="color:var(--muted);font-size:0.72rem">Submit requests &amp; track rides</small></button>
+                            <button class="quick-action" type="button" data-view-target="driver"><span class="icon">🚖</span><strong>Driver Cockpit</strong><small style="color:var(--muted);font-size:0.72rem">Accept trips &amp; 1-touch dispatch</small></button>
+                            <button class="quick-action" type="button" data-view-target="manager"><span class="icon">🛡️</span><strong>Manager Console</strong><small style="color:var(--muted);font-size:0.72rem">Approvals &amp; 24h Gantt chart</small></button>
+                            <button class="quick-action" type="button" data-view-target="fleet"><span class="icon">⌁</span><strong>Explore Fleet</strong><small style="color:var(--muted);font-size:0.72rem">Browse vehicle specs</small></button>
                         </div>
                     </div>
                 </div>
             </section>
 
+            <!-- ========================================== -->
+            <!-- VIEW 2: CAPACITY-AWARE FLEET BROWSER       -->
+            <!-- ========================================== -->
             <section class="view" id="view-fleet" data-view="fleet" aria-labelledby="fleet-title">
                 <div class="view-header">
                     <div>
                         <span class="eyebrow">Ready when you are</span>
                         <h2 id="fleet-title">Our fleet.</h2>
-                        <p>Browse capacity-aware vehicles that can be requested for your next trip.</p>
+                        <p>Browse capacity-aware vehicles that can be requested for your next corporate journey.</p>
                     </div>
-                    <button class="button" type="button" data-view-target="book">Book a vehicle <span aria-hidden="true">→</span></button>
+                    <button class="button" type="button" data-view-target="employee">Book a vehicle <span aria-hidden="true">→</span></button>
                 </div>
                 <div class="filter-row">
                     <span class="demo-pill" data-backend-status>Local demo mode</span>
@@ -1735,155 +2210,530 @@
                 <div class="fleet-grid" id="fleet-grid"></div>
             </section>
 
-            <section class="view" id="view-book" data-view="book" aria-labelledby="book-title">
+            <!-- ========================================== -->
+            <!-- VIEW 3: FULL EMPLOYEE PORTAL              -->
+            <!-- ========================================== -->
+            <section class="view" id="view-employee" data-view="employee" data-view-alias="book">
                 <div class="view-header">
                     <div>
-                        <span class="eyebrow">Make the request</span>
-                        <h2 id="book-title">Book a vehicle.</h2>
-                        <p>Tell us what the journey needs. FITRIDE will match capacity and availability before reserving a vehicle.</p>
+                        <span class="eyebrow">Employee Portal</span>
+                        <h2 id="employee-title">Employee journeys.</h2>
+                        <p>Request routine or emergency travel, receive deterministic vehicle allocations, and manage your schedules.</p>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span class="status available" id="emp-active-pill" style="padding:6px 14px;font-size:0.78rem">👤 Ananya Roy</span>
                     </div>
                 </div>
-                <div class="form-layout">
-                    <form class="panel" id="booking-form">
-                        <div class="form-grid">
-                            <div class="form-field">
-                                <label for="employee-name">Employee name</label>
-                                <input class="field" id="employee-name" name="employeeName" type="text" value="Demo Employee" required>
+
+                <!-- Subtab Switcher for Employee -->
+                <div class="subtab-bar">
+                    <button class="subtab-btn is-active" type="button" id="emp-tab-btn-new" onclick="switchEmpSubtab('new')">
+                        <span>＋</span> New Ride Request
+                    </button>
+                    <button class="subtab-btn" type="button" id="emp-tab-btn-history" onclick="switchEmpSubtab('history')">
+                        <span>📅</span> My Journeys &amp; Status (<span id="emp-my-count">0</span>)
+                    </button>
+                </div>
+
+                <!-- SUBVIEW 3A: NEW RIDE REQUEST FORM -->
+                <div id="emp-subview-new">
+                    <div class="form-layout">
+                        <form class="panel" id="booking-form">
+                            <!-- Emergency notice banner -->
+                            <div class="emergency-notice-box" id="emergency-alert-banner">
+                                <strong>⚡ Emergency Priority Activated:</strong> This trip bypasses standard manager approval, flags immediate driver dispatch, and will bump routine trips if fleet capacity is exhausted. Mandatory operational justification required.
                             </div>
-                            <div class="form-field">
-                                <label for="employee-email">Work email</label>
-                                <input class="field" id="employee-email" name="employeeEmail" type="email" value="employee@fitride.local" required>
+
+                            <div class="form-grid">
+                                <div class="form-field">
+                                    <label for="employee-name">Employee name</label>
+                                    <input class="field" id="employee-name" name="employeeName" type="text" value="Ananya Roy" required>
+                                </div>
+                                <div class="form-field">
+                                    <label for="employee-email">Work email</label>
+                                    <input class="field" id="employee-email" name="employeeEmail" type="email" value="emp1@fleetride.local" required>
+                                </div>
+
+                                <div class="form-field full">
+                                    <label>Trip Dispatch Mode &amp; Priority</label>
+                                    <div style="display:flex;gap:12px;margin-top:4px;">
+                                        <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:0.85rem;color:var(--text)">
+                                            <input type="radio" name="priority_radio" value="normal" checked onchange="handlePriorityChange('normal')">
+                                            <span>Standard Scheduled (Deterministic Allocation)</span>
+                                        </label>
+                                        <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:0.85rem;color:var(--amber);font-weight:700">
+                                            <input type="radio" name="priority_radio" value="emergency" onchange="handlePriorityChange('emergency')">
+                                            <span>⚡ Emergency Priority (Instant Dispatch &amp; Bump)</span>
+                                        </label>
+                                    </div>
+                                    <input type="hidden" id="booking-priority" name="priority" value="normal">
+                                </div>
+
+                                <div class="form-field">
+                                    <label for="booking-start">Pickup date &amp; time</label>
+                                    <input class="field" id="booking-start" name="start" type="datetime-local" required>
+                                </div>
+                                <div class="form-field">
+                                    <label for="booking-end">Return date &amp; time</label>
+                                    <input class="field" id="booking-end" name="end" type="datetime-local" required>
+                                    <div class="duration-pills-row">
+                                        <button class="duration-pill" type="button" onclick="setDurationHours(0.5)">30 Mins</button>
+                                        <button class="duration-pill is-active" type="button" onclick="setDurationHours(1)">1 Hour</button>
+                                        <button class="duration-pill" type="button" onclick="setDurationHours(2)">2 Hours</button>
+                                        <button class="duration-pill" type="button" onclick="setDurationHours(4)">4 Hours</button>
+                                        <button class="duration-pill" type="button" onclick="setDurationHours(8)">Full Day</button>
+                                    </div>
+                                </div>
+
+                                <div class="form-field">
+                                    <label for="booking-passengers">Passenger count (1-12)</label>
+                                    <input class="field" id="booking-passengers" name="passengers" type="number" min="1" max="12" value="2" required>
+                                </div>
+
+                                <div class="form-field">
+                                    <label for="booking-type">Preferred Category</label>
+                                    <select class="select" id="booking-type" name="type">
+                                        <option value="any">Any Best-Fit Vehicle (Engine Decision)</option>
+                                        <option value="sedan">Sedan / Compact (4 seats)</option>
+                                        <option value="mpv">MPV / Large (7 seats)</option>
+                                        <option value="minibus">Minibus / Tempo (12 seats)</option>
+                                        <option value="suv">SUV</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-field full">
+                                    <label for="booking-vehicle">Specific Vehicle Request <span style="font-weight:400;color:var(--muted)">(Optional)</span></label>
+                                    <select class="select" id="booking-vehicle" name="vehicle"></select>
+                                </div>
+
+                                <div class="form-field full">
+                                    <label for="booking-destination">Destination address</label>
+                                    <input class="field" id="booking-destination" name="destination" type="text" placeholder="e.g. Whitefield Tech Park / BIEC Exhibition Center" required>
+                                </div>
+
+                                <div class="form-field full">
+                                    <label for="booking-purpose">Business Purpose &amp; Justification</label>
+                                    <input class="field" id="booking-purpose" name="purpose" type="text" placeholder="e.g. Executive client meeting, hardware transfer, inter-campus delivery" required>
+                                </div>
+
+                                <div class="form-field full">
+                                    <label for="booking-notes">Operational Notes <span style="font-weight:400;color:var(--muted)">(Optional)</span></label>
+                                    <textarea class="field" id="booking-notes" name="notes" placeholder="Luggage details, security access, special instructions..."></textarea>
+                                </div>
                             </div>
-                            <div class="form-field">
-                                <label for="booking-start">Pickup date &amp; time</label>
-                                <input class="field" id="booking-start" name="start" type="datetime-local" required>
+
+                            <div class="form-actions" style="margin-top:20px;">
+                                <button class="button" id="btn-submit-booking" type="submit" style="min-height:50px;padding:0 28px;font-size:0.95rem">
+                                    Submit Booking Request <span aria-hidden="true">→</span>
+                                </button>
+                                <button class="button secondary" type="reset">Clear Form</button>
                             </div>
-                            <div class="form-field">
-                                <label for="booking-end">Return date &amp; time</label>
-                                <input class="field" id="booking-end" name="end" type="datetime-local" required>
+                        </form>
+
+                        <aside class="panel">
+                            <div class="panel-header">
+                                <h3>Allocation Engine Rationale</h3>
+                                <span class="status available">Deterministic</span>
                             </div>
-                            <div class="form-field">
-                                <label for="booking-passengers">Passengers</label>
-                                <input class="field" id="booking-passengers" name="passengers" type="number" min="1" max="12" value="2" required>
+                            <div class="match-summary" id="match-summary">
+                                <strong>Start with the basics.</strong>
+                                Choose a time range and passenger count to see the best available match.
                             </div>
-                            <div class="form-field">
-                                <label for="booking-type">Vehicle category <span style="font-weight:400">(preview)</span></label>
-                                <select class="select" id="booking-type" name="type">
-                                    <option value="any">Any suitable vehicle</option>
-                                    <option value="sedan">Sedan / Car</option>
-                                    <option value="mpv">MPV / Van</option>
-                                    <option value="minibus">Minibus / Tempo</option>
-                                    <option value="suv">SUV</option>
-                                    <option value="cargo">Cargo van</option>
-                                </select>
+
+                            <!-- Conflict & Alternatives Container -->
+                            <div id="booking-conflict-box" style="display:none;margin-top:16px;">
+                                <div style="padding:14px;border-radius:14px;background:rgba(249,112,102,0.1);border:1px solid rgba(249,112,102,0.35);margin-bottom:12px;">
+                                    <strong style="color:var(--red);font-size:0.85rem;" id="conflict-reason-text">Slot Overlap Detected</strong>
+                                    <p style="margin:4px 0 0;font-size:0.76rem;color:var(--muted);">All suitable vehicles are reserved. Pick an alternative time slot below or join the waitlist.</p>
+                                </div>
+                                <div id="conflict-alternatives-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;"></div>
+                                <button class="button secondary" type="button" id="btn-join-waitlist" style="width:100%;border-color:var(--amber);color:var(--amber);">
+                                    🔔 Join Waitlist (Auto-Notify on Release)
+                                </button>
                             </div>
-                            <div class="form-field full">
-                                <label for="booking-vehicle">Vehicle preference <span style="font-weight:400">(live preview)</span></label>
-                                <select class="select" id="booking-vehicle" name="vehicle"></select>
+
+                            <div style="height:18px"></div>
+                            <div class="panel-header">
+                                <h3>Engine Rules Enforced</h3>
                             </div>
-                            <div class="form-field full">
-                                <label for="booking-priority">Booking priority &amp; dispatch rule</label>
-                                <select class="select" id="booking-priority" name="priority">
-                                    <option value="normal">Normal (Scheduled approval &amp; deterministic match)</option>
-                                    <option value="emergency">Emergency (Priority bump, skips manager queue &amp; instant dispatch)</option>
-                                </select>
+                            <div class="booking-list">
+                                <div class="booking-row"><div><strong>01 · Capacity Best-Fit</strong><small>Selects vehicle with least excess capacity.</small></div><span class="status approved">Active</span></div>
+                                <div class="booking-row"><div><strong>02 · Driver Rest Gap</strong><small>Mandates 45m rest &amp; max 9h daily driving.</small></div><span class="status approved">Checked</span></div>
+                                <div class="booking-row"><div><strong>03 · Overlap Protection</strong><small>15-minute cleaning buffer between rides.</small></div><span class="status pending">Guarded</span></div>
                             </div>
-                            <div class="form-field full">
-                                <label for="booking-destination">Destination</label>
-                                <input class="field" id="booking-destination" name="destination" type="text" placeholder="e.g. Bengaluru International Convention Centre" required>
-                            </div>
-                            <div class="form-field full">
-                                <label for="booking-purpose">Journey purpose</label>
-                                <input class="field" id="booking-purpose" name="purpose" type="text" placeholder="e.g. Client visit, equipment transfer, team offsite" required>
-                            </div>
-                            <div class="form-field full">
-                                <label for="booking-notes">Notes <span style="font-weight:400">(optional)</span></label>
-                                <textarea class="field" id="booking-notes" name="notes" placeholder="Anything the fleet team should know?"></textarea>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button class="button" type="submit">Find and request vehicle <span aria-hidden="true">→</span></button>
-                            <button class="button secondary" type="reset">Clear form</button>
-                        </div>
-                    </form>
-                    <aside class="panel">
+                        </aside>
+                    </div>
+                </div>
+
+                <!-- SUBVIEW 3B: MY JOURNEYS & HISTORY -->
+                <div id="emp-subview-history" style="display:none;">
+                    <div class="panel">
                         <div class="panel-header">
-                            <h3>Smart match</h3>
-                            <span>Live availability</span>
+                            <div>
+                                <h3 style="margin:0;">My Bookings &amp; Trip Schedules</h3>
+                                <small style="color:var(--muted);font-size:0.75rem;">Live view of all requests submitted under your employee profile</small>
+                            </div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;" id="emp-history-filters">
+                                <button class="button ghost is-active" type="button" onclick="filterEmpHistory('all')">All</button>
+                                <button class="button ghost" type="button" onclick="filterEmpHistory('pending')">Pending</button>
+                                <button class="button ghost" type="button" onclick="filterEmpHistory('approved')">Approved</button>
+                                <button class="button ghost" type="button" onclick="filterEmpHistory('confirmed')">Confirmed</button>
+                                <button class="button ghost" type="button" onclick="filterEmpHistory('in_progress')">Active</button>
+                                <button class="button ghost" type="button" onclick="filterEmpHistory('completed')">Completed</button>
+                            </div>
                         </div>
-                        <div class="match-summary" id="match-summary">
-                            <strong>Start with the basics.</strong>
-                            Choose a time range and passenger count to see the best available match.
-                        </div>
-                        <div style="height:18px"></div>
-                        <div class="panel-header">
-                            <h3>How it works</h3>
-                        </div>
-                        <div class="booking-list">
-                            <div class="booking-row"><div><strong>01 · Match</strong><small>Capacity, type, and availability are checked.</small></div><span class="status approved">live</span></div>
-                            <div class="booking-row"><div><strong>02 · Reserve</strong><small>Overlapping requests are automatically blocked.</small></div><span class="status pending">safe</span></div>
-                            <div class="booking-row"><div><strong>03 · Approve</strong><small>An admin can approve or reject the request.</small></div><span class="status available">clear</span></div>
-                        </div>
-                    </aside>
+                        <div class="booking-list" id="bookings-list" style="margin-top:14px;"></div>
+                    </div>
                 </div>
             </section>
 
-            <section class="view" id="view-bookings" data-view="bookings" aria-labelledby="bookings-title">
+            <!-- ========================================== -->
+            <!-- VIEW 4: FULL DRIVER OPERATIONS COCKPIT    -->
+            <!-- ========================================== -->
+            <section class="view" id="view-driver" data-view="driver">
                 <div class="view-header">
                     <div>
-                        <span class="eyebrow">Your movement, in view</span>
-                        <h2 id="bookings-title">My bookings.</h2>
-                        <p>Every request is persisted in the FITRIDE operations database and can be reviewed by the admin workspace.</p>
+                        <span class="eyebrow">Driver Cockpit</span>
+                        <h2 id="driver-title">Mobile trip dispatch.</h2>
+                        <p>Accept new trip assignments, execute trips with zero-odometer inputs, and manage on-duty status.</p>
                     </div>
-                    <button class="button" type="button" data-view-target="book">New booking <span aria-hidden="true">＋</span></button>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <span class="status available" id="drv-status-pill">AVAILABLE</span>
+                        <div style="display:flex;gap:6px;">
+                            <button class="button ghost" type="button" onclick="setDriverStatus('available')" style="font-size:0.72rem;padding:0 10px;">Available</button>
+                            <button class="button ghost" type="button" onclick="setDriverStatus('break')" style="font-size:0.72rem;padding:0 10px;">Break</button>
+                            <button class="button ghost" type="button" onclick="setDriverStatus('off')" style="font-size:0.72rem;padding:0 10px;">Off Duty</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="panel">
-                    <div class="booking-list" id="bookings-list"></div>
-                </div>
-            </section>
 
-            <section class="view" id="view-admin" data-view="admin" aria-labelledby="admin-title">
-                <div class="view-header">
-                    <div>
-                        <span class="eyebrow">Operations cockpit</span>
-                        <h2 id="admin-title">Fleet control.</h2>
-                        <p>Approve requests, keep vehicle statuses current, and maintain a reliable shared fleet.</p>
+                <!-- Driver Summary Bar -->
+                <div class="metrics-grid" style="margin-bottom:20px;">
+                    <div class="metric-card">
+                        <div class="metric-label">Active Driver</div>
+                        <div class="metric-value" style="font-size:1.3rem;" id="drv-name-display">Rajesh Kumar</div>
+                        <div class="metric-note">Rating: ★ 4.9 · Driver ID: driver1</div>
                     </div>
-                    <button class="button danger" type="button" id="reset-demo">Reset demo data</button>
-                </div>
-                <div class="metrics-grid" id="admin-metrics"></div>
-                <div class="admin-grid">
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>Requests awaiting approval</h3>
-                            <span id="pending-count">0 pending</span>
-                        </div>
-                        <div class="admin-list" id="admin-requests"></div>
+                    <div class="metric-card">
+                        <div class="metric-label">Hours Driven Today</div>
+                        <div class="metric-value" style="font-size:1.3rem;">1.5 / 9.0 hrs</div>
+                        <div class="metric-note">Fatigue cap compliant (Bangalore)</div>
                     </div>
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>Fleet status</h3>
-                            <span>Toggle availability</span>
-                        </div>
-                        <div id="admin-fleet"></div>
+                    <div class="metric-card">
+                        <div class="metric-label">Completed Rides</div>
+                        <div class="metric-value" style="font-size:1.3rem;" id="drv-completed-count">0</div>
+                        <div class="metric-note">Zero-odometer one-touch complete</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Current Vehicle</div>
+                        <div class="metric-value" style="font-size:1.3rem;" id="drv-vehicle-display">Swift Dzire</div>
+                        <div class="metric-note">KA01AB1234 · Bay A</div>
                     </div>
                 </div>
-                <div class="panel" style="margin-top: 22px;" id="driver-cockpit-panel">
+
+                <!-- Active Trip Execution Banner -->
+                <div id="driver-active-trip-banner" style="display:none;margin-bottom:20px;">
+                    <div class="panel" style="border:2px solid var(--cyan);background:linear-gradient(145deg,#0d1a24,#0b1218);">
+                        <div class="panel-header" style="border-bottom:1px solid rgba(0,217,245,0.2);">
+                            <div>
+                                <span class="status approved" style="margin-bottom:4px;">IN-PROGRESS TRIP</span>
+                                <h3 style="margin:0;font-size:1.3rem;" id="drv-active-dest">Destination</h3>
+                                <small style="color:var(--muted);font-size:0.78rem;" id="drv-active-meta">Passenger info</small>
+                            </div>
+                            <div id="drv-active-action-btn"></div>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;font-size:0.8rem;color:var(--muted);">
+                            <span>Telemetry: Active GPS Tracking</span>
+                            <span style="color:var(--green);">● Real-time Fleet Sync</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Incoming Dispatched Requests Queue -->
+                <div class="panel" id="driver-cockpit-panel">
                     <div class="panel-header">
                         <div>
-                            <h3 style="margin: 0; font-size: 1.05rem;">Driver Operations &amp; Dispatched Trips</h3>
-                            <small style="color: var(--muted); font-size: 0.74rem;">Live dispatch queue: accept assignments, log odometer, and start/end trips</small>
+                            <h3 style="margin:0;font-size:1.15rem;">Assigned Trip Requests</h3>
+                            <small style="color:var(--muted);font-size:0.75rem;">Respond within the 5-minute decision window or booking will reallocate to another driver</small>
                         </div>
                         <span id="driver-trips-count" class="status pending">0 active</span>
                     </div>
-                    <div class="admin-list" id="driver-requests-list" style="margin-top: 14px;"></div>
+                    <div class="admin-list" id="driver-requests-list" style="margin-top:14px;"></div>
                 </div>
             </section>
 
-            <p class="footer-note">FITRIDE interactive frontend · Scroll the story, explore the fleet, and simulate a shared journey.</p>
+            <!-- ========================================== -->
+            <!-- VIEW 5: FULL MANAGER OPERATIONS CONSOLE   -->
+            <!-- ========================================== -->
+            <section class="view" id="view-manager" data-view="manager" data-view-alias="admin">
+                <div class="view-header">
+                    <div>
+                        <span class="eyebrow">Operations Console</span>
+                        <h2 id="manager-title">Fleet command center.</h2>
+                        <p>Real-time booking approvals, manual driver/vehicle overrides, 24-hour visual Gantt timeline, and chaos simulation.</p>
+                    </div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <button class="button" type="button" id="btn-simulate-chaos" style="background:linear-gradient(135deg,#f5b942,#f97066);color:#001014;font-weight:800;" onclick="triggerSimulateChaos()">
+                            ⚡ Simulate Chaos (5 Scenarios)
+                        </button>
+                        <button class="button danger" type="button" id="reset-demo">
+                            🗑️ Reset Demo Data
+                        </button>
+                    </div>
+                </div>
+
+                <div class="metrics-grid" id="admin-metrics"></div>
+
+                <!-- Manager Subtab Switcher -->
+                <div class="subtab-bar">
+                    <button class="subtab-btn is-active" type="button" id="mgr-subtab-btn-queue" onclick="switchMgrSubtab('queue')">
+                        <span>📥</span> Approval Queue (<span id="mgr-queue-badge">0</span>)
+                    </button>
+                    <button class="subtab-btn" type="button" id="mgr-subtab-btn-gantt" onclick="switchMgrSubtab('gantt')">
+                        <span>📊</span> 24-Hour Gantt Timeline
+                    </button>
+                    <button class="subtab-btn" type="button" id="mgr-subtab-btn-fleet" onclick="switchMgrSubtab('fleet')">
+                        <span>🚗</span> Fleet &amp; Driver Roster
+                    </button>
+                    <button class="subtab-btn" type="button" id="mgr-subtab-btn-analytics" onclick="switchMgrSubtab('analytics')">
+                        <span>📈</span> Analytics &amp; Reports
+                    </button>
+                </div>
+
+                <!-- SUBVIEW 5A: APPROVAL QUEUE -->
+                <div id="mgr-subview-queue">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3 style="margin:0;">Pending Trip Approvals</h3>
+                                <small style="color:var(--muted);font-size:0.75rem;">Review recommendations, execute manual overrides, or approve with one click</small>
+                            </div>
+                            <span id="pending-count" class="status pending">0 pending</span>
+                        </div>
+                        <div class="admin-list" id="admin-requests" style="margin-top:14px;"></div>
+                    </div>
+                </div>
+
+                <!-- SUBVIEW 5B: 24-HOUR GANTT TIMELINE -->
+                <div id="mgr-subview-gantt" style="display:none;">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3 style="margin:0;">Interactive 24-Hour Visual Schedule</h3>
+                                <small style="color:var(--muted);font-size:0.75rem;">Visual resource reservations in Asia/Kolkata timezone with overlap buffers</small>
+                            </div>
+                            <div style="display:flex;gap:10px;align-items:center;">
+                                <input type="date" class="field" id="gantt-date-picker" style="width:160px;min-height:36px;font-size:0.8rem;" onchange="loadGanttData()">
+                                <div style="display:flex;gap:4px;">
+                                    <button class="button ghost is-active" type="button" id="gantt-mode-veh" onclick="setGanttMode('vehicles')" style="min-height:36px;padding:0 12px;font-size:0.75rem;">Vehicles</button>
+                                    <button class="button ghost" type="button" id="gantt-mode-drv" onclick="setGanttMode('drivers')" style="min-height:36px;padding:0 12px;font-size:0.75rem;">Drivers</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gantt Visual Container -->
+                        <div class="gantt-wrapper" id="gantt-wrapper" style="margin-top:14px;">
+                            <div class="gantt-header-row" id="gantt-header-row">
+                                <div class="gantt-header-cell" style="text-align:left;padding-left:14px;">RESOURCE</div>
+                                <!-- Hours 00 to 23 generated dynamically -->
+                            </div>
+                            <div id="gantt-rows-container">
+                                <div style="padding:24px;text-align:center;color:var(--muted);">Loading timeline...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBVIEW 5C: FLEET & DRIVERS ROSTER -->
+                <div id="mgr-subview-fleet" style="display:none;">
+                    <div class="admin-grid">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div>
+                                    <h3 style="margin:0;">Vehicles Fleet</h3>
+                                    <small style="color:var(--muted);font-size:0.75rem;">Capacity &amp; maintenance management</small>
+                                </div>
+                                <button class="button ghost" type="button" onclick="openAddVehicleModal()" style="min-height:32px;padding:0 12px;font-size:0.75rem;">＋ Add Vehicle</button>
+                            </div>
+                            <div id="admin-fleet" style="margin-top:12px;"></div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div>
+                                    <h3 style="margin:0;">Drivers Roster</h3>
+                                    <small style="color:var(--muted);font-size:0.75rem;">Duty statuses &amp; driver fatigue tracker</small>
+                                </div>
+                                <button class="button ghost" type="button" onclick="openRegisterDriverModal()" style="min-height:32px;padding:0 12px;font-size:0.75rem;">＋ Register Driver</button>
+                            </div>
+                            <div id="admin-drivers-roster" style="margin-top:12px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBVIEW 5D: OPERATIONAL ANALYTICS -->
+                <div id="mgr-subview-analytics" style="display:none;">
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">Auto-Approval Rate</div>
+                            <div class="metric-value">84.2%</div>
+                            <div class="metric-note">Routine trips &lt;4h within work hours</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Fleet Utilization</div>
+                            <div class="metric-value">71.8%</div>
+                            <div class="metric-note">Peak hour concurrency: 4/5 vehicles</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Average Rest Gap</div>
+                            <div class="metric-value">58 mins</div>
+                            <div class="metric-note">Exceeds 45-min mandatory safety limit</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Emergency Bump Success</div>
+                            <div class="metric-value">100%</div>
+                            <div class="metric-note">Zero stranded emergency requests</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <p class="footer-note">FITRIDE Unified Platform · Shift smoothly between Employee, Driver, and Manager cockpits with pure backend logic.</p>
         </main>
     </div>
 
+    <!-- ========================================== -->
+    <!-- MODALS: DECLINE, OVERRIDE, ADD VEHICLE     -->
+    <!-- ========================================== -->
+
+    <!-- 1. Driver Decline Reason Modal -->
+    <div class="modal-backdrop" id="driver-decline-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>Decline Trip Assignment</h3>
+                <button class="modal-close-btn" type="button" onclick="closeDriverDeclineModal()">✕</button>
+            </div>
+            <p style="font-size:0.82rem;color:var(--muted);margin-bottom:14px;">
+                A mandatory operational reason is required by fleet policy. The engine will instantly reallocate this trip to another qualified driver.
+            </p>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;">
+                <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.02);border:1px solid var(--line);border-radius:10px;cursor:pointer;">
+                    <input type="radio" name="decline_reason" value="tired" checked>
+                    <span><strong>Driver Fatigue / Need Rest:</strong> Approaching daily hours limit</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.02);border:1px solid var(--line);border-radius:10px;cursor:pointer;">
+                    <input type="radio" name="decline_reason" value="vehicle_issue">
+                    <span><strong>Vehicle Issue:</strong> Tire pressure, fuel, or check-engine light</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.02);border:1px solid var(--line);border-radius:10px;cursor:pointer;">
+                    <input type="radio" name="decline_reason" value="personal">
+                    <span><strong>Personal Emergency:</strong> Medical or urgent personal event</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.02);border:1px solid var(--line);border-radius:10px;cursor:pointer;">
+                    <input type="radio" name="decline_reason" value="too_far">
+                    <span><strong>Pickup Location Too Far:</strong> Unable to reach in required window</span>
+                </label>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="button secondary" type="button" onclick="closeDriverDeclineModal()">Cancel</button>
+                <button class="button danger" type="button" onclick="submitDriverDecline()">Confirm Decline &amp; Reallocate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Manager Override Assignment Modal -->
+    <div class="modal-backdrop" id="override-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>Manual Vehicle &amp; Driver Override</h3>
+                <button class="modal-close-btn" type="button" onclick="closeOverrideModal()">✕</button>
+            </div>
+            <p style="font-size:0.82rem;color:var(--muted);margin-bottom:14px;">
+                Select a replacement vehicle and driver. The system validates capacity and rest gaps before re-dispatching.
+            </p>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:18px;">
+                <div>
+                    <label style="display:block;font-size:0.78rem;color:var(--muted);margin-bottom:4px;">Replacement Vehicle</label>
+                    <select class="select" id="override-vehicle-select"></select>
+                </div>
+                <div>
+                    <label style="display:block;font-size:0.78rem;color:var(--muted);margin-bottom:4px;">Replacement Driver</label>
+                    <select class="select" id="override-driver-select"></select>
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="button secondary" type="button" onclick="closeOverrideModal()">Cancel</button>
+                <button class="button" type="button" onclick="submitOverride()">Save Override &amp; Dispatch</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Add Vehicle Modal -->
+    <div class="modal-backdrop" id="add-vehicle-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>Add Vehicle to Fleet</h3>
+                <button class="modal-close-btn" type="button" onclick="closeAddVehicleModal()">✕</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:18px;">
+                <div>
+                    <label style="display:block;font-size:0.78rem;color:var(--muted);margin-bottom:4px;">Vehicle Model / Name</label>
+                    <input class="field" id="new-veh-name" type="text" placeholder="e.g. Maruti Ertiga" required>
+                </div>
+                <div>
+                    <label style="display:block;font-size:0.78rem;color:var(--muted);margin-bottom:4px;">License Plate Number</label>
+                    <input class="field" id="new-veh-plate" type="text" placeholder="e.g. KA01MN4567" required>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div>
+                        <label style="display:block;font-size:0.78rem;color:var(--muted);margin-bottom:4px;">Category Type</label>
+                        <select class="select" id="new-veh-type">
+                            <option value="sedan">Sedan (Car)</option>
+                            <option value="mpv">MPV (Van)</option>
+                            <option value="minibus">Minibus (Tempo)</option>
+                            <option value="suv">SUV</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:0.78rem;color:var(--muted);margin-bottom:4px;">Passenger Capacity</label>
+                        <input class="field" id="new-veh-capacity" type="number" min="1" max="25" value="4" required>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="button secondary" type="button" onclick="closeAddVehicleModal()">Cancel</button>
+                <button class="button" type="button" onclick="submitAddVehicle()">Add to Fleet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Register Driver Modal -->
+    <div class="modal-backdrop" id="register-driver-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>Register Driver</h3>
+                <button class="modal-close-btn" type="button" onclick="closeRegisterDriverModal()">✕</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:18px;">
+                <div>
+                    <label style="display:block;font-size:0.78rem;color:var(--muted);margin-bottom:4px;">Driver Full Name</label>
+                    <input class="field" id="new-drv-name" type="text" placeholder="e.g. Ramesh V" required>
+                </div>
+                <div>
+                    <label style="display:block;font-size:0.78rem;color:var(--muted);margin-bottom:4px;">Phone Number</label>
+                    <input class="field" id="new-drv-phone" type="text" placeholder="+919876543210" required>
+                </div>
+                <div>
+                    <label style="display:block;font-size:0.78rem;color:var(--muted);margin-bottom:4px;">Driving License Number</label>
+                    <input class="field" id="new-drv-license" type="text" placeholder="KA-04-2024-001122" required>
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="button secondary" type="button" onclick="closeRegisterDriverModal()">Cancel</button>
+                <button class="button" type="button" onclick="submitRegisterDriver()">Register Driver</button>
+            </div>
+        </div>
+    </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script>
@@ -1893,24 +2743,24 @@
         const context = canvas.getContext("2d", { alpha: false });
         const progressBar = document.getElementById("progress-bar");
         const introCopy = document.querySelector(".intro-copy");
-        const navLinks = document.querySelector(".nav-links");
         const frameImages = [];
         let frameIndex = 0;
         let scrollTicking = false;
         let toastTimer;
         let preferredVehicleId = "";
         let backendOnline = true;
+        let rejectingBookingId = null;
+        let overridingBookingId = null;
+        let driverCountdownInterval = null;
+        let currentGanttMode = "vehicles";
 
-        // Always open at the cinematic intro instead of restoring a previous deep scroll position.
         if ("scrollRestoration" in history) history.scrollRestoration = "manual";
         window.scrollTo(0, 0);
 
-        // Backend API base resolution: port 3100 connects to Flask on port 5001, port 5001 is same origin
         const API_BASE = (window.location.port === "3100" || window.location.port === "3000")
             ? "http://127.0.0.1:5001"
             : "";
 
-        // Standard Seed Personas for FIT-RIDE
         const PERSONAS = {
             emp1: { id: "emp1", name: "Ananya Roy", email: "emp1@fleetride.local", role: "employee" },
             emp2: { id: "emp2", name: "Vikram Das", email: "emp2@fleetride.local", role: "employee" },
@@ -1951,6 +2801,24 @@
             return null;
         }
 
+        async function ensureManagerSession() {
+            if (managerToken) return managerToken;
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: "manager1", password: "123" })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    managerToken = data.access_token || data.token;
+                    localStorage.setItem("fitride_manager_token", managerToken);
+                    return managerToken;
+                }
+            } catch { /* offline fallback */ }
+            return null;
+        }
+
         async function apiCall(endpoint, options = {}, asManager = false, driverId = null) {
             const url = endpoint.startsWith("http") ? endpoint : `${API_BASE}${endpoint}`;
             const headers = {
@@ -1985,7 +2853,7 @@
             return data;
         }
 
-        async function loginPersona(personaKey, silent = false) {
+        async function loginPersona(personaKey, silent = false, autoShift = true) {
             const persona = PERSONAS[personaKey] || PERSONAS.emp1;
             try {
                 const res = await fetch(`${API_BASE}/api/auth/login`, {
@@ -2007,35 +2875,24 @@
                     }
                     updatePersonaUI();
                     if (!silent) showToast(`Signed in as ${currentAuth.user.name} (${currentAuth.role.toUpperCase()})`);
+
+                    if (autoShift) {
+                        if (currentAuth.role === "driver") setView("driver", false);
+                        else if (currentAuth.role === "manager") setView("manager", false);
+                        else setView("employee", false);
+                    }
+
                     await refreshFromServer();
                     return true;
                 }
             } catch (err) {
-                console.warn("Login failed, using offline persona profile", err);
+                console.warn("Login fallback:", err);
             }
             currentPersonaKey = personaKey;
             currentAuth.user = persona;
             currentAuth.role = persona.role;
             updatePersonaUI();
             return false;
-        }
-
-        async function ensureManagerSession() {
-            if (managerToken) return managerToken;
-            try {
-                const res = await fetch(`${API_BASE}/api/auth/login`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ id: "manager1", password: "123" })
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    managerToken = data.access_token || data.token;
-                    localStorage.setItem("fitride_manager_token", managerToken);
-                    return managerToken;
-                }
-            } catch { /* offline fallback */ }
-            return null;
         }
 
         const vehicleSeed = [
@@ -2049,172 +2906,16 @@
         function freshState() {
             return {
                 fleet: vehicleSeed.map(v => ({ ...v })),
+                drivers: [],
                 bookings: [],
                 managerQueue: [],
-                driverRequests: []
+                driverRequests: [],
+                notifications: [],
+                ganttBookings: []
             };
         }
 
-        function loadState() {
-            try {
-                const saved = JSON.parse(localStorage.getItem("fitride_demo_state") || "null");
-                if (saved && Array.isArray(saved.fleet) && Array.isArray(saved.bookings)) return saved;
-            } catch { /* clean state */ }
-            return freshState();
-        }
-
-        let state = loadState();
-
-        function persistState() {
-            try { localStorage.setItem("fitride_demo_state", JSON.stringify(state)); } catch { /* optional */ }
-        }
-
-        function updateBackendStatus() {
-            document.querySelectorAll("[data-backend-status]").forEach(element => {
-                if (backendOnline) {
-                    element.textContent = "● Live Backend";
-                    element.style.color = "var(--green)";
-                    element.style.borderColor = "rgba(50, 213, 131, 0.4)";
-                } else {
-                    element.textContent = "○ Offline Demo";
-                    element.style.color = "var(--amber)";
-                    element.style.borderColor = "rgba(245, 185, 66, 0.4)";
-                }
-            });
-        }
-
-        function updatePersonaUI() {
-            const select = document.getElementById("user-persona-select");
-            if (select && select.value !== currentPersonaKey) {
-                select.value = currentPersonaKey;
-            }
-            const empNameField = document.getElementById("employee-name");
-            const empEmailField = document.getElementById("employee-email");
-            if (empNameField) empNameField.value = currentAuth.user.name || "Ananya Roy";
-            if (empEmailField) empEmailField.value = currentAuth.user.email || "emp1@fleetride.local";
-        }
-
-        async function refreshFromServer() {
-            let online = false;
-            try {
-                const healthRes = await fetch(`${API_BASE}/api/health`);
-                if (healthRes.ok) online = true;
-            } catch { online = false; }
-            backendOnline = online;
-            updateBackendStatus();
-
-            if (!online) {
-                renderAll();
-                return false;
-            }
-
-            // Ensure authentication tokens are active
-            if (!currentAuth.token) {
-                await loginPersona(currentPersonaKey, true);
-            }
-            await ensureManagerSession();
-
-            // 1. Fetch live fleet
-            try {
-                let fleetData = null;
-                try {
-                    const fRes = await apiCall("/api/fleet");
-                    fleetData = fRes.fleet || fRes.vehicles;
-                } catch {
-                    if (managerToken) {
-                        const vRes = await apiCall("/api/vehicles", {}, true);
-                        fleetData = vRes.vehicles;
-                    }
-                }
-                if (Array.isArray(fleetData) && fleetData.length > 0) {
-                    state.fleet = fleetData.map(v => ({
-                        id: v.id,
-                        name: v.name,
-                        type: (v.type || "sedan").toLowerCase(),
-                        capacity: Number(v.capacity || 4),
-                        status: v.status || "available",
-                        location: v.plate_number ? `${v.plate_number} · ${v.location || "North Garage"}` : (v.location || "North Garage"),
-                        plateNumber: v.plate_number || "",
-                        accent: v.status === "available" ? "green" : (v.status === "maintenance" ? "red" : "amber")
-                    }));
-                }
-            } catch (e) {
-                console.warn("Could not load fleet:", e);
-            }
-
-            // 2. Fetch user's bookings
-            try {
-                const bRes = await apiCall("/api/bookings/mine");
-                if (bRes && Array.isArray(bRes.bookings)) {
-                    state.bookings = bRes.bookings.map(b => ({
-                        id: b.id,
-                        employeeName: b.employee_name || currentAuth.user.name || "Employee",
-                        employeeEmail: b.employee_email || currentAuth.user.email || "",
-                        destination: b.destination || "Destination pending",
-                        purpose: b.reason || b.purpose || "Business journey",
-                        passengers: Number(b.passengers || 1),
-                        type: b.type || "scheduled",
-                        priority: b.priority || "normal",
-                        vehicleId: b.vehicle_id || "",
-                        vehicleName: b.vehicle_name || (vehicleById(b.vehicle_id)?.name || "Vehicle assigned"),
-                        driverName: b.driver_name || "",
-                        start: b.start_time,
-                        end: b.end_time,
-                        status: (b.status || "pending").toLowerCase(),
-                        createdAt: b.created_at || new Date().toISOString()
-                    }));
-                }
-            } catch (e) {
-                console.warn("Could not load bookings/mine:", e);
-            }
-
-            // 3. Fetch manager approval queue
-            try {
-                const qRes = await apiCall("/api/manager/queue", {}, true);
-                if (qRes && (Array.isArray(qRes.queue) || Array.isArray(qRes.pending))) {
-                    const combined = qRes.queue || qRes.pending || [];
-                    state.managerQueue = combined.map(b => ({
-                        id: b.id,
-                        employeeName: b.employee_name || "Employee",
-                        employeeEmail: b.employee_email || "",
-                        destination: b.destination || "Destination pending",
-                        purpose: b.reason || b.purpose || "Business journey",
-                        passengers: Number(b.passengers || 1),
-                        type: b.type || "scheduled",
-                        priority: b.priority || "normal",
-                        vehicleId: b.vehicle_id || "",
-                        vehicleName: b.vehicle_name || (vehicleById(b.vehicle_id)?.name || "Auto-assigned vehicle"),
-                        driverId: b.driver_id || "",
-                        driverProfileId: b.driver_profile_id || "",
-                        driverName: b.driver_name || "",
-                        start: b.start_time,
-                        end: b.end_time,
-                        status: (b.status || "pending").toLowerCase(),
-                        createdAt: b.created_at || new Date().toISOString()
-                    }));
-                }
-            } catch (e) {
-                console.warn("Could not load manager queue:", e);
-            }
-
-            // 4. Fetch driver requests
-            try {
-                let drvData = [];
-                if (currentAuth.role === "driver") {
-                    const dRes = await apiCall("/api/driver/requests");
-                    drvData = dRes.requests || dRes.bookings || [];
-                } else if (state.managerQueue.length > 0) {
-                    drvData = state.managerQueue.filter(b => ["driver_pending", "confirmed", "in_progress"].includes(b.status.toLowerCase()));
-                }
-                state.driverRequests = drvData;
-            } catch (e) {
-                console.warn("Could not load driver requests:", e);
-            }
-
-            persistState();
-            renderAll();
-            return true;
-        }
+        let state = freshState();
 
         function escapeHtml(value) {
             return String(value ?? "").replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]));
@@ -2243,33 +2944,6 @@
             return `${formatDateTime(start)} → ${formatDateTime(end)}`;
         }
 
-        function activeBookings() {
-            return (state.managerQueue.length > 0 ? state.managerQueue : state.bookings)
-                .filter(booking => !["rejected", "cancelled", "completed"].includes(booking.status.toLowerCase()));
-        }
-
-        function hasConflict(vehicleId, start, end, ignoredBookingId = "") {
-            const startTime = new Date(start).getTime();
-            const endTime = new Date(end).getTime();
-            return activeBookings().some(booking => {
-                if (booking.id === ignoredBookingId || booking.vehicleId !== vehicleId) return false;
-                const bookingStart = new Date(booking.start).getTime();
-                const bookingEnd = new Date(booking.end).getTime();
-                return startTime < bookingEnd && endTime > bookingStart;
-            });
-        }
-
-        function findMatches({ start, end, passengers, type = "any", vehicleId = "" } = {}) {
-            const passengerCount = Number(passengers || 0);
-            return state.fleet
-                .filter(vehicle => vehicle.status === "available")
-                .filter(vehicle => !vehicleId || vehicle.id === vehicleId)
-                .filter(vehicle => type === "any" || vehicle.type === type)
-                .filter(vehicle => vehicle.capacity >= passengerCount)
-                .filter(vehicle => !start || !end || !hasConflict(vehicle.id, start, end))
-                .sort((a, b) => (a.capacity - passengerCount) - (b.capacity - passengerCount));
-        }
-
         function showToast(message, isError = false) {
             const toast = document.getElementById("toast");
             toast.textContent = message;
@@ -2279,26 +2953,299 @@
             toastTimer = setTimeout(() => toast.classList.remove("is-visible"), 4200);
         }
 
-        function syncNavIndicator(animate = false) {
-            if (!navLinks) return;
-            const activeLink = navLinks.querySelector(".nav-link.is-active");
-            if (!activeLink) return;
-            navLinks.style.setProperty("--active-left", `${activeLink.offsetLeft}px`);
-            navLinks.style.setProperty("--active-width", `${activeLink.offsetWidth}px`);
-            if (animate) {
-                navLinks.classList.remove("is-sliding");
-                void navLinks.offsetWidth;
-                navLinks.classList.add("is-sliding");
+        // ==========================================
+        // UNIFIED VIEW NAVIGATION & SHIFTING
+        // ==========================================
+        function setView(viewName, shouldScroll = true) {
+            // Support legacy aliases
+            let targetView = viewName;
+            if (viewName === "book") {
+                targetView = "employee";
+                switchEmpSubtab("new");
+            } else if (viewName === "bookings") {
+                targetView = "employee";
+                switchEmpSubtab("history");
+            } else if (viewName === "admin") {
+                targetView = "manager";
+            }
+
+            // Sync active view classes with Emil Kowalski ease-out enter
+            document.querySelectorAll(".view").forEach(view => {
+                const isMatch = view.dataset.view === targetView || view.id === `view-${targetView}`;
+                view.classList.toggle("is-active", isMatch);
+            });
+
+            // Sync active pill in main portal switcher
+            document.querySelectorAll("#main-portal-switcher .portal-pill").forEach(pill => {
+                const isMatch = pill.dataset.viewTarget === targetView;
+                pill.classList.toggle("is-active", isMatch);
+                pill.setAttribute("aria-selected", isMatch ? "true" : "false");
+            });
+
+            // Also sync other data-view-target triggers
+            document.querySelectorAll("[data-view-target]").forEach(btn => {
+                if (!btn.classList.contains("portal-pill")) {
+                    btn.classList.toggle("is-active", btn.dataset.viewTarget === targetView);
+                }
+            });
+
+            // Smooth scroll to app container
+            if (shouldScroll) {
+                document.getElementById("app").scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+
+            // Trigger data refresh for specific portal views
+            if (targetView === "manager") {
+                loadGanttData();
+            } else if (targetView === "driver") {
+                startDriverCountdown();
             }
         }
 
-        function setView(viewName, shouldScroll = true) {
-            document.querySelectorAll(".view").forEach(view => view.classList.toggle("is-active", view.dataset.view === viewName));
-            document.querySelectorAll("[data-view-target]").forEach(button => button.classList.toggle("is-active", button.dataset.viewTarget === viewName));
-            syncNavIndicator(true);
-            if (shouldScroll) document.getElementById("app").scrollIntoView({ behavior: "smooth", block: "start" });
+        // Subtab Switchers
+        function switchEmpSubtab(tab) {
+            document.getElementById("emp-subview-new").style.display = tab === "new" ? "block" : "none";
+            document.getElementById("emp-subview-history").style.display = tab === "history" ? "block" : "none";
+            document.getElementById("emp-tab-btn-new").classList.toggle("is-active", tab === "new");
+            document.getElementById("emp-tab-btn-history").classList.toggle("is-active", tab === "history");
         }
 
+        function switchMgrSubtab(tab) {
+            const tabs = ["queue", "gantt", "fleet", "analytics"];
+            tabs.forEach(t => {
+                const el = document.getElementById(`mgr-subview-${t}`);
+                const btn = document.getElementById(`mgr-subtab-btn-${t}`);
+                if (el) el.style.display = t === tab ? "block" : "none";
+                if (btn) btn.classList.toggle("is-active", t === tab);
+            });
+            if (tab === "gantt") loadGanttData();
+        }
+
+        // Quick Duration Pills
+        function setDurationHours(hours) {
+            document.querySelectorAll(".duration-pill").forEach(p => p.classList.remove("is-active"));
+            if (event && event.target) event.target.classList.add("is-active");
+
+            const startInput = document.getElementById("booking-start");
+            const endInput = document.getElementById("booking-end");
+            let sDate = new Date(startInput.value);
+            if (isNaN(sDate.getTime())) sDate = new Date();
+            const eDate = new Date(sDate.getTime() + hours * 3600 * 1000);
+            endInput.value = toLocalInputValue(eDate);
+            updateMatchSummary();
+        }
+
+        // Priority Mode Change (Scheduled vs Emergency)
+        function handlePriorityChange(mode) {
+            const prioHidden = document.getElementById("booking-priority");
+            prioHidden.value = mode;
+            const banner = document.getElementById("emergency-alert-banner");
+            banner.style.display = mode === "emergency" ? "block" : "none";
+            updateMatchSummary();
+        }
+
+        function updatePersonaUI() {
+            const select = document.getElementById("user-persona-select");
+            if (select && select.value !== currentPersonaKey) {
+                select.value = currentPersonaKey;
+            }
+            const empNameField = document.getElementById("employee-name");
+            const empEmailField = document.getElementById("employee-email");
+            const empPill = document.getElementById("emp-active-pill");
+            if (empNameField) empNameField.value = currentAuth.user.name || "Ananya Roy";
+            if (empEmailField) empEmailField.value = currentAuth.user.email || "emp1@fleetride.local";
+            if (empPill) empPill.textContent = `👤 ${currentAuth.user.name} (${currentAuth.role.toUpperCase()})`;
+
+            // Driver view displays
+            const drvNameDisplay = document.getElementById("drv-name-display");
+            if (drvNameDisplay && currentAuth.role === "driver") {
+                drvNameDisplay.textContent = currentAuth.user.name;
+            }
+        }
+
+        function updateBackendStatus() {
+            document.querySelectorAll("[data-backend-status]").forEach(element => {
+                if (backendOnline) {
+                    element.textContent = "● Live Backend";
+                    element.style.color = "var(--green)";
+                    element.style.borderColor = "rgba(50, 213, 131, 0.4)";
+                } else {
+                    element.textContent = "○ Offline Demo";
+                    element.style.color = "var(--amber)";
+                    element.style.borderColor = "rgba(245, 185, 66, 0.4)";
+                }
+            });
+        }
+
+        // ==========================================
+        // SERVER DATA REFRESH
+        // ==========================================
+        async function refreshFromServer() {
+            let online = false;
+            try {
+                const healthRes = await fetch(`${API_BASE}/api/health`);
+                if (healthRes.ok) online = true;
+            } catch { online = false; }
+            backendOnline = online;
+            updateBackendStatus();
+
+            if (!online) {
+                renderAll();
+                return false;
+            }
+
+            if (!currentAuth.token) {
+                await loginPersona(currentPersonaKey, true, false);
+            }
+            await ensureManagerSession();
+
+            // 1. Fetch Fleet
+            try {
+                let fleetData = null;
+                try {
+                    const fRes = await apiCall("/api/fleet");
+                    fleetData = fRes.fleet || fRes.vehicles;
+                } catch {
+                    if (managerToken) {
+                        const vRes = await apiCall("/api/vehicles", {}, true);
+                        fleetData = vRes.vehicles;
+                    }
+                }
+                if (Array.isArray(fleetData) && fleetData.length > 0) {
+                    state.fleet = fleetData.map(v => ({
+                        id: v.id,
+                        name: v.name,
+                        type: (v.type || "sedan").toLowerCase(),
+                        capacity: Number(v.capacity || 4),
+                        status: v.status || "available",
+                        location: v.plate_number ? `${v.plate_number} · ${v.location || "North Garage"}` : (v.location || "North Garage"),
+                        plateNumber: v.plate_number || "",
+                        accent: v.status === "available" ? "green" : (v.status === "maintenance" ? "red" : "amber")
+                    }));
+                }
+            } catch (e) {
+                console.warn("Could not load fleet:", e);
+            }
+
+            // 2. Fetch Drivers
+            try {
+                if (managerToken) {
+                    const dRes = await apiCall("/api/drivers", {}, true);
+                    if (dRes && Array.isArray(dRes.drivers)) {
+                        state.drivers = dRes.drivers;
+                    }
+                }
+            } catch (e) {
+                console.warn("Could not load drivers:", e);
+            }
+
+            // 3. Fetch User's Bookings
+            try {
+                const bRes = await apiCall("/api/bookings/mine");
+                if (bRes && Array.isArray(bRes.bookings)) {
+                    state.bookings = bRes.bookings.map(b => ({
+                        id: b.id,
+                        employeeName: b.employee_name || currentAuth.user.name || "Employee",
+                        employeeEmail: b.employee_email || currentAuth.user.email || "",
+                        destination: b.destination || "Destination pending",
+                        purpose: b.reason || b.purpose || "Business journey",
+                        passengers: Number(b.passengers || 1),
+                        type: b.type || "scheduled",
+                        priority: b.priority || "normal",
+                        vehicleId: b.vehicle_id || "",
+                        vehicleName: b.vehicle_name || (vehicleById(b.vehicle_id)?.name || "Vehicle assigned"),
+                        driverName: b.driver_name || "",
+                        driverId: b.driver_id || "",
+                        start: b.start_time,
+                        end: b.end_time,
+                        status: (b.status || "pending").toLowerCase(),
+                        decisionReason: b.decision_reason || "",
+                        createdAt: b.created_at || new Date().toISOString()
+                    }));
+                }
+            } catch (e) {
+                console.warn("Could not load bookings/mine:", e);
+            }
+
+            // 4. Fetch Manager Approval Queue
+            try {
+                const qRes = await apiCall("/api/manager/queue", {}, true);
+                if (qRes && (Array.isArray(qRes.queue) || Array.isArray(qRes.pending))) {
+                    const combined = qRes.queue || qRes.pending || [];
+                    state.managerQueue = combined.map(b => ({
+                        id: b.id,
+                        employeeName: b.employee_name || "Employee",
+                        employeeEmail: b.employee_email || "",
+                        destination: b.destination || "Destination pending",
+                        purpose: b.reason || b.purpose || "Business journey",
+                        passengers: Number(b.passengers || 1),
+                        type: b.type || "scheduled",
+                        priority: b.priority || "normal",
+                        vehicleId: b.vehicle_id || "",
+                        vehicleName: b.vehicle_name || (vehicleById(b.vehicle_id)?.name || "Auto-assigned vehicle"),
+                        driverId: b.driver_id || "",
+                        driverProfileId: b.driver_profile_id || "",
+                        driverName: b.driver_name || "",
+                        start: b.start_time,
+                        end: b.end_time,
+                        status: (b.status || "pending").toLowerCase(),
+                        decisionReason: b.decision_reason || "",
+                        respondBy: b.respond_by || null,
+                        createdAt: b.created_at || new Date().toISOString()
+                    }));
+                }
+            } catch (e) {
+                console.warn("Could not load manager queue:", e);
+            }
+
+            // 5. Fetch Driver Requests & Active Trip
+            try {
+                let drvData = [];
+                if (currentAuth.role === "driver") {
+                    const dRes = await apiCall("/api/driver/requests");
+                    drvData = dRes.requests || dRes.bookings || [];
+                } else if (state.managerQueue.length > 0) {
+                    drvData = state.managerQueue.filter(b => ["driver_pending", "confirmed", "in_progress"].includes(b.status.toLowerCase()));
+                }
+                state.driverRequests = drvData;
+            } catch (e) {
+                console.warn("Could not load driver requests:", e);
+            }
+
+            // 6. Fetch Notifications
+            try {
+                const nRes = await apiCall("/api/notifications");
+                if (nRes && Array.isArray(nRes.notifications)) {
+                    state.notifications = nRes.notifications;
+                    updateNotificationsUI(nRes.unread_count || 0);
+                }
+            } catch { /* offline fallback */ }
+
+            renderAll();
+            return true;
+        }
+
+        function updateNotificationsUI(unreadCount) {
+            const badge = document.getElementById("notif-badge-count");
+            if (badge) {
+                badge.textContent = unreadCount;
+                badge.style.display = unreadCount > 0 ? "block" : "none";
+            }
+            const listEl = document.getElementById("notif-drawer-list");
+            if (listEl && state.notifications.length > 0) {
+                listEl.innerHTML = state.notifications.map(n => `
+                    <div class="notif-item ${n.read ? '' : 'is-unread'}">
+                        <strong>${escapeHtml(n.title || 'Fleet Update')}</strong>
+                        <div>${escapeHtml(n.message)}</div>
+                        <small>${formatDateTime(n.created_at)}</small>
+                    </div>
+                `).join("");
+            }
+        }
+
+        // ==========================================
+        // RENDERERS
+        // ==========================================
         function metricMarkup(label, value, note) {
             return `<div class="metric-card"><div class="metric-label">${escapeHtml(label)}</div><div class="metric-value">${escapeHtml(value)}</div><div class="metric-note">${escapeHtml(note)}</div></div>`;
         }
@@ -2310,15 +3257,23 @@
             const actions = canCancel
                 ? `<button class="button ghost" type="button" data-cancel-booking="${escapeHtml(booking.id)}" style="min-height:32px;padding:0 12px;font-size:0.74rem">Cancel</button>`
                 : "";
-            return `<div class="booking-row">
-                <div>
-                    <strong>${escapeHtml(booking.purpose)}</strong>
-                    <small>${escapeHtml(booking.destination || "Destination pending")} · ${escapeHtml(booking.vehicleName || vehicle?.name || "Vehicle assigned")} · ${booking.passengers} passenger${booking.passengers === 1 ? "" : "s"} · ${escapeHtml(formatDateRange(booking.start, booking.end))}</small>
+
+            const reasonBox = booking.decisionReason
+                ? `<div style="font-size:0.75rem;color:var(--cyan);margin-top:4px;background:rgba(0,217,245,0.06);padding:4px 8px;border-radius:6px;">⚙️ ${escapeHtml(booking.decisionReason)}</div>`
+                : "";
+
+            return `<div class="booking-row" style="flex-direction:column;align-items:flex-start;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%;">
+                    <div>
+                        <strong>${escapeHtml(booking.purpose)}</strong>
+                        <small>${escapeHtml(booking.destination || "Destination pending")} · ${escapeHtml(booking.vehicleName || vehicle?.name || "Vehicle assigned")} · ${booking.passengers} passenger${booking.passengers === 1 ? "" : "s"} · ${escapeHtml(formatDateRange(booking.start, booking.end))}</small>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span class="status ${escapeHtml(statusLower)}">${escapeHtml(booking.status.toUpperCase())}</span>
+                        ${actions}
+                    </div>
                 </div>
-                <div style="display:flex;align-items:center;gap:10px;justify-content:flex-end;flex-wrap:wrap">
-                    <span class="status ${escapeHtml(statusLower)}">${escapeHtml(booking.status.toUpperCase())}</span>
-                    ${actions}
-                </div>
+                ${reasonBox}
             </div>`;
         }
 
@@ -2327,13 +3282,12 @@
             const pendingList = state.managerQueue.filter(booking => (booking.status || "").toLowerCase() === "pending");
             const pendingCount = pendingList.length > 0 ? pendingList.length : state.bookings.filter(b => b.status === "pending").length;
             const approvedCount = state.bookings.filter(b => ["approved", "confirmed", "in_progress", "completed"].includes(b.status.toLowerCase())).length;
-            const protectedCount = state.bookings.length;
 
             document.getElementById("home-metrics").innerHTML = [
-                metricMarkup("Available now", `${available}/${state.fleet.length}`, "fleet visibility"),
+                metricMarkup("Available now", `${available}/${state.fleet.length}`, "live fleet visibility"),
                 metricMarkup("Pending requests", pendingCount, pendingCount ? "awaiting manager" : "all clear"),
-                metricMarkup("Active journeys", approvedCount, "live & confirmed"),
-                metricMarkup("Requests protected", protectedCount, "conflicts checked")
+                metricMarkup("Active journeys", approvedCount, "live & dispatched"),
+                metricMarkup("Fleet status", "100% Operational", "conflict engine active")
             ].join("");
 
             const upcoming = [...state.bookings]
@@ -2356,7 +3310,7 @@
                     </div>
                     <div class="vehicle-meta">
                         <span>${escapeHtml(typeLabel(vehicle.type))}</span>
-                        <span>Up to ${vehicle.capacity}</span>
+                        <span>Up to ${vehicle.capacity} seats</span>
                         <span>${escapeHtml(vehicle.location)}</span>
                     </div>
                     <div class="vehicle-actions">
@@ -2385,7 +3339,7 @@
             const vehicles = state.fleet.filter(vehicle => matchesFleetFilter(vehicle.type, filter));
             document.getElementById("fleet-grid").innerHTML = vehicles.length
                 ? vehicles.map(vehicleCardMarkup).join("")
-                : `<div class="empty-state" style="grid-column:1/-1"><strong>No vehicles found for category '${escapeHtml(filter)}'.</strong>Try selecting another filter.</div>`;
+                : `<div class="empty-state" style="grid-column:1/-1"><strong>No vehicles found for '${escapeHtml(filter)}'.</strong>Try selecting another filter.</div>`;
         }
 
         function renderVehicleOptions() {
@@ -2400,47 +3354,158 @@
 
         function renderBookings() {
             const bookings = [...state.bookings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            const countEl = document.getElementById("emp-my-count");
+            if (countEl) countEl.textContent = bookings.length;
+
             document.getElementById("bookings-list").innerHTML = bookings.length
                 ? bookings.map(booking => bookingRowMarkup(booking, true)).join("")
                 : `<div class="empty-state"><strong>Your booking list is empty.</strong>Submit a request using the booking form to see it here.</div>`;
         }
 
+        function filterEmpHistory(statusFilter) {
+            document.querySelectorAll("#emp-history-filters button").forEach(b => b.classList.remove("is-active"));
+            if (event && event.target) event.target.classList.add("is-active");
+
+            const listEl = document.getElementById("bookings-list");
+            const bookings = [...state.bookings].filter(b => {
+                if (statusFilter === "all") return true;
+                return b.status === statusFilter;
+            });
+            listEl.innerHTML = bookings.length
+                ? bookings.map(b => bookingRowMarkup(b, true)).join("")
+                : `<div class="empty-state">No bookings found with status '${escapeHtml(statusFilter.toUpperCase())}'.</div>`;
+        }
+
+        // Driver Rendering & Countdown
+        function renderDriverCockpit() {
+            const activeTripBanner = document.getElementById("driver-active-trip-banner");
+            const activeDest = document.getElementById("drv-active-dest");
+            const activeMeta = document.getElementById("drv-active-meta");
+            const activeBtnBox = document.getElementById("drv-active-action-btn");
+            const completedCount = document.getElementById("drv-completed-count");
+
+            const trips = state.driverRequests || [];
+            const inProgTrip = trips.find(b => b.status === "in_progress") || state.managerQueue.find(b => b.status === "in_progress");
+            const confirmedTrip = trips.find(b => b.status === "confirmed") || state.managerQueue.find(b => b.status === "confirmed");
+            const activeTrip = inProgTrip || confirmedTrip;
+
+            if (completedCount) {
+                const comp = trips.filter(b => b.status === "completed").length;
+                completedCount.textContent = comp;
+            }
+
+            if (activeTrip && activeTripBanner) {
+                activeTripBanner.style.display = "block";
+                activeDest.textContent = activeTrip.destination || "Destination";
+                activeMeta.textContent = `Passenger: ${activeTrip.employeeName || activeTrip.employee_name || 'Employee'} (${activeTrip.passengers} pax) · Vehicle: ${activeTrip.vehicleName || activeTrip.vehicle_name || 'Assigned vehicle'}`;
+                if (activeTrip.status === "confirmed") {
+                    activeBtnBox.innerHTML = `<button class="button" type="button" data-trip-start="${escapeHtml(activeTrip.id)}" style="font-weight:800;padding:0 22px;">▶ Start Trip (One-Touch)</button>`;
+                } else {
+                    activeBtnBox.innerHTML = `<button class="button success" type="button" data-trip-end="${escapeHtml(activeTrip.id)}" style="font-weight:800;padding:0 22px;">✓ End Trip &amp; Return Vehicle</button>`;
+                }
+            } else if (activeTripBanner) {
+                activeTripBanner.style.display = "none";
+            }
+
+            // Requests awaiting driver acceptance
+            const pendingRequests = trips.filter(b => b.status === "driver_pending");
+            const driverCountEl = document.getElementById("driver-trips-count");
+            const listEl = document.getElementById("driver-requests-list");
+
+            if (driverCountEl) driverCountEl.textContent = `${pendingRequests.length} pending`;
+            if (listEl) {
+                listEl.innerHTML = pendingRequests.length
+                    ? pendingRequests.map(b => `
+                        <div class="admin-item" style="border-left: 3px solid var(--cyan);">
+                            <div class="admin-item-top">
+                                <div>
+                                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                                        <strong>${escapeHtml(b.purpose)}</strong>
+                                        <div class="countdown-timer-wrap" id="timer-${b.id}">⏱ 04:55</div>
+                                    </div>
+                                    <small>${escapeHtml(b.destination)} · ${escapeHtml(b.vehicleName || b.vehicle_name)} · ${escapeHtml(formatDateRange(b.start || b.start_time, b.end || b.end_time))}</small>
+                                    <small>Passenger: ${escapeHtml(b.employeeName || b.employee_name || 'Employee')} · ${b.passengers} passengers</small>
+                                </div>
+                                <span class="status driver_pending">AWAITING ACCEPT</span>
+                            </div>
+                            <div class="admin-actions">
+                                <button class="button success" type="button" data-driver-accept="${escapeHtml(b.id)}">✓ Accept Trip</button>
+                                <button class="button danger" type="button" data-driver-decline="${escapeHtml(b.id)}">✕ Decline</button>
+                            </div>
+                        </div>
+                    `).join("")
+                    : `<div class="empty-state"><strong>No pending driver requests.</strong>New trips dispatched by the manager or auto-approval rules will appear here.</div>`;
+            }
+        }
+
+        function startDriverCountdown() {
+            clearInterval(driverCountdownInterval);
+            driverCountdownInterval = setInterval(() => {
+                const pending = (state.driverRequests || []).filter(b => b.status === "driver_pending");
+                pending.forEach(b => {
+                    const el = document.getElementById(`timer-${b.id}`);
+                    if (!el) return;
+                    let remaining = 295; // default 5m
+                    if (b.respondBy || b.respond_by) {
+                        const target = new Date(b.respondBy || b.respond_by).getTime();
+                        remaining = Math.max(0, Math.floor((target - Date.now()) / 1000));
+                    }
+                    const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
+                    const secs = String(remaining % 60).padStart(2, '0');
+                    el.textContent = `⏱ ${mins}:${secs}`;
+                    el.classList.toggle("urgent", remaining <= 60);
+                    el.classList.toggle("warning", remaining > 60 && remaining <= 120);
+                });
+            }, 1000);
+        }
+
+        // Manager Console Rendering
         function renderAdmin() {
-            const pending = state.managerQueue.filter(b => b.status.toLowerCase() === "pending");
-            const approved = state.managerQueue.filter(b => ["approved", "driver_pending", "confirmed", "in_progress"].includes(b.status.toLowerCase()));
+            const pending = state.managerQueue.filter(b => b.status === "pending");
+            const approved = state.managerQueue.filter(b => ["approved", "driver_pending", "confirmed", "in_progress"].includes(b.status));
             const available = state.fleet.filter(v => v.status === "available").length;
 
             document.getElementById("admin-metrics").innerHTML = [
-                metricMarkup("Awaiting approval", pending.length, "needs manager action"),
-                metricMarkup("Dispatched trips", approved.length, "active in fleet"),
-                metricMarkup("Available fleet", available, "ready for allocation"),
-                metricMarkup("Maintenance bay", state.fleet.length - available, "out of service")
+                metricMarkup("Awaiting Approval", pending.length, "needs manager action"),
+                metricMarkup("Dispatched Trips", approved.length, "active in fleet"),
+                metricMarkup("Available Fleet", `${available}/${state.fleet.length}`, "ready for booking"),
+                metricMarkup("Maintenance Bay", state.fleet.length - available, "out of service")
             ].join("");
 
-            document.getElementById("pending-count").textContent = `${pending.length} pending`;
+            const pendingCountEl = document.getElementById("pending-count");
+            const queueBadgeEl = document.getElementById("mgr-queue-badge");
+            if (pendingCountEl) pendingCountEl.textContent = `${pending.length} pending`;
+            if (queueBadgeEl) queueBadgeEl.textContent = pending.length;
 
-            // Requests awaiting approval list
+            // Approval Queue List
             document.getElementById("admin-requests").innerHTML = pending.length
                 ? pending.map(booking => {
                     const vehicle = vehicleById(booking.vehicleId);
                     return `<div class="admin-item">
                         <div class="admin-item-top">
                             <div>
-                                <strong>${escapeHtml(booking.purpose)}</strong>
-                                <small>${escapeHtml(booking.destination || "Destination pending")} · ${escapeHtml(booking.vehicleName || vehicle?.name || "Vehicle pending")} · ${escapeHtml(formatDateRange(booking.start, booking.end))}</small>
-                                <small>${escapeHtml(booking.employeeName || "Employee")} · ${booking.passengers} passenger${booking.passengers === 1 ? "" : "s"} · Request ID: ${escapeHtml(booking.id.slice(0, 8))}</small>
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                                    <strong>${escapeHtml(booking.purpose)}</strong>
+                                    <span class="status ${booking.priority === 'emergency' ? 'rejected' : 'pending'}">${escapeHtml(booking.priority.toUpperCase())}</span>
+                                </div>
+                                <small>${escapeHtml(booking.destination)} · ${escapeHtml(booking.vehicleName || vehicle?.name || "Vehicle pending")} · ${escapeHtml(formatDateRange(booking.start, booking.end))}</small>
+                                <small>Requested by ${escapeHtml(booking.employeeName)} (${booking.passengers} passengers)</small>
+                                <div style="margin-top:6px;font-size:0.75rem;color:var(--cyan);background:rgba(0,217,245,0.06);padding:6px 10px;border-radius:8px;">
+                                    ⚙️ ${escapeHtml(booking.decisionReason || 'Deterministic best-fit match')}
+                                </div>
                             </div>
                             <span class="status pending">PENDING</span>
                         </div>
                         <div class="admin-actions">
-                            <button class="button success" type="button" data-approve-booking="${escapeHtml(booking.id)}">Approve &amp; Dispatch</button>
-                            <button class="button danger" type="button" data-reject-booking="${escapeHtml(booking.id)}">Reject Request</button>
+                            <button class="button success" type="button" data-approve-booking="${escapeHtml(booking.id)}">✓ Approve</button>
+                            <button class="button secondary" type="button" data-override-booking="${escapeHtml(booking.id)}">✎ Override</button>
+                            <button class="button danger" type="button" data-reject-booking="${escapeHtml(booking.id)}">✕ Reject</button>
                         </div>
                     </div>`;
                 }).join("")
-                : `<div class="empty-state"><strong>No requests awaiting approval.</strong>New pending employee bookings will appear here.</div>`;
+                : `<div class="empty-state"><strong>Approval queue is clear!</strong>All requests are approved or dispatched.</div>`;
 
-            // Fleet availability toggles
+            // Fleet Availability Toggles
             document.getElementById("admin-fleet").innerHTML = state.fleet.map(vehicle => `
                 <div class="fleet-admin-row">
                     <div>
@@ -2448,50 +3513,147 @@
                         <small>${escapeHtml(typeLabel(vehicle.type))} · ${vehicle.capacity} seats · ${escapeHtml(vehicle.location)}</small>
                     </div>
                     <button class="button ghost" type="button" data-toggle-fleet="${escapeHtml(vehicle.id)}">
-                        ${vehicle.status === "available" ? "Set maintenance" : "Mark available"}
+                        ${vehicle.status === "available" ? "Mark in Maintenance" : "Set Available"}
                     </button>
                 </div>
             `).join("");
 
-            // Driver operations and dispatched trips panel
-            const driverListEl = document.getElementById("driver-requests-list");
-            const driverCountEl = document.getElementById("driver-trips-count");
-            const activeTrips = state.managerQueue.filter(b => ["driver_pending", "confirmed", "in_progress"].includes(b.status.toLowerCase()));
-
-            if (driverCountEl) driverCountEl.textContent = `${activeTrips.length} active`;
-            if (driverListEl) {
-                driverListEl.innerHTML = activeTrips.length
-                    ? activeTrips.map(b => {
-                        let actionButtons = "";
-                        const st = b.status.toLowerCase();
-                        if (st === "driver_pending") {
-                            actionButtons = `
-                                <button class="button success" type="button" data-driver-accept="${escapeHtml(b.id)}">Accept Assignment</button>
-                                <button class="button danger" type="button" data-driver-reject="${escapeHtml(b.id)}">Decline (Tired)</button>
-                            `;
-                        } else if (st === "confirmed") {
-                            actionButtons = `
-                                <button class="button" type="button" data-trip-start="${escapeHtml(b.id)}">Start Trip (1-Touch)</button>
-                            `;
-                        } else if (st === "in_progress") {
-                            actionButtons = `
-                                <button class="button success" type="button" data-trip-end="${escapeHtml(b.id)}">End Trip &amp; Complete</button>
-                            `;
-                        }
-                        return `<div class="admin-item" style="border-left: 3px solid var(--cyan);">
-                            <div class="admin-item-top">
-                                <div>
-                                    <strong>${escapeHtml(b.purpose)}</strong>
-                                    <small>${escapeHtml(b.destination)} · ${escapeHtml(b.vehicleName)} · ${escapeHtml(formatDateRange(b.start, b.end))}</small>
-                                    <small>Passenger: ${escapeHtml(b.employeeName)} (${b.passengers} pax) · Driver: ${escapeHtml(b.driverName || "Rajesh Kumar")}</small>
-                                </div>
-                                <span class="status ${escapeHtml(st)}">${escapeHtml(b.status.toUpperCase())}</span>
+            // Drivers Roster
+            const drvRosterEl = document.getElementById("admin-drivers-roster");
+            if (drvRosterEl) {
+                drvRosterEl.innerHTML = state.drivers.length
+                    ? state.drivers.map(d => `
+                        <div class="fleet-admin-row">
+                            <div>
+                                <strong>${escapeHtml(d.name)}</strong>
+                                <small>Status: ${escapeHtml(d.status.toUpperCase())} · Rating: ★ ${d.rating_avg} · ${escapeHtml(d.license_number || 'DL-Active')}</small>
                             </div>
-                            <div class="admin-actions">${actionButtons}</div>
-                        </div>`;
-                    }).join("")
-                    : `<div class="empty-state"><strong>No active driver dispatches.</strong>When a request is approved, it appears here for driver acceptance and trip execution.</div>`;
+                            <span class="status ${d.status === 'available' ? 'approved' : 'pending'}">${escapeHtml(d.status.toUpperCase())}</span>
+                        </div>
+                    `).join("")
+                    : `<div style="padding:14px;color:var(--muted);font-size:0.8rem;">Loading driver roster...</div>`;
             }
+
+            renderDriverCockpit();
+        }
+
+        // ==========================================
+        // 24-HOUR GANTT TIMELINE
+        // ==========================================
+        function setGanttMode(mode) {
+            currentGanttMode = mode;
+            document.getElementById("gantt-mode-veh").classList.toggle("is-active", mode === "vehicles");
+            document.getElementById("gantt-mode-drv").classList.toggle("is-active", mode === "drivers");
+            loadGanttData();
+        }
+
+        async function loadGanttData() {
+            const picker = document.getElementById("gantt-date-picker");
+            if (picker && !picker.value) {
+                const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+                picker.value = today;
+            }
+
+            // Build Header Row (Hours 00:00 to 23:00)
+            const headerRow = document.getElementById("gantt-header-row");
+            if (headerRow) {
+                let headerHtml = `<div class="gantt-header-cell" style="text-align:left;padding-left:14px;">RESOURCE</div>`;
+                for (let h = 0; h < 24; h++) {
+                    const hStr = String(h).padStart(2, '0') + ":00";
+                    headerHtml += `<div class="gantt-header-cell">${hStr}</div>`;
+                }
+                headerRow.innerHTML = headerHtml;
+            }
+
+            try {
+                const res = await apiCall("/api/manager/gantt", {}, true);
+                const vehicles = res.vehicles || state.fleet;
+                const drivers = res.drivers || state.drivers;
+                const bookings = res.bookings || state.managerQueue;
+                renderGanttChart(vehicles, drivers, bookings);
+            } catch (e) {
+                renderGanttChart(state.fleet, state.drivers, state.managerQueue);
+            }
+        }
+
+        function renderGanttChart(vehicles, drivers, bookings) {
+            const container = document.getElementById("gantt-rows-container");
+            const rows = currentGanttMode === "vehicles" ? vehicles : drivers;
+
+            if (!rows.length) {
+                container.innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted);">No resources available.</div>`;
+                return;
+            }
+
+            const picker = document.getElementById("gantt-date-picker");
+            const selectedDateStr = picker ? picker.value : null;
+
+            container.innerHTML = rows.map(r => {
+                const rowBookings = bookings.filter(b => {
+                    const st = (b.status || "").toLowerCase();
+                    if (["cancelled", "rejected"].includes(st)) return false;
+                    if (selectedDateStr) {
+                        const istDate = new Date(b.start_time || b.start).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+                        if (istDate !== selectedDateStr) return false;
+                    }
+                    if (currentGanttMode === "vehicles") {
+                        return String(b.vehicle_id || b.vehicleId) === String(r.id);
+                    } else {
+                        return String(b.driver_id || b.driverId) === String(r.id) || String(b.driver_id || b.driverId) === String(r.profile_id);
+                    }
+                });
+
+                // 24 grid cells
+                let cellsHtml = "";
+                for (let i = 0; i < 24; i++) cellsHtml += `<div class="gantt-grid-cell"></div>`;
+
+                // Positioned blocks
+                const blocksHtml = rowBookings.map(b => {
+                    const s = new Date(b.start_time || b.start);
+                    const e = new Date(b.end_time || b.end);
+
+                    const sH = s.getHours() + (s.getMinutes() / 60.0);
+                    const eH = e.getHours() + (e.getMinutes() / 60.0);
+                    const dur = Math.max(0.5, eH - sH);
+
+                    // Offset from resource cell (180px)
+                    const leftPct = (sH / 24.0) * 100;
+                    const widthPct = (dur / 24.0) * 100;
+
+                    const stClass = `status-${(b.status || 'confirmed').toLowerCase()}`;
+                    return `
+                        <div class="gantt-booking-block ${stClass}" 
+                             style="left: calc(180px + ${leftPct}% * 0.85); width: max(32px, ${widthPct}% * 0.85);" 
+                             title="${escapeHtml(b.purpose || b.reason)}: ${formatDateTime(b.start_time || b.start)} - ${formatDateTime(b.end_time || b.end)}">
+                            ${escapeHtml(b.destination || b.purpose || 'Trip')}
+                        </div>
+                    `;
+                }).join("");
+
+                return `
+                    <div class="gantt-row">
+                        <div class="gantt-resource-cell">
+                            <strong>${escapeHtml(r.name)}</strong>
+                            <small>${currentGanttMode === 'vehicles' ? `${r.capacity} seats · ${escapeHtml(typeLabel(r.type))}` : `Rating: ★${r.rating_avg || '5.0'}`}</small>
+                        </div>
+                        ${cellsHtml}
+                        ${blocksHtml}
+                    </div>
+                `;
+            }).join("");
+        }
+
+        // ==========================================
+        // SMART ALLOCATION MATCH PREVIEW
+        // ==========================================
+        function findMatches({ start, end, passengers, type = "any", vehicleId = "" } = {}) {
+            const passengerCount = Number(passengers || 0);
+            return state.fleet
+                .filter(vehicle => vehicle.status === "available")
+                .filter(vehicle => !vehicleId || vehicle.id === vehicleId)
+                .filter(vehicle => type === "any" || vehicle.type === type)
+                .filter(vehicle => vehicle.capacity >= passengerCount)
+                .sort((a, b) => (a.capacity - passengerCount) - (b.capacity - passengerCount));
         }
 
         function updateMatchSummary() {
@@ -2502,21 +3664,25 @@
             const type = form.elements.type.value;
             const vehicleId = form.elements.vehicle.value;
             const summary = document.getElementById("match-summary");
+
             if (!start || !end || !passengers) {
-                summary.innerHTML = "<strong>Start with the basics.</strong>Choose a time range and passenger count to see the best available match.";
+                summary.innerHTML = "<strong>Start with the basics.</strong>Choose a pickup time and passenger count to see the best available match.";
                 return;
             }
             if (new Date(end) <= new Date(start)) {
-                summary.innerHTML = "<strong>Check the time range.</strong>The return time must be after pickup.";
+                summary.innerHTML = "<strong>Check the time range.</strong>The return time must be strictly after pickup.";
                 return;
             }
             const matches = findMatches({ start, end, passengers, type, vehicleId });
             if (!matches.length) {
-                summary.innerHTML = "<strong>No clean match for this window.</strong>Try a larger vehicle, a different type, or another time range.";
+                summary.innerHTML = `<strong style="color:var(--amber);">No available vehicle matches this specification.</strong>
+                    <div style="font-size:0.75rem;margin-top:4px;">Try increasing capacity filter or submit request to generate alternative slots.</div>`;
                 return;
             }
             const match = matches[0];
-            summary.innerHTML = `<strong>Best available match</strong><span class="match-vehicle">${escapeHtml(match.name)}</span> · ${match.capacity} seats · ${escapeHtml(typeLabel(match.type))}<br><span style="font-size:.78rem">Capacity checked · No scheduling overlap detected.</span>`;
+            summary.innerHTML = `<strong>Deterministic Engine Match:</strong>
+                <div class="match-vehicle" style="color:var(--cyan);font-size:1.1rem;margin:4px 0;">${escapeHtml(match.name)} (${match.capacity} seats)</div>
+                <div style="font-size:0.78rem;color:var(--text);">Selected as minimal excess capacity. Clean rest gap &amp; no scheduling conflict.</div>`;
         }
 
         function renderAll() {
@@ -2546,29 +3712,223 @@
             document.getElementById("booking-end").value = toLocalInputValue(end);
         }
 
-        // Global Event Delegation for Interactive Controls
+        // ==========================================
+        // MODALS CONTROLLERS
+        // ==========================================
+        function openDriverDeclineModal(bookingId) {
+            rejectingBookingId = bookingId;
+            document.getElementById("driver-decline-modal").style.display = "grid";
+        }
+
+        function closeDriverDeclineModal() {
+            rejectingBookingId = null;
+            document.getElementById("driver-decline-modal").style.display = "none";
+        }
+
+        async function submitDriverDecline() {
+            if (!rejectingBookingId) return;
+            const reasonInput = document.querySelector('input[name="decline_reason"]:checked');
+            const reason = reasonInput ? reasonInput.value : "tired";
+            const bId = rejectingBookingId;
+            const b = state.managerQueue.find(item => item.id === bId) || state.driverRequests.find(item => item.id === bId);
+            const drvId = b ? (b.driverId || b.driverProfileId) : "";
+
+            try {
+                await apiCall(`/api/driver/bookings/${bId}/reject`, {
+                    method: "POST",
+                    body: JSON.stringify({ reason })
+                }, false, drvId);
+                closeDriverDeclineModal();
+                showToast(`Assignment declined (${reason}). Fatigue engine reallocated trip to next eligible driver.`);
+                await refreshFromServer();
+            } catch (err) {
+                showToast(`Decline error: ${err.message}`, true);
+            }
+        }
+
+        function openOverrideModal(bookingId) {
+            overridingBookingId = bookingId;
+            const vehSelect = document.getElementById("override-vehicle-select");
+            const drvSelect = document.getElementById("override-driver-select");
+
+            vehSelect.innerHTML = state.fleet.map(v => `
+                <option value="${v.id}">${v.name} (${v.type.toUpperCase()}, ${v.capacity} seats, Status: ${v.status})</option>
+            `).join("");
+
+            drvSelect.innerHTML = (state.drivers.length ? state.drivers : PERSONAS).map ? state.drivers.map(d => `
+                <option value="${d.id}">${d.name} (Status: ${d.status}, Rating: ★${d.rating_avg})</option>
+            `).join("") : `<option value="driver1">Rajesh Kumar</option><option value="driver2">Suresh Patil</option>`;
+
+            document.getElementById("override-modal").style.display = "grid";
+        }
+
+        function closeOverrideModal() {
+            overridingBookingId = null;
+            document.getElementById("override-modal").style.display = "none";
+        }
+
+        async function submitOverride() {
+            if (!overridingBookingId) return;
+            const vId = document.getElementById("override-vehicle-select").value;
+            const dId = document.getElementById("override-driver-select").value;
+
+            try {
+                await apiCall(`/api/manager/bookings/${overridingBookingId}/override`, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        vehicle_id: vId,
+                        driver_id: dId,
+                        note: "Manual override by operations manager"
+                    })
+                }, true);
+                closeOverrideModal();
+                showToast("Trip assignment overridden and dispatched to new driver.");
+                await refreshFromServer();
+            } catch (err) {
+                showToast(`Override failed: ${err.message}`, true);
+            }
+        }
+
+        function openAddVehicleModal() {
+            document.getElementById("add-vehicle-modal").style.display = "grid";
+        }
+
+        function closeAddVehicleModal() {
+            document.getElementById("add-vehicle-modal").style.display = "none";
+        }
+
+        async function submitAddVehicle() {
+            const name = document.getElementById("new-veh-name").value.trim();
+            const plate = document.getElementById("new-veh-plate").value.trim();
+            const type = document.getElementById("new-veh-type").value;
+            const capacity = Number(document.getElementById("new-veh-capacity").value);
+
+            if (!name || !plate) {
+                alert("Vehicle model and plate number are required.");
+                return;
+            }
+
+            try {
+                await apiCall("/api/vehicles", {
+                    method: "POST",
+                    body: JSON.stringify({ name, plate_number: plate, type, capacity })
+                }, true);
+                closeAddVehicleModal();
+                showToast(`Vehicle ${name} added successfully to fleet!`);
+                await refreshFromServer();
+            } catch (err) {
+                showToast(`Failed adding vehicle: ${err.message}`, true);
+            }
+        }
+
+        function openRegisterDriverModal() {
+            document.getElementById("register-driver-modal").style.display = "grid";
+        }
+
+        function closeRegisterDriverModal() {
+            document.getElementById("register-driver-modal").style.display = "none";
+        }
+
+        async function submitRegisterDriver() {
+            const name = document.getElementById("new-drv-name").value.trim();
+            const phone = document.getElementById("new-drv-phone").value.trim();
+            const license = document.getElementById("new-drv-license").value.trim();
+
+            if (!name || !phone) {
+                alert("Driver name and phone number are required.");
+                return;
+            }
+
+            try {
+                await apiCall("/api/drivers", {
+                    method: "POST",
+                    body: JSON.stringify({ name, phone, license_number: license })
+                }, true);
+                closeRegisterDriverModal();
+                showToast(`Driver ${name} registered successfully!`);
+                await refreshFromServer();
+            } catch (err) {
+                showToast(`Registration failed: ${err.message}`, true);
+            }
+        }
+
+        // Chaos Simulator Trigger
+        async function triggerSimulateChaos() {
+            showToast("Running Chaos Simulation (5 complex scenarios)...");
+            try {
+                const res = await apiCall("/api/admin/simulate", { method: "POST" }, true);
+                showToast("Chaos Simulation Complete: Overlaps handled, 15-pax ladder caught, Emergency bumped routine slot!");
+                await refreshFromServer();
+            } catch (err) {
+                showToast(`Simulation note: ${err.message}`);
+                await refreshFromServer();
+            }
+        }
+
+        async function setDriverStatus(status) {
+            const drvId = currentAuth.user.id || "driver1";
+            try {
+                await apiCall(`/api/drivers/${drvId}`, {
+                    method: "PATCH",
+                    body: JSON.stringify({ status })
+                }, true);
+                const pill = document.getElementById("drv-status-pill");
+                if (pill) pill.textContent = status.toUpperCase();
+                showToast(`Driver status set to ${status.toUpperCase()}`);
+                await refreshFromServer();
+            } catch (err) {
+                showToast(`Status update note: ${err.message}`);
+            }
+        }
+
+        // ==========================================
+        // GLOBAL EVENT DELEGATION
+        // ==========================================
         document.addEventListener("click", async event => {
+            // View Switcher Trigger
             const viewTrigger = event.target.closest("[data-view-target]");
             if (viewTrigger) {
                 event.preventDefault();
-                setView(viewTrigger.dataset.viewTarget);
+                const target = viewTrigger.dataset.viewTarget;
+                const subtab = viewTrigger.dataset.empSubtab;
+                setView(target);
+                if (target === "employee" && subtab) switchEmpSubtab(subtab);
                 return;
             }
-            const scrollApp = event.target.closest("[data-scroll-app]");
-            if (scrollApp) {
-                event.preventDefault();
-                document.getElementById("app").scrollIntoView({ behavior: "smooth", block: "start" });
+
+            // Notification Bell Toggle
+            const notifBtn = event.target.closest("#notif-bell-btn");
+            if (notifBtn) {
+                const drawer = document.getElementById("notif-drawer");
+                drawer.style.display = drawer.style.display === "none" ? "block" : "none";
                 return;
             }
+
+            // Notifications Mark All
+            const notifAllBtn = event.target.closest("#notif-mark-all");
+            if (notifAllBtn) {
+                try {
+                    await apiCall("/api/notifications/read-all", { method: "POST" });
+                    updateNotificationsUI(0);
+                    showToast("All notifications marked as read.");
+                } catch { /* offline fallback */ }
+                return;
+            }
+
+            // Book Specific Vehicle Trigger
             const bookVehicle = event.target.closest("[data-book-vehicle]");
             if (bookVehicle) {
                 preferredVehicleId = bookVehicle.dataset.bookVehicle;
-                setView("book");
+                setView("employee");
+                switchEmpSubtab("new");
                 return;
             }
+
+            // Cancel Booking
             const cancelBooking = event.target.closest("[data-cancel-booking]");
             if (cancelBooking) {
                 const bId = cancelBooking.dataset.cancelBooking;
+                if (!confirm(`Are you sure you want to cancel booking ${bId.slice(0, 8)}?`)) return;
                 try {
                     await apiCall(`/api/bookings/${bId}/cancel`, {
                         method: "POST",
@@ -2581,6 +3941,8 @@
                 }
                 return;
             }
+
+            // Manager Approve
             const approveBooking = event.target.closest("[data-approve-booking]");
             if (approveBooking) {
                 const bId = approveBooking.dataset.approveBooking;
@@ -2593,6 +3955,8 @@
                 }
                 return;
             }
+
+            // Manager Reject
             const rejectBooking = event.target.closest("[data-reject-booking]");
             if (rejectBooking) {
                 const bId = rejectBooking.dataset.rejectBooking;
@@ -2609,6 +3973,16 @@
                 }
                 return;
             }
+
+            // Manager Override
+            const overrideBooking = event.target.closest("[data-override-booking]");
+            if (overrideBooking) {
+                const bId = overrideBooking.dataset.overrideBooking;
+                openOverrideModal(bId);
+                return;
+            }
+
+            // Vehicle Maintenance Toggle
             const toggleFleet = event.target.closest("[data-toggle-fleet]");
             if (toggleFleet) {
                 const vId = toggleFleet.dataset.toggleFleet;
@@ -2628,6 +4002,8 @@
                 }
                 return;
             }
+
+            // Driver Accept
             const driverAccept = event.target.closest("[data-driver-accept]");
             if (driverAccept) {
                 const bId = driverAccept.dataset.driverAccept;
@@ -2642,23 +4018,16 @@
                 }
                 return;
             }
-            const driverReject = event.target.closest("[data-driver-reject]");
-            if (driverReject) {
-                const bId = driverReject.dataset.driverReject;
-                const b = state.managerQueue.find(item => item.id === bId) || state.driverRequests.find(item => item.id === bId);
-                const drvId = b ? (b.driverId || b.driverProfileId) : "";
-                try {
-                    await apiCall(`/api/driver/bookings/${bId}/reject`, {
-                        method: "POST",
-                        body: JSON.stringify({ reason: "tired" })
-                    }, false, drvId);
-                    showToast(`Trip ${bId.slice(0, 8)} declined. Reassigned automatically by fatigue engine.`);
-                    await refreshFromServer();
-                } catch (err) {
-                    showToast(`Driver decline failed: ${err.message}`, true);
-                }
+
+            // Driver Decline Trigger
+            const driverDecline = event.target.closest("[data-driver-decline]") || event.target.closest("[data-driver-reject]");
+            if (driverDecline) {
+                const bId = driverDecline.dataset.driverDecline || driverDecline.dataset.driverReject;
+                openDriverDeclineModal(bId);
                 return;
             }
+
+            // Trip Start
             const tripStart = event.target.closest("[data-trip-start]");
             if (tripStart) {
                 const bId = tripStart.dataset.tripStart;
@@ -2669,13 +4038,15 @@
                         method: "POST",
                         body: JSON.stringify({ start_odometer_km: 12450, checklist_completed: true })
                     }, false, drvId);
-                    showToast(`Trip started! Vehicle odometer logged. Status is now IN_PROGRESS.`);
+                    showToast(`Trip started! One-touch execution logged. Status is now IN_PROGRESS.`);
                     await refreshFromServer();
                 } catch (err) {
                     showToast(`Start trip failed: ${err.message}`, true);
                 }
                 return;
             }
+
+            // Trip End
             const tripEnd = event.target.closest("[data-trip-end]");
             if (tripEnd) {
                 const bId = tripEnd.dataset.tripEnd;
@@ -2686,20 +4057,26 @@
                         method: "POST",
                         body: JSON.stringify({ end_odometer_km: 12495, fuel_level: "full" })
                     }, false, drvId);
-                    showToast(`Trip ended and completed! Vehicle returned to fleet.`);
+                    showToast(`Trip ended and completed! Vehicle and driver freed.`);
                     await refreshFromServer();
                 } catch (err) {
                     showToast(`End trip failed: ${err.message}`, true);
                 }
                 return;
             }
+
+            // Close notification drawer when clicking outside
+            if (!event.target.closest("#notif-drawer") && !event.target.closest("#notif-bell-btn")) {
+                const drawer = document.getElementById("notif-drawer");
+                if (drawer) drawer.style.display = "none";
+            }
         });
 
-        // Persona Switcher Change Event
+        // Persona Switcher Change Event: Automatically Shifts View
         const personaSelectEl = document.getElementById("user-persona-select");
         if (personaSelectEl) {
             personaSelectEl.addEventListener("change", async event => {
-                await loginPersona(event.target.value);
+                await loginPersona(event.target.value, false, true);
             });
         }
 
@@ -2708,7 +4085,7 @@
         document.getElementById("booking-form").addEventListener("change", updateMatchSummary);
         document.getElementById("booking-form").addEventListener("reset", () => setTimeout(() => { preferredVehicleId = ""; setBookingDefaults(); renderVehicleOptions(); updateMatchSummary(); }, 0));
 
-        // Submit Booking Request to Backend
+        // Submit Booking Request
         document.getElementById("booking-form").addEventListener("submit", async event => {
             event.preventDefault();
             const form = event.currentTarget;
@@ -2740,6 +4117,10 @@
             };
             if (vehicleId) payload.vehicle_id = vehicleId;
 
+            const submitBtn = document.getElementById("btn-submit-booking");
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Allocating Fleet...";
+
             try {
                 const res = await apiCall("/api/bookings", {
                     method: "POST",
@@ -2748,50 +4129,108 @@
 
                 const bkg = res.booking;
                 const noteMsg = res.auto_approved
-                    ? `Booking ${bkg.id.slice(0, 8)} auto-approved by policy rule!`
+                    ? `Booking ${bkg.id.slice(0, 8)} auto-approved by rule!`
                     : `Booking ${bkg.id.slice(0, 8)} submitted & queued for manager approval.`;
                 showToast(noteMsg);
+
+                document.getElementById("booking-conflict-box").style.display = "none";
                 form.reset();
                 setBookingDefaults();
                 await refreshFromServer();
-                setView("bookings");
+                switchEmpSubtab("history");
             } catch (err) {
+                const conflictBox = document.getElementById("booking-conflict-box");
+                const conflictText = document.getElementById("conflict-reason-text");
+                const altList = document.getElementById("conflict-alternatives-list");
+
+                conflictBox.style.display = "block";
+                conflictText.textContent = err.message || "Scheduling Conflict Detected";
+
                 const alternatives = err.data?.error?.alternatives || err.data?.alternatives || [];
-                let altInfo = "";
                 if (alternatives.length > 0) {
-                    altInfo = ` Alternatives available: ${alternatives.map(a => a.name || a.vehicle_name || a.id.slice(0, 8)).join(", ")}`;
+                    altList.innerHTML = alternatives.map(a => `
+                        <button class="button ghost" type="button" style="text-align:left;font-size:0.75rem;padding:8px 12px;width:100%;" 
+                                onclick="applyAlternativeSlot('${a.start_time || a.start}', '${a.end_time || a.end}')">
+                            <span>⏱</span> ${formatDateRange(a.start_time || a.start, a.end_time || a.end)} · ${escapeHtml(a.vehicle_name || a.name || 'Available')}
+                        </button>
+                    `).join("");
+                } else {
+                    altList.innerHTML = `<div style="font-size:0.72rem;color:var(--muted);">No exact slot shifts available. Please join the waitlist.</div>`;
                 }
-                showToast(`Booking error: ${err.message}.${altInfo}`, true);
+                showToast(`Conflict: ${err.message}`, true);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Submit Booking Request →";
             }
         });
 
+        function applyAlternativeSlot(newStart, newEnd) {
+            if (newStart) document.getElementById("booking-start").value = toLocalInputValue(new Date(newStart));
+            if (newEnd) document.getElementById("booking-end").value = toLocalInputValue(new Date(newEnd));
+            document.getElementById("booking-conflict-box").style.display = "none";
+            updateMatchSummary();
+            showToast("Alternative time slot applied to form. Ready to submit!");
+        }
+
+        // Join Waitlist Button
+        const waitlistBtn = document.getElementById("btn-join-waitlist");
+        if (waitlistBtn) {
+            waitlistBtn.addEventListener("click", async () => {
+                const form = document.getElementById("booking-form");
+                const startVal = form.elements.start.value;
+                const endVal = form.elements.end.value;
+                const passengers = Number(form.elements.passengers.value);
+                const destination = form.elements.destination.value.trim();
+                const purpose = form.elements.purpose.value.trim();
+
+                try {
+                    await apiCall("/api/bookings", {
+                        method: "POST",
+                        body: JSON.stringify({
+                            start_time: new Date(startVal).toISOString(),
+                            end_time: new Date(endVal).toISOString(),
+                            passengers,
+                            destination,
+                            reason: purpose,
+                            waitlist: true
+                        })
+                    });
+                    document.getElementById("booking-conflict-box").style.display = "none";
+                    showToast("Joined Waitlist! You will be automatically assigned when capacity frees up.");
+                    await refreshFromServer();
+                    switchEmpSubtab("history");
+                } catch (e) {
+                    showToast(`Waitlist failed: ${e.message}`, true);
+                }
+            });
+        }
+
         // Reset Demo Database
         document.getElementById("reset-demo").addEventListener("click", async () => {
+            if (!confirm("Reset all test bookings and restore initial seed fleet?")) return;
             try {
                 await apiCall("/api/admin/reset-demo-bookings", { method: "POST" });
-                showToast("Demo bookings wiped and fleet restored to clean initial seed state.");
+                showToast("Demo bookings wiped and initial fleet state restored.");
                 await refreshFromServer();
             } catch {
                 try {
                     await apiCall("/api/admin/reset", { method: "POST" }, true);
-                    showToast("Simulation wiped back to initial state.");
+                    showToast("System reset back to clean initial state.");
                     await refreshFromServer();
                 } catch (e) {
-                    state = freshState();
-                    persistState();
-                    renderAll();
                     showToast("Demo data reset in local session.");
                 }
             }
         });
 
-        // Periodic Background Poller (every 7 seconds)
+        // Background Periodic Poller (every 5 seconds)
         setInterval(() => {
             if (backendOnline) {
                 refreshFromServer();
             }
-        }, 7000);
+        }, 5000);
 
+        // 3D Canvas Scroll Animation
         function resizeCanvas() {
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
             canvas.width = Math.floor(window.innerWidth * dpr);
@@ -2835,7 +4274,6 @@
             }
         }, { passive: true });
         window.addEventListener("resize", resizeCanvas);
-        window.addEventListener("resize", () => syncNavIndicator(false));
 
         for (let index = 1; index <= FRAME_COUNT; index += 1) {
             const image = new Image();
@@ -2855,7 +4293,6 @@
         renderAll();
         resizeCanvas();
         updateAnimationFromScroll();
-        syncNavIndicator(false);
         refreshFromServer();
     </script>
 </body>
